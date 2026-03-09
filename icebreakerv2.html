@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mercato de Agentes - Edición RFID</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3f2f1;
+            color: #323130;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 { margin-bottom: 5px; color: #0078d4; text-align: center; }
+        p { margin-bottom: 20px; font-size: 1.1em; color: #605e5c; text-align: center; }
+        
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        /* Zona de Tareas (Izquierda) */
+        .tasks-pool {
+            flex: 0 0 300px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 20px;
+        }
+        .tasks-pool h2 { margin-top: 0; font-size: 1.2em; border-bottom: 2px solid #edebe9; padding-bottom: 10px;}
+
+        /* Zona de Gabinete (Grid Derecha) */
+        .cabinet-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .agent-bucket {
+            background-color: #ffffff;
+            border: 2px dashed #c8c6c4;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.2s ease;
+            min-height: 250px;
+        }
+        .agent-bucket.drag-over {
+            background-color: #e1dfdd;
+            border-color: #0078d4;
+            transform: scale(1.02);
+        }
+        .agent-header {
+            text-align: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #edebe9;
+        }
+        .agent-icon { font-size: 2em; margin-bottom: 5px; }
+        .agent-name { font-weight: bold; font-size: 1.1em; color: #0078d4; min-height: 26px; }
+        .agent-desc { font-size: 0.8em; color: #605e5c; margin-top: 5px; line-height: 1.3; }
+
+        /* Tarjetas arrastrables */
+        .task-card {
+            background-color: #deecf9;
+            border-left: 4px solid #0078d4;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            cursor: grab;
+            font-size: 0.9em;
+            line-height: 1.4;
+            user-select: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.1s;
+        }
+        .task-card:active { cursor: grabbing; transform: scale(0.98); }
+
+        /* Botón Revelar */
+        .reveal-btn {
+            margin-top: 30px;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            background-color: #107c10;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: background-color 0.2s;
+        }
+        .reveal-btn:hover { background-color: #0b5a0b; }
+        .reveal-btn:disabled { background-color: #0078d4; cursor: default; }
+
+        .drop-zone { flex-grow: 1; display: flex; flex-direction: column; gap: 8px; min-height: 100px; }
+    </style>
+</head>
+<body>
+
+    <h1>Ficha a tu Gabinete (Edición RFID)</h1>
+    <p>Arrastra cada tarea del día a día de la empresa al especialista adecuado para resolverla.</p>
+
+    <div class="container">
+        <!-- Pool de Tareas (Izquierda) -->
+        <div class="tasks-pool">
+            <h2>Bandeja de Pendientes</h2>
+            <div class="drop-zone" id="pool" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <div class="task-card" draggable="true" ondragstart="drag(event)" id="t1"><strong>[RRHH]</strong> Lanzar un formulario para medir el clima laboral tras la fusión con el fabricante de hardware.</div>
+                <div class="task-card" draggable="true" ondragstart="drag(event)" id="t2"><strong>[Marketing]</strong> Generar una imagen fotorrealista de un toro mecánico escaneando palés con UHF para la web.</div>
+                <div class="task-card" draggable="true" ondragstart="drag(event)" id="t3"><strong>[Finanzas]</strong> Cruzar los datos de ventas de tags activos del Q3 con el gasto en campañas de LinkedIn.</div>
+                <div class="task-card" draggable="true" ondragstart="drag(event)" id="t4"><strong>[Comercial]</strong> Transformar el hilo de correos del proyecto 'Hospitales' en una intranet bonita para el equipo.</div>
+                <div class="task-card" draggable="true" ondragstart="drag(event)" id="t5"><strong>[Legal]</strong> Buscar normativas europeas recientes sobre frecuencias de radio para etiquetas logísticas.</div>
+                <div class="task-card" draggable="true" ondragstart="drag(event)" id="t6"><strong>[Operaciones]</strong> Necesitamos un bot interno que revise si los contratos de proveedores incluyen confidencialidad de chips.</div>
+            </div>
+        </div>
+
+        <!-- Los Agentes (Grid 3x2) -->
+        <div class="cabinet-grid">
+            
+            <!-- Investigador -->
+            <div class="agent-bucket" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                <div class="agent-header">
+                    <div class="agent-icon">🔍</div>
+                    <div class="agent-name" id="name-sabueso">El Sabueso</div>
+                    <div class="agent-desc">Busca, filtra y sintetiza información normativa o de mercado.</div>
+                </div>
+                <div class="drop-zone"></div>
+            </div>
+
+            <!-- Analista -->
+            <div class="agent-bucket" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                <div class="agent-header">
+                    <div class="agent-icon">📊</div>
+                    <div class="agent-name" id="name-estratega">El Estratega</div>
+                    <div class="agent-desc">Procesa hojas de cálculo, encuentra patrones y cruza métricas.</div>
+                </div>
+                <div class="drop-zone"></div>
+            </div>
+
+            <!-- Crear -->
+            <div class="agent-bucket" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                <div class="agent-header">
+                    <div class="agent-icon">🎨</div>
+                    <div class="agent-name" id="name-visionario">El Visionario</div>
+                    <div class="agent-desc">Transforma descripciones de texto en conceptos visuales.</div>
+                </div>
+                <div class="drop-zone"></div>
+            </div>
+
+            <!-- Encuestas -->
+            <div class="agent-bucket" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                <div class="agent-header">
+                    <div class="agent-icon">📋</div>
+                    <div class="agent-name" id="name-sondeador">El Sondeador</div>
+                    <div class="agent-desc">Estructura preguntas y crea sistemas de recolección de feedback.</div>
+                </div>
+                <div class="drop-zone"></div>
+            </div>
+
+            <!-- Sharepoint -->
+            <div class="agent-bucket" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                <div class="agent-header">
+                    <div class="agent-icon">🌐</div>
+                    <div class="agent-name" id="name-maquetador">El Maquetador</div>
+                    <div class="agent-desc">Convierte conversaciones desestructuradas en portales de información.</div>
+                </div>
+                <div class="drop-zone"></div>
+            </div>
+
+            <!-- Hazlo tú mismo -->
+            <div class="agent-bucket" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                <div class="agent-header">
+                    <div class="agent-icon">⚙️</div>
+                    <div class="agent-name" id="name-arquitecto">El Arquitecto</div>
+                    <div class="agent-desc">Construye soluciones a medida cuando ninguna otra herramienta sirve.</div>
+                </div>
+                <div class="drop-zone"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <button class="reveal-btn" onclick="revelarNombres()">Revelar Herramientas Reales</button>
+
+    <script>
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            let data = ev.dataTransfer.getData("text");
+            let dropTarget = ev.target.closest('.drop-zone') || ev.target.querySelector('.drop-zone');
+            
+            if (dropTarget) {
+                dropTarget.appendChild(document.getElementById(data));
+            }
+            
+            document.querySelectorAll('.agent-bucket').forEach(bucket => {
+                bucket.classList.remove('drag-over');
+            });
+        }
+
+        function dragEnter(ev) {
+            ev.preventDefault();
+            let bucket = ev.target.closest('.agent-bucket');
+            if(bucket) bucket.classList.add('drag-over');
+        }
+
+        function dragLeave(ev) {
+            let bucket = ev.target.closest('.agent-bucket');
+            if(bucket) bucket.classList.remove('drag-over');
+        }
+
+        function revelarNombres() {
+            // Nombres exactos solicitados por el usuario, sin importar la mezcla de formatos
+            document.getElementById('name-sabueso').innerText = "Investigador";
+            document.getElementById('name-estratega').innerText = "Analista";
+            document.getElementById('name-visionario').innerText = "Crear";
+            document.getElementById('name-sondeador').innerText = "Encuestas";
+            document.getElementById('name-maquetador').innerText = "Sharepoint page agent";
+            document.getElementById('name-arquitecto').innerText = "Hazlo tú mismo";
+            
+            let btn = document.querySelector('.reveal-btn');
+            btn.innerText = "¡Herramientas Reveladas!";
+            btn.disabled = true;
+        }
+    </script>
+</body>
+</html>
