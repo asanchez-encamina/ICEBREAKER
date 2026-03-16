@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorio de Ensamblaje: Agentes de Copilot</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --panel-bg: #1e293b;
+            --text-light: #f8fafc;
+            --accent: #38bdf8;
+            --border: #334155;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            max-width: 800px;
+        }
+        
+        .header h1 { color: var(--accent); margin-bottom: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;}
+        .header p { color: #94a3b8; font-size: 1.1em; line-height: 1.5; }
+        .mission-box {
+            background-color: rgba(56, 189, 248, 0.1);
+            border: 1px solid var(--accent);
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 1.1em;
+            color: #bae6fd;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 450px 1fr;
+            gap: 30px;
+            width: 100%;
+            max-width: 1300px;
+        }
+
+        /* Plano del Agente (Motherboard) */
+        .blueprint {
+            background-color: #0b1120;
+            border: 2px solid #1e3a8a;
+            border-radius: 8px;
+            padding: 25px;
+            background-image: 
+                linear-gradient(rgba(30, 58, 138, 0.4) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(30, 58, 138, 0.4) 1px, transparent 1px);
+            background-size: 20px 20px;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .blueprint::after {
+            content: "MOTHERBOARD_V2";
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+            color: #1e3a8a;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .blueprint h2 { margin-top: 0; color: var(--accent); border-bottom: 1px solid #1e3a8a; padding-bottom: 10px; font-family: monospace;}
+
+        .slot-container {
+            margin-bottom: 30px;
+        }
+
+        .slot-label {
+            display: block;
+            margin-bottom: 8px;
+            font-family: monospace;
+            color: #64748b;
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+
+        /* Sockets (Huecos en la placa base) */
+        .drop-slot {
+            background-color: rgba(0, 0, 0, 0.5);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .drop-slot::before {
+            content: "VACÍO";
+            color: #334155;
+            font-family: monospace;
+            font-size: 1.2em;
+            letter-spacing: 2px;
+            position: absolute;
+            z-index: 0;
+        }
+        .drop-slot:has(.component)::before { display: none; }
+
+        /* Formas de los Sockets para encajar piezas */
+        #slot-role { border: 2px dashed #9333ea; border-radius: 30px; } /* Circular/Píldora */
+        #slot-data { border: 2px dashed #d97706; border-radius: 4px 20px 4px 20px; } /* SD Card */
+        #slot-rule { border: 2px dashed #059669; border-left-width: 8px; border-right-width: 8px; } /* Módulo lógico */
+
+        .drop-slot.drag-over { background-color: rgba(255, 255, 255, 0.05); }
+
+        /* Inventario */
+        .inventory {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .component-group h3 {
+            margin-top: 0;
+            font-size: 0.9em;
+            color: #94a3b8;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            min-height: 50px;
+            padding-bottom: 10px;
+        }
+
+        /* Piezas (Componentes) */
+        .component {
+            background-color: #1e293b;
+            padding: 12px 15px;
+            cursor: grab;
+            font-size: 0.85em;
+            user-select: none;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+            transition: transform 0.1s, box-shadow 0.1s;
+            display: flex;
+            align-items: center;
+            line-height: 1.4;
+            color: #e2e8f0;
+        }
+
+        .component:active { cursor: grabbing; transform: scale(0.95); box-shadow: none; }
+        
+        /* Diferenciación visual por tipo (Formas mecánicas de hardware) */
+        
+        /* Rol: Forma de píldora / Chip central */
+        .type-role { 
+            border: 2px solid #9333ea; 
+            border-radius: 30px; 
+            background: linear-gradient(145deg, #2e1065, #1e293b);
+        }
+        
+        /* Data: Forma de Tarjeta de Memoria / Cartucho */
+        .type-data { 
+            border: 2px solid #d97706; 
+            border-radius: 4px 20px 4px 20px; 
+            background: linear-gradient(145deg, #78350f, #1e293b);
+            border-bottom-width: 6px;
+        }
+
+        /* Rule: Forma de Módulo de Seguridad (Angular) */
+        .type-rule { 
+            border: 2px solid #059669; 
+            border-left: 8px solid #059669;
+            border-right: 8px solid #059669;
+            border-radius: 2px;
+            background: linear-gradient(145deg, #064e3b, #1e293b);
+        }
+
+        /* Controles */
+        .controls {
+            margin-top: 40px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .btn-start {
+            background-color: var(--accent);
+            color: #0f172a;
+            border: none;
+            padding: 16px 45px;
+            font-size: 1.2em;
+            font-weight: 800;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 4px 0 #0284c7;
+        }
+
+        .btn-start:hover {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #0284c7;
+        }
+        .btn-start:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+
+        /* Terminal de resultados */
+        .terminal {
+            margin-top: 25px;
+            background-color: #000;
+            border-left: 4px solid var(--accent);
+            border-radius: 0 4px 4px 0;
+            padding: 20px;
+            font-family: monospace;
+            font-size: 1.1em;
+            min-height: 80px;
+            display: none;
+            text-align: left;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .text-success { color: var(--success); }
+        .text-error { color: var(--error); }
+        .text-warning { color: var(--warning); }
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+
+        @media (max-width: 1000px) {
+            .workspace { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Laboratorio de Ensamblaje: Agentes de Copilot</h1>
+        <p>Montar un agente requiere precisión. Selecciona los componentes de hardware lógicos correctos para compilar un asistente útil y seguro.</p>
+        <div class="mission-box">
+            > OBJETIVO_ACTUAL: Compilar "Agente de Soporte Técnico" para resolver dudas de clientes sobre fallos en lectores RFID de la serie UHF.
+        </div>
+    </div>
+
+    <div class="workspace">
+        
+        <!-- Plano del Agente (Motherboard) -->
+        <div class="blueprint">
+            <h2>> SYSTEM_SOCKETS</h2>
+            
+            <div class="slot-container">
+                <span class="slot-label">CPU [IDENTIDAD Y TONO]</span>
+                <div class="drop-slot" id="slot-role" data-type="role" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+            </div>
+
+            <div class="slot-container">
+                <span class="slot-label">MEMORY [BASE DE CONOCIMIENTO]</span>
+                <div class="drop-slot" id="slot-data" data-type="data" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+            </div>
+
+            <div class="slot-container">
+                <span class="slot-label">FIREWALL [RESTRICCIONES]</span>
+                <div class="drop-slot" id="slot-rule" data-type="rule" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+            </div>
+        </div>
+
+        <!-- Inventario de Piezas -->
+        <div class="inventory">
+            <div class="component-group">
+                <h3>> Componentes CPU Disponibles (Arrastrar)</h3>
+                <div class="components-grid drop-slot-inv" id="inv-role" data-type="role" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <div class="component type-role" draggable="true" ondragstart="drag(event)" id="role-wrong">🎭 Comercial agresivo enfocado en cerrar ventas rápidas.</div>
+                    <div class="component type-role" draggable="true" ondragstart="drag(event)" id="role-generic">🤖 Asistente genérico, extremadamente educado y servicial.</div>
+                    <div class="component type-role" draggable="true" ondragstart="drag(event)" id="role-correct">🛠️ Ingeniero paciente, técnico y muy resolutivo.</div>
+                </div>
+            </div>
+
+            <div class="component-group">
+                <h3>> Bancos de Memoria Disponibles (Arrastrar)</h3>
+                <div class="components-grid drop-slot-inv" id="inv-data" data-type="data" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <div class="component type-data" draggable="true" ondragstart="drag(event)" id="data-wrong">📁 Excel_Nominas_RRHH_2025.xlsx</div>
+                    <div class="component type-data" draggable="true" ondragstart="drag(event)" id="data-privacy">📜 Historial_Quejas_Todos_Clientes.csv</div>
+                    <div class="component type-data" draggable="true" ondragstart="drag(event)" id="data-correct">📚 Manual_Tecnico_Lectores_UHF_v3.pdf</div>
+                </div>
+            </div>
+
+            <div class="component-group">
+                <h3>> Módulos Firewall Disponibles (Arrastrar)</h3>
+                <div class="components-grid drop-slot-inv" id="inv-rule" data-type="rule" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <div class="component type-rule" draggable="true" ondragstart="drag(event)" id="rule-wrong">⚠️ Inventa especificaciones libremente si el documento base está incompleto.</div>
+                    <div class="component type-rule" draggable="true" ondragstart="drag(event)" id="rule-jargon">🔒 Responde utilizando jerga técnica extrema, aunque el cliente no entienda el vocabulario.</div>
+                    <div class="component type-rule" draggable="true" ondragstart="drag(event)" id="rule-correct">🛡️ Si no sabes la respuesta exacta, pide abrir un ticket al SAT. No inventes datos.</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="controls">
+        <button class="btn-start" onclick="arrancarAgente()">Ejecutar Compilación</button>
+        <div class="terminal" id="terminal"></div>
+    </div>
+
+    <script>
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+            ev.dataTransfer.setData("type", ev.target.classList.contains('type-role') ? 'role' : 
+                                            ev.target.classList.contains('type-data') ? 'data' : 'rule');
+        }
+
+        function dragEnter(ev) {
+            ev.preventDefault();
+            let slot = ev.target.closest('.drop-slot');
+            if(slot) slot.classList.add('drag-over');
+        }
+
+        function dragLeave(ev) {
+            let slot = ev.target.closest('.drop-slot');
+            if(slot) slot.classList.remove('drag-over');
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            let draggedId = ev.dataTransfer.getData("text");
+            let draggedType = ev.dataTransfer.getData("type");
+            
+            // Allow drop in both the motherboard slots and the inventory containers
+            let dropZone = ev.target.closest('.drop-slot') || ev.target.closest('.drop-slot-inv');
+            
+            if (dropZone) {
+                if(dropZone.classList.contains('drop-slot')) dropZone.classList.remove('drag-over');
+                
+                let zoneType = dropZone.getAttribute('data-type');
+                if (zoneType === draggedType) {
+                    if (dropZone.id.startsWith('slot-') && dropZone.children.length > 0) {
+                        let existingChild = dropZone.children[0];
+                        document.getElementById('inv-' + zoneType).appendChild(existingChild);
+                    }
+                    dropZone.appendChild(document.getElementById(draggedId));
+                }
+            }
+            document.getElementById('terminal').style.display = 'none';
+        }
+
+        function arrancarAgente() {
+            let slotRole = document.getElementById('slot-role').children[0];
+            let slotData = document.getElementById('slot-data').children[0];
+            let slotRule = document.getElementById('slot-rule').children[0];
+            let terminal = document.getElementById('terminal');
+            
+            terminal.style.display = 'block';
+            terminal.innerHTML = "> Inicializando compilador... <span class='blink'>_</span><br>";
+
+            if (!slotRole || !slotData || !slotRule) {
+                terminal.innerHTML += "<br><span class='text-error'>[ERROR] Hardware incompleto. Faltan componentes insertados en los sockets de la placa base.</span>";
+                return;
+            }
+
+            let idRole = slotRole.id;
+            let idData = slotData.id;
+            let idRule = slotRule.id;
+
+            // Retraso para simular carga
+            setTimeout(() => {
+                terminal.innerHTML = "> Analizando configuración de hardware...<br><br>";
+                
+                // Prioridad de errores: Primero los de Datos (los más graves), luego Reglas, luego Roles.
+                if (idData === 'data-wrong') {
+                    terminal.innerHTML += "<span class='text-error'>[ERROR FATAL] BRECHA DE SEGURIDAD DETECTADA. El Agente acaba de proporcionar el salario del CEO al cliente del soporte técnico. Desconectando servidores...</span>";
+                } else if (idData === 'data-privacy') {
+                    terminal.innerHTML += "<span class='text-error'>[ERROR FATAL] VIOLACIÓN DE PRIVACIDAD. El Agente ha enviado a un cliente el historial de quejas completo de su mayor competidor. Auditoría requerida de inmediato.</span>";
+                } else if (idRule === 'rule-wrong') {
+                    terminal.innerHTML += "<span class='text-error'>[CRÍTICO] ALUCINACIÓN DE HARDWARE. El Agente ha inventado que los lectores UHF son sumergibles a 100 metros. El cliente ha inundado su almacén.</span>";
+                } else if (idRule === 'rule-jargon') {
+                    terminal.innerHTML += "<span class='text-warning'>[ADVERTENCIA] FALLO DE COMUNICACIÓN. El Agente ha respondido con cadenas hexagonales y parámetros de calibración crudos. El cliente, frustrado, ha colgado el teléfono.</span>";
+                } else if (idRole === 'role-wrong') {
+                    terminal.innerHTML += "<span class='text-warning'>[ADVERTENCIA] TONO COMERCIAL AGRESIVO. El Agente está intentando venderle un lector nuevo a un cliente que solo necesita reiniciar su equipo actual. Queja recibida.</span>";
+                } else if (idRole === 'role-generic') {
+                    terminal.innerHTML += "<span class='text-warning'>[ADVERTENCIA] INCOMPETENCIA TÉCNICA. El Agente es muy educado y pide disculpas constantemente, pero no tiene ni idea de cómo resetear un chip RFID. Problema no resuelto.</span>";
+                } else if (idRole === 'role-correct' && idData === 'data-correct' && idRule === 'rule-correct') {
+                    terminal.innerHTML += "<span class='text-success'>[ÉXITO] Agente ensamblado correctamente. Conectando con los manuales técnicos... Listo para operar.</span>";
+                } else {
+                    terminal.innerHTML += "<span class='text-error'>[ERROR] Conflicto de hardware desconocido.</span>";
+                }
+            }, 600);
+        }
+    </script>
+</body>
+</html>
