@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Prompts - Método ROCEF</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f3f4f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .scania-blue { color: #001e4e; }
+        .scania-bg { background-color: #001e4e; }
+        .scania-red { background-color: #d6001c; }
+        .scania-red-text { color: #d6001c; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col p-4 md:p-8">
+
+    <header class="mb-8 text-center md:text-left border-b pb-4 border-gray-300">
+        <h1 class="text-3xl font-bold scania-blue">Reto Copilot: Análisis de Correo Crítico</h1>
+        <p class="text-gray-600 mt-2">Evalúa tu prompt utilizando el método ROCEF (Rol, Objetivo, Contexto, Expectativas, Formato).</p>
+    </header>
+
+    <main class="flex flex-col md:flex-row gap-6 flex-grow">
+        <!-- Panel Izquierdo: El Correo -->
+        <section class="md:w-1/2 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <div class="border-b pb-4 mb-4">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    Bandeja de Entrada
+                </h2>
+            </div>
+            
+            <div class="bg-gray-50 p-4 rounded border border-gray-200">
+                <div class="mb-2"><strong>De:</strong> logistica@proveedorejes.com</div>
+                <div class="mb-2"><strong>Para:</strong> produccion.ensamblaje@scania.com</div>
+                <div class="mb-4"><strong>Asunto:</strong> <span class="scania-red-text font-bold">URGENTE: Retraso en entrega - Ejes traseros R-Series</span></div>
+                <div class="mb-2 text-sm text-gray-500">Fecha: Hoy, 08:32 AM</div>
+                
+                <hr class="my-4 border-gray-300">
+                
+                <div class="text-gray-700 leading-relaxed space-y-3">
+                    <p>Estimado equipo de producción,</p>
+                    <p>Lamentamos informarles que el envío programado para la semana 42, consistente en 150 unidades de ejes traseros para la serie R, sufrirá un retraso estimado de 12 días laborables.</p>
+                    <p>Este contratiempo se debe a una escasez imprevista de materia prima (aleación de acero específico) en nuestra planta de fundición en Alemania. Actualmente estamos desviando recursos de otras líneas para minimizar el impacto, pero no podremos cargar los camiones antes del día 28.</p>
+                    <p>Sabemos que esto afecta directamente a la línea de ensamblaje en Södertälje. Nuestro responsable de cuenta, Klaus, les contactará a las 11:00 AM para evaluar planes de contingencia y opciones de envíos parciales.</p>
+                    <p>Quedamos a la espera de sus instrucciones sobre cómo priorizar el stock actual.</p>
+                    <p>Saludos cordiales,<br>Departamento de Logística</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Panel Derecho: Input y Evaluación -->
+        <section class="md:w-1/2 flex flex-col gap-4">
+            <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 flex-grow flex flex-col">
+                <h2 class="text-xl font-bold scania-blue mb-2">Escribe tu Prompt</h2>
+                <p class="text-sm text-gray-600 mb-4">¿Cómo le pedirías a Copilot que gestione este correo? Redacta tu instrucción en la caja inferior.</p>
+                
+                <textarea id="promptInput" class="w-full h-48 p-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-800 resize-none font-mono text-sm" placeholder="Ejemplo: Resume este correo..."></textarea>
+                
+                <button onclick="evaluatePrompt()" class="mt-4 scania-bg hover:bg-blue-900 text-white font-bold py-3 px-6 rounded transition duration-200 w-full md:w-auto self-end">
+                    Validar Prompt
+                </button>
+            </div>
+
+            <!-- Panel de Resultados -->
+            <div id="resultPanel" class="hidden bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                <div class="flex items-center justify-between mb-4 border-b pb-4">
+                    <h3 class="text-lg font-bold text-gray-800">Evaluación ROCEF</h3>
+                    <div class="text-3xl font-black px-4 py-2 rounded" id="scoreDisplay">--/10</div>
+                </div>
+                
+                <div id="feedbackContainer" class="space-y-4">
+                    <!-- Los resultados se inyectarán aquí -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function evaluatePrompt() {
+            const text = document.getElementById('promptInput').value.toLowerCase();
+            const resultPanel = document.getElementById('resultPanel');
+            const feedbackContainer = document.getElementById('feedbackContainer');
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            
+            if (text.trim() === '') {
+                alert('Por favor, escribe un prompt antes de validar.');
+                return;
+            }
+
+            // Diccionarios básicos para simular la evaluación (Heurística)
+            const criteria = {
+                rol: {
+                    keywords: ['actúa', 'eres', 'como', 'experto', 'responsable', 'analista', 'asistente', 'director', 'gestor', 'imagina'],
+                    found: false,
+                    name: 'Rol',
+                    success: 'Has definido un rol claro para la IA.',
+                    fail: 'Falta asignar un rol. Sugerencia: Empieza con "Actúa como un gestor de producción..." o "Eres un analista logístico...".'
+                },
+                objetivo: {
+                    keywords: ['resume', 'extrae', 'redacta', 'analiza', 'crea', 'responde', 'prepara', 'identifica', 'propón', 'calcula', 'enumera'],
+                    found: false,
+                    name: 'Objetivo',
+                    success: 'El objetivo de la tarea está presente.',
+                    fail: 'No queda clara la acción principal. Usa verbos de acción fuertes como "Resume", "Extrae", "Redacta un borrador".'
+                },
+                contexto: {
+                    keywords: ['correo', 'email', 'mensaje', 'retraso', 'ejes', 'proveedor', 'scania', 'producción', 'incidencia', 'situación'],
+                    found: false,
+                    name: 'Contexto',
+                    success: 'Has proporcionado contexto suficiente sobre la situación.',
+                    fail: 'Falta contexto. Debes indicarle a la IA a qué información te refieres (ej: "basándote en este correo del proveedor de ejes...").'
+                },
+                expectativas: {
+                    keywords: ['breve', 'conciso', 'profesional', 'urgente', 'tono', 'destaca', 'prioriza', 'preciso', 'sin omitir', 'amable', 'firme', 'solución'],
+                    found: false,
+                    name: 'Expectativas / Misión',
+                    success: 'Has marcado expectativas claras sobre cómo debe ser el resultado.',
+                    fail: 'Faltan restricciones o expectativas. ¿Qué tono quieres? ¿Qué debe omitir o destacar? Ej: "Usa un tono firme pero profesional" o "Destaca las fechas clave".'
+                },
+                formato: {
+                    keywords: ['tabla', 'viñetas', 'puntos', 'lista', 'párrafo', 'columnas', 'email', 'esquema', 'borrador', 'negrita'],
+                    found: false,
+                    name: 'Formato',
+                    success: 'Has definido un formato de salida específico.',
+                    fail: 'No has especificado cómo quieres recibir la información. Sugerencia: "Preséntalo en una tabla con tres columnas", "Usa una lista de viñetas".'
+                }
+            };
+
+            let score = 0;
+            feedbackContainer.innerHTML = '';
+
+            // Evaluar cada criterio
+            for (const key in criteria) {
+                const item = criteria[key];
+                // Comprobar si alguna palabra clave está en el texto
+                item.found = item.keywords.some(word => text.includes(word));
+                
+                if (item.found) {
+                    score += 2;
+                }
+
+                // Generar UI de feedback para este criterio
+                const statusColor = item.found ? 'text-green-600 bg-green-50 border-green-200' : 'text-red-600 bg-red-50 border-red-200';
+                const icon = item.found ? '✓' : '✗';
+                
+                const feedbackBlock = `
+                    <div class="p-3 border rounded ${statusColor}">
+                        <div class="font-bold flex items-center gap-2">
+                            <span>${icon}</span> ${item.name}
+                        </div>
+                        <div class="text-sm mt-1 text-gray-700">
+                            ${item.found ? item.success : item.fail}
+                        </div>
+                    </div>
+                `;
+                feedbackContainer.innerHTML += feedbackBlock;
+            }
+
+            // Actualizar nota global
+            scoreDisplay.innerText = `${score}/10`;
+            
+            // Colores de la nota
+            scoreDisplay.className = 'text-3xl font-black px-4 py-2 rounded text-white text-center';
+            if (score <= 4) scoreDisplay.classList.add('bg-red-500');
+            else if (score <= 8) scoreDisplay.classList.add('bg-yellow-500');
+            else scoreDisplay.classList.add('bg-green-500');
+
+            // Mostrar el panel
+            resultPanel.classList.remove('hidden');
+            
+            // Scroll hacia el resultado en móviles
+            resultPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>
