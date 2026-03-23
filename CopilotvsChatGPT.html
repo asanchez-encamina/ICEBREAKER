@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filtro de Datos AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0f172a; /* Slate 900 */
+            color: #f8fafc; /* Slate 50 */
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-5px); }
+            40% { transform: translateX(5px); }
+            60% { transform: translateX(-5px); }
+            80% { transform: translateX(5px); }
+        }
+
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        .card-enter {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-fade-out {
+            opacity: 0;
+            transform: scale(0.9);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-6 md:p-12 flex flex-col items-center">
+
+    <header class="max-w-4xl w-full mb-10 text-center">
+        <h1 class="text-3xl md:text-4xl font-bold mb-4 tracking-tight">El Filtro de Datos</h1>
+        <div class="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-lg">
+            <p class="text-lg font-medium text-amber-400 mb-2">Premisa: "Tengo un archivo confidencial de la empresa, ¿dónde puedo trabajar?"</p>
+            <p class="text-slate-300">Selecciona y elimina únicamente las tareas que exponen la información a modelos de lenguaje públicos. Analiza la infraestructura, no solo la herramienta.</p>
+        </div>
+        <div class="mt-6 flex justify-between items-center max-w-sm mx-auto bg-slate-800 py-2 px-4 rounded-full border border-slate-700">
+            <span class="text-sm text-slate-400">Amenazas neutralizadas:</span>
+            <span id="score-counter" class="font-mono font-bold text-emerald-400 text-xl">0 / 5</span>
+        </div>
+    </header>
+
+    <main id="game-board" class="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+        <!-- Las tarjetas se generan mediante JS -->
+    </main>
+
+    <div id="victory-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-emerald-500 p-8 rounded-2xl max-w-md w-full text-center shadow-2xl shadow-emerald-500/20">
+            <svg class="w-16 h-16 text-emerald-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <h2 class="text-2xl font-bold mb-2">Entorno Asegurado</h2>
+            <p class="text-slate-300 mb-6">Has filtrado correctamente las herramientas de uso público. Los datos confidenciales permanecen en entornos bajo contrato comercial o locales.</p>
+            <button onclick="location.reload()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 px-6 rounded-lg transition-colors">
+                Reiniciar Simulación
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const tasks = [
+            {
+                id: 1,
+                text: "Subir el PDF a la versión gratuita de ChatGPT para extraer los puntos clave.",
+                isUnsafe: true
+            },
+            {
+                id: 2,
+                text: "Usar Microsoft Copilot iniciando sesión con la cuenta corporativa (protección de datos comercial).",
+                isUnsafe: false,
+                feedback: "Los términos corporativos prohíben el entrenamiento con tus datos. Has bloqueado una herramienta segura y auditable."
+            },
+            {
+                id: 3,
+                text: "Pegar fragmentos de código propietario en Claude.ai (plan gratuito) para depurar errores.",
+                isUnsafe: true
+            },
+            {
+                id: 4,
+                text: "Procesar la base de datos usando un modelo Llama 3 alojado en un servidor local aislado (on-premise).",
+                isUnsafe: false,
+                feedback: "Un entorno local no tiene salida a internet. No hay envío de telemetría externo. La decisión de bloquearlo carece de fundamento técnico."
+            },
+            {
+                id: 5,
+                text: "Pedirle a un bot de Telegram integrado con una API pública que formatee la tabla de salarios.",
+                isUnsafe: true
+            },
+            {
+                id: 6,
+                text: "Traducir el contrato usando una web gratuita sin revisión de sus términos de confidencialidad.",
+                isUnsafe: true
+            },
+            {
+                id: 7,
+                text: "Utilizar el entorno de ChatGPT Enterprise de la empresa.",
+                isUnsafe: false,
+                feedback: "Los contratos Enterprise y Team de OpenAI excluyen el uso de datos del cliente por defecto. El riesgo es nulo bajo este esquema."
+            },
+            {
+                id: 8,
+                text: "Instalar una extensión de navegador gratuita de origen desconocido para resumir el texto en pantalla.",
+                isUnsafe: true
+            }
+        ];
+
+        // Aleatorizar el array
+        const shuffledTasks = tasks.sort(() => Math.random() - 0.5);
+        
+        const board = document.getElementById('game-board');
+        const scoreCounter = document.getElementById('score-counter');
+        const victoryModal = document.getElementById('victory-modal');
+        
+        let score = 0;
+        const totalUnsafe = tasks.filter(t => t.isUnsafe).length;
+
+        function renderCards() {
+            shuffledTasks.forEach(task => {
+                const card = document.createElement('div');
+                card.className = 'card-enter bg-slate-800 border border-slate-700 p-6 rounded-xl cursor-pointer hover:-translate-y-1 hover:border-slate-500 hover:shadow-lg flex flex-col justify-between';
+                card.dataset.id = task.id;
+                
+                card.innerHTML = `
+                    <p class="text-slate-200 text-sm leading-relaxed">${task.text}</p>
+                    <div class="mt-4 feedback-container hidden">
+                        <p class="text-xs text-rose-400 font-medium"></p>
+                    </div>
+                    <div class="absolute top-3 right-3 success-icon hidden">
+                        <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => handleCardClick(card, task));
+                board.appendChild(card);
+            });
+        }
+
+        function handleCardClick(cardElement, taskData) {
+            // Prevenir clics múltiples si la tarjeta ya fue resuelta
+            if (cardElement.classList.contains('pointer-events-none')) return;
+
+            if (taskData.isUnsafe) {
+                // Acierto
+                cardElement.classList.remove('border-slate-700', 'hover:border-slate-500');
+                cardElement.classList.add('border-emerald-500', 'bg-emerald-900/20', 'pointer-events-none');
+                cardElement.querySelector('.success-icon').classList.remove('hidden');
+                
+                score++;
+                updateScore();
+
+                // Animación de borrado tras una breve pausa
+                setTimeout(() => {
+                    cardElement.classList.add('card-fade-out');
+                    setTimeout(() => {
+                        cardElement.style.display = 'none';
+                        checkVictory();
+                    }, 300); // Espera a que termine la transición CSS
+                }, 600);
+
+            } else {
+                // Fallo
+                cardElement.classList.remove('animate-shake');
+                void cardElement.offsetWidth; // Forzar reflow para reiniciar la animación
+                cardElement.classList.add('animate-shake', 'border-rose-500');
+                
+                const feedbackContainer = cardElement.querySelector('.feedback-container');
+                const feedbackText = cardElement.querySelector('.feedback-container p');
+                
+                feedbackText.textContent = taskData.feedback;
+                feedbackContainer.classList.remove('hidden');
+
+                setTimeout(() => {
+                    cardElement.classList.remove('border-rose-500');
+                    cardElement.classList.add('border-slate-700');
+                }, 4000);
+            }
+        }
+
+        function updateScore() {
+            scoreCounter.textContent = `${score} / ${totalUnsafe}`;
+        }
+
+        function checkVictory() {
+            if (score === totalUnsafe) {
+                setTimeout(() => {
+                    victoryModal.classList.remove('hidden');
+                }, 300);
+            }
+        }
+
+        // Inicializar juego
+        renderCards();
+    </script>
+</body>
+</html>
