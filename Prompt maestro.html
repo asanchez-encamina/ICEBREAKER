@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Master - Copilot Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-blur: blur(12px);
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+            min-height: 100vh;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .drop-zone {
+            min-height: 80px;
+            transition: all 0.3s ease;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+        }
+
+        .drop-zone.dragover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #6366f1;
+            transform: scale(1.02);
+        }
+
+        .draggable-item {
+            cursor: grab;
+            transition: transform 0.2s, opacity 0.2s;
+            user-select: none;
+        }
+
+        .draggable-item:active {
+            cursor: grabbing;
+        }
+
+        .draggable-item.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .btn-execute {
+            background: linear-gradient(90deg, #4f46e5, #9333ea);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-execute:disabled {
+            background: #334155;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #fff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold mb-2 tracking-tight">Prompt Master</h1>
+            <p class="text-blue-200">Construye la instrucción perfecta para Copilot arrastrando los bloques</p>
+        </header>
+
+        <!-- Contenedores de Destino -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+            <div class="glass-card p-4 flex flex-col">
+                <span class="text-xs font-bold uppercase text-blue-300 mb-2">1. Objetivo</span>
+                <div id="target-objetivo" class="drop-zone rounded-lg p-2 flex items-center justify-center text-center text-sm text-slate-400" data-type="objetivo">
+                    Arrastra aquí el fin
+                </div>
+            </div>
+            <div class="glass-card p-4 flex flex-col">
+                <span class="text-xs font-bold uppercase text-purple-300 mb-2">2. Contexto</span>
+                <div id="target-contexto" class="drop-zone rounded-lg p-2 flex items-center justify-center text-center text-sm text-slate-400" data-type="contexto">
+                    Arrastra el escenario
+                </div>
+            </div>
+            <div class="glass-card p-4 flex flex-col">
+                <span class="text-xs font-bold uppercase text-emerald-300 mb-2">3. Fuente</span>
+                <div id="target-fuente" class="drop-zone rounded-lg p-2 flex items-center justify-center text-center text-sm text-slate-400" data-type="fuente">
+                    Arrastra los datos
+                </div>
+            </div>
+            <div class="glass-card p-4 flex flex-col">
+                <span class="text-xs font-bold uppercase text-amber-300 mb-2">4. Formato</span>
+                <div id="target-formato" class="drop-zone rounded-lg p-2 flex items-center justify-center text-center text-sm text-slate-400" data-type="formato">
+                    Arrastra la salida
+                </div>
+            </div>
+        </div>
+
+        <!-- Bloques Disponibles -->
+        <div class="glass-card p-6 mb-8">
+            <h3 class="text-lg font-semibold mb-4 border-b border-white/10 pb-2">Bloques de Construcción</h3>
+            <div id="blocks-container" class="flex flex-wrap gap-3">
+                <!-- Los bloques se generan por JS -->
+            </div>
+        </div>
+
+        <!-- Acción -->
+        <div class="flex flex-col items-center">
+            <button id="btn-execute" disabled class="btn-execute px-8 py-3 rounded-full font-bold text-lg shadow-lg hover:scale-105 active:scale-95 transition-all">
+                Ejecutar Prompt
+            </button>
+            <div id="status-area" class="mt-6 w-full max-w-2xl hidden">
+                <div id="loading" class="flex flex-col items-center gap-3">
+                    <div class="loader"></div>
+                    <p class="text-blue-200 animate-pulse">Copilot está procesando tu instrucción...</p>
+                </div>
+                <div id="result" class="glass-card p-6 text-center hidden animate-fade-in border-2">
+                    <h2 id="result-title" class="text-2xl font-bold mb-2"></h2>
+                    <p id="result-desc" class="text-slate-200"></p>
+                    <button onclick="location.reload()" class="mt-4 text-xs underline opacity-50 hover:opacity-100">Reiniciar desafío</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const blocksData = [
+            { id: 'b1', type: 'objetivo', text: 'Redacta un correo ejecutivo', correct: true },
+            { id: 'b2', type: 'objetivo', text: 'Haz algo con este texto', correct: false },
+            { id: 'b3', type: 'contexto', text: 'Para un cliente potencial tras una reunión de ventas', correct: true },
+            { id: 'b4', type: 'contexto', text: 'Sin dar muchos detalles de por qué escribo', correct: false },
+            { id: 'b5', type: 'fuente', text: 'Usa los puntos clave del archivo Adjunto_Notas.docx', correct: true },
+            { id: 'b6', type: 'fuente', text: 'Invéntate los beneficios del producto', correct: false },
+            { id: 'b7', type: 'formato', text: 'Usa un tono formal, máximo 3 párrafos y bullets', correct: true },
+            { id: 'b8', type: 'formato', text: 'Escríbelo como sea, rápido', correct: false }
+        ];
+
+        const container = document.getElementById('blocks-container');
+        const dropZones = document.querySelectorAll('.drop-zone');
+        const executeBtn = document.getElementById('btn-execute');
+        const statusArea = document.getElementById('status-area');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+
+        // Inicializar bloques
+        function initBlocks() {
+            // Mezclar bloques
+            const shuffled = [...blocksData].sort(() => Math.random() - 0.5);
+            
+            shuffled.forEach(data => {
+                const div = document.createElement('div');
+                div.id = data.id;
+                div.className = 'draggable-item glass-card px-4 py-2 text-sm bg-white/5 hover:bg-white/20 border-white/10';
+                div.draggable = true;
+                div.innerText = data.text;
+                div.dataset.type = data.type;
+                
+                div.addEventListener('dragstart', handleDragStart);
+                div.addEventListener('dragend', handleDragEnd);
+                
+                container.appendChild(div);
+            });
+        }
+
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.id);
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', e => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('dragover');
+            });
+
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                const id = e.dataTransfer.getData('text/plain');
+                const draggable = document.getElementById(id);
+                
+                // Si ya hay un elemento, devolverlo al pool
+                if (zone.children.length > 0 && zone.querySelector('.draggable-item')) {
+                    const oldItem = zone.querySelector('.draggable-item');
+                    container.appendChild(oldItem);
+                }
+
+                zone.innerHTML = ''; // Limpiar texto guía
+                zone.appendChild(draggable);
+                checkCompletion();
+            });
+        });
+
+        function checkCompletion() {
+            const fullZones = Array.from(dropZones).filter(z => z.querySelector('.draggable-item'));
+            executeBtn.disabled = fullZones.length < 4;
+        }
+
+        executeBtn.addEventListener('click', () => {
+            executeBtn.classList.add('hidden');
+            statusArea.classList.remove('hidden');
+            
+            setTimeout(() => {
+                loading.classList.add('hidden');
+                evaluatePrompt();
+            }, 2000);
+        });
+
+        function evaluatePrompt() {
+            let score = 0;
+            const zones = Array.from(dropZones);
+            
+            zones.forEach(zone => {
+                const item = zone.querySelector('.draggable-item');
+                const itemData = blocksData.find(b => b.id === item.id);
+                
+                // Puntos por tipo correcto en zona correcta y por ser contenido "de experto"
+                if (itemData.type === zone.dataset.type && itemData.correct) {
+                    score += 25;
+                }
+            });
+
+            result.classList.remove('hidden');
+            const title = document.getElementById('result-title');
+            const desc = document.getElementById('result-desc');
+
+            if (score === 100) {
+                result.classList.add('border-emerald-500');
+                title.innerText = "🚀 Prompt de Experto";
+                title.className = "text-2xl font-bold mb-2 text-emerald-400";
+                desc.innerText = "¡Increíble! Has estructurado una instrucción precisa con objetivo, contexto, fuente y formato. Copilot te dará una respuesta impecable.";
+            } else if (score >= 50) {
+                result.classList.add('border-amber-500');
+                title.innerText = "⚠️ Prompt Funcional";
+                title.className = "text-2xl font-bold mb-2 text-amber-400";
+                desc.innerText = "Tu prompt funcionará, pero es algo vago o le falta rigor en las fuentes/formato. Los resultados podrían requerir mucha edición manual.";
+            } else {
+                result.classList.add('border-red-500');
+                title.innerText = "❌ Prompt Incompleto";
+                title.className = "text-2xl font-bold mb-2 text-red-400";
+                desc.innerText = "Las instrucciones son demasiado genéricas o incorrectas. Copilot probablemente alucinará o te dará una respuesta genérica inútil.";
+            }
+        }
+
+        window.onload = initBlocks;
+    </script>
+</body>
+</html>
