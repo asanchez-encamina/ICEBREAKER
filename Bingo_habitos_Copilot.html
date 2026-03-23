@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bingo de Hábitos: M365 Copilot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .bingo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .bingo-card {
+            aspect-ratio: 1 / 1;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            perspective: 1000px;
+        }
+
+        .bingo-card.completed {
+            background-color: #10b981;
+            color: white;
+            transform: scale(0.95);
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .bingo-card:not(.completed):hover {
+            transform: translateY(-4px);
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+
+        .modal-overlay {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Encabezado -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-slate-900 mb-2">Bingo de Hábitos Copilot</h1>
+            <p class="text-slate-600">Completa tareas reales con IA para marcar tus casillas. ¡Consigue una línea o el cartón lleno!</p>
+            
+            <div class="mt-6 flex justify-center gap-6 text-sm font-bold uppercase tracking-wider">
+                <div class="flex flex-col">
+                    <span class="text-slate-400">Progreso</span>
+                    <span id="progress-text" class="text-2xl text-blue-600">0 / 16</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-slate-400">Líneas</span>
+                    <span id="lines-text" class="text-2xl text-emerald-600">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Rejilla del Bingo -->
+        <div id="bingo-container" class="bingo-grid bg-white p-6 rounded-3xl shadow-xl border border-slate-200">
+            <!-- Casillas generadas por JS -->
+        </div>
+
+        <div class="mt-8 p-4 bg-blue-50 border border-blue-100 rounded-2xl text-sm text-blue-800">
+            <strong>Instrucciones:</strong> Haz clic en una casilla cuando hayas realizado esa tarea en tu día a día usando Copilot. Se te pedirá que pegues el prompt que utilizaste para validar el hábito.
+        </div>
+    </div>
+
+    <!-- Modal para validar tarea -->
+    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="modal-overlay absolute inset-0"></div>
+        <div class="bg-white rounded-3xl shadow-2xl z-10 max-w-lg w-full p-8 relative">
+            <h2 id="modal-title" class="text-2xl font-bold mb-2">Validar Hábito</h2>
+            <p id="modal-desc" class="text-slate-600 mb-6 text-sm"></p>
+            
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Prompt utilizado (Requerido)</label>
+            <textarea id="prompt-input" rows="4" class="w-full border border-slate-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none mb-6" placeholder="Ej: Copilot, resume este hilo de correos destacando los costes mencionados..."></textarea>
+            
+            <div class="flex gap-3">
+                <button onclick="closeModal()" class="flex-1 px-4 py-3 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-colors">Cancelar</button>
+                <button onclick="confirmTask()" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors">Marcar Casilla</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tasks = [
+            { id: 0, title: "Resumen de Reunión", desc: "Usa Copilot en Teams para resumir una reunión a la que asististe o llegaste tarde." },
+            { id: 1, title: "Borrador Difícil", desc: "Genera el borrador de un correo complejo en Outlook partiendo de notas breves." },
+            { id: 2, title: "Análisis de Excel", desc: "Pide a Copilot que identifique tendencias o cree una columna de fórmula en una tabla." },
+            { id: 3, title: "PPT desde Word", desc: "Crea una presentación de PowerPoint automática basada en un documento de Word existente." },
+            { id: 4, title: "Limpieza de Notas", desc: "Transforma notas desordenadas de OneNote en una lista de tareas estructurada." },
+            { id: 5, title: "Consulta de Datos", desc: "Usa M365 Chat para encontrar un archivo o chat del que no recuerdas la ubicación." },
+            { id: 6, title: "Cambio de Tono", desc: "Usa Copilot en Word para reescribir un párrafo con un tono más profesional o directo." },
+            { id: 7, title: "Resumen de Hilo", desc: "Resume un hilo largo de correos electrónicos en Outlook para ponerte al día." },
+            { id: 8, title: "Ideación Libre", desc: "Haz una sesión de lluvia de ideas con Copilot sobre un problema de negocio." },
+            { id: 9, title: "Preparación de Agenda", desc: "Pide a Copilot que genere la agenda de una reunión basada en correos previos." },
+            { id: 10, title: "Explicación Técnica", desc: "Pide a Copilot que te explique un concepto complejo de un documento técnico." },
+            { id: 11, title: "Traducción Contextual", desc: "Traduce y adapta culturalmente un texto de marketing usando Copilot." },
+            { id: 12, title: "Extracción de Acción", desc: "Extrae todos los 'Action Items' de una transcripción de Teams." },
+            { id: 13, title: "Comparativa", desc: "Pide a Copilot que compare dos documentos y liste las diferencias clave." },
+            { id: 14, title: "Formato de Tablas", desc: "Pide a Copilot en Word que convierta una lista de texto en una tabla formateada." },
+            { id: 15, title: "Pregunta Abierta", desc: "¿Qué planea el equipo para el Proyecto X? (Respuesta vía M365 Chat)." }
+        ];
+
+        let userState = {
+            completedTasks: [],
+            prompts: {}
+        };
+
+        let activeTaskId = null;
+
+        function initBingo() {
+            const container = document.getElementById('bingo-container');
+            container.innerHTML = '';
+            
+            tasks.forEach(task => {
+                const card = document.createElement('div');
+                card.id = `task-${task.id}`;
+                card.className = 'bingo-card border-2 border-slate-100 bg-white rounded-2xl p-3 flex flex-col items-center justify-center text-center shadow-sm';
+                card.innerHTML = `<span class="text-xs font-bold leading-tight">${task.title}</span>`;
+                card.onclick = () => openModal(task.id);
+                container.appendChild(card);
+            });
+            updateStats();
+        }
+
+        function openModal(id) {
+            if (userState.completedTasks.includes(id)) return;
+            activeTaskId = id;
+            const task = tasks.find(t => t.id === id);
+            document.getElementById('modal-title').textContent = task.title;
+            document.getElementById('modal-desc').textContent = task.desc;
+            document.getElementById('prompt-input').value = '';
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+            activeTaskId = null;
+        }
+
+        function confirmTask() {
+            const prompt = document.getElementById('prompt-input').value.trim();
+            if (prompt.length < 10) {
+                alert("Por favor, introduce el prompt que usaste para validar la tarea.");
+                return;
+            }
+
+            userState.completedTasks.push(activeTaskId);
+            userState.prompts[activeTaskId] = prompt;
+            
+            const card = document.getElementById(`task-${activeTaskId}`);
+            card.classList.add('completed');
+            card.innerHTML = `
+                <svg class="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                <span class="text-[10px] font-bold uppercase">Completado</span>
+            `;
+            
+            closeModal();
+            updateStats();
+            checkLines();
+        }
+
+        function updateStats() {
+            document.getElementById('progress-text').textContent = `${userState.completedTasks.length} / ${tasks.length}`;
+        }
+
+        function checkLines() {
+            const size = 4; // Grid 4x4
+            let lines = 0;
+
+            // Filas
+            for (let i = 0; i < size; i++) {
+                let row = true;
+                for (let j = 0; j < size; j++) {
+                    if (!userState.completedTasks.includes(i * size + j)) row = false;
+                }
+                if (row) lines++;
+            }
+
+            // Columnas
+            for (let i = 0; i < size; i++) {
+                let col = true;
+                for (let j = 0; j < size; j++) {
+                    if (!userState.completedTasks.includes(j * size + i)) col = false;
+                }
+                if (col) lines++;
+            }
+
+            // Diagonales
+            let d1 = true, d2 = true;
+            for (let i = 0; i < size; i++) {
+                if (!userState.completedTasks.includes(i * size + i)) d1 = false;
+                if (!userState.completedTasks.includes(i * size + (size - 1 - i))) d2 = false;
+            }
+            if (d1) lines++;
+            if (d2) lines++;
+
+            document.getElementById('lines-text').textContent = lines;
+        }
+
+        initBingo();
+    </script>
+</body>
+</html>
