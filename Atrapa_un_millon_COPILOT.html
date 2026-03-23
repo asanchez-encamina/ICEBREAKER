@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atrapa un Millón: Edición M365 Copilot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        /* Animaciones para las transiciones de ronda */
+        .fade-enter {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .fade-enter-active {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .fade-exit {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .fade-exit-active {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.4s ease-in, transform 0.4s ease-in;
+        }
+
+        /* Animación de la trampilla cayendo */
+        @keyframes dropTrapdoor {
+            0% { transform: translateY(0) rotateX(0deg); opacity: 1; }
+            20% { transform: translateY(10px) rotateX(-10deg); opacity: 1; }
+            100% { transform: translateY(300px) rotateX(-60deg); opacity: 0; }
+        }
+
+        .trapdoor-drop {
+            animation: dropTrapdoor 1.2s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+            pointer-events: none;
+        }
+
+        /* Efectos visuales */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .correct-pulse {
+            animation: pulse-green 2s infinite;
+            border-color: #22c55e !important;
+        }
+
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        /* Estilo para el dinero en pantalla */
+        .money-font {
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.05em;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Toast de notificaciones -->
+    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 transition-opacity duration-300 z-50 pointer-events-none font-semibold">
+        Mensaje
+    </div>
+
+    <!-- PANTALLA DE INICIO -->
+    <main id="screen-intro" class="flex-1 flex flex-col items-center justify-center p-4 glass-panel m-4 rounded-3xl fade-enter-active">
+        <h1 class="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600 mb-6 text-center">
+            Atrapa un Millón
+        </h1>
+        <h2 class="text-2xl md:text-3xl font-semibold text-slate-300 mb-8 tracking-wide">Edición M365 Copilot</h2>
+        
+        <div class="max-w-2xl text-slate-400 mb-12 space-y-4 text-lg">
+            <p>Comienzas con <strong class="text-green-400 text-xl">1.000.000 🪙</strong> en tokens virtuales.</p>
+            <p>Aparecerá 1 pregunta sobre las funcionalidades de M365 Copilot por ronda (4 rondas en total).</p>
+            <ul class="list-disc list-inside space-y-2 ml-4">
+                <li>Debes apostar <strong>todo tu dinero</strong> en cada ronda.</li>
+                <li>Puedes repartir el dinero entre varias opciones.</li>
+                <li><strong>Obligatorio:</strong> No puedes apostar a todas las opciones. Al menos una trampilla debe quedar vacía.</li>
+                <li>El dinero en respuestas incorrectas caerá por la trampilla y se perderá.</li>
+            </ul>
+        </div>
+
+        <button onclick="startGame()" class="bg-gradient-to-r from-blue-600 to-purple-700 hover:from-blue-500 hover:to-purple-600 text-white font-bold py-4 px-12 rounded-full text-xl transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(124,58,237,0.5)]">
+            Comenzar Juego
+        </button>
+    </main>
+
+    <!-- PANTALLA DE JUEGO -->
+    <main id="screen-game" class="hidden flex-1 flex-col p-4 md:p-8 w-full max-w-7xl mx-auto">
+        
+        <!-- Cabecera de Estado -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 glass-panel p-4 rounded-2xl gap-4">
+            <div class="text-center md:text-left">
+                <p class="text-slate-400 text-sm uppercase tracking-wider font-semibold">Ronda Actual</p>
+                <h2 class="text-3xl font-bold text-white"><span id="ui-round">1</span> / 4</h2>
+            </div>
+            
+            <div class="text-center">
+                <p class="text-slate-400 text-sm uppercase tracking-wider font-semibold">Tokens para Apostar</p>
+                <div class="text-4xl md:text-5xl font-extrabold text-green-400 money-font" id="ui-unplaced-money">
+                    1.000.000
+                </div>
+            </div>
+
+            <div class="text-center md:text-right">
+                <p class="text-slate-400 text-sm uppercase tracking-wider font-semibold">Tokens Salvados</p>
+                <div class="text-2xl font-bold text-blue-300 money-font" id="ui-total-money">
+                    1.000.000
+                </div>
+            </div>
+        </header>
+
+        <!-- Contenedor de Pregunta -->
+        <section class="glass-panel p-6 md:p-10 rounded-3xl mb-8 border-t-4 border-blue-500">
+            <h3 id="ui-question" class="text-2xl md:text-4xl font-semibold leading-tight text-center">
+                Cargando pregunta...
+            </h3>
+        </section>
+
+        <!-- Opciones y Apuestas (Trampillas) -->
+        <section id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 flex-1">
+            <!-- Generado dinámicamente -->
+        </section>
+
+        <!-- Controles de confirmación -->
+        <div class="flex justify-center pb-8">
+            <button id="btn-lock" onclick="lockBets()" class="bg-slate-700 text-slate-400 cursor-not-allowed font-bold py-4 px-12 rounded-full text-xl transition-all w-full md:w-auto">
+                Reparte todo el dinero para continuar
+            </button>
+        </div>
+    </main>
+
+    <!-- PANTALLA DE RESULTADO (Final / Game Over) -->
+    <main id="screen-result" class="hidden flex-1 flex-col items-center justify-center p-4 glass-panel m-4 rounded-3xl">
+        <h1 id="result-title" class="text-6xl font-extrabold mb-4 text-center">Resultado</h1>
+        <p id="result-message" class="text-2xl text-slate-300 mb-8 text-center max-w-2xl">Mensaje</p>
+        <div id="result-money-container" class="mb-12 text-center">
+            <p class="text-slate-400 uppercase tracking-wider mb-2">Tokens Finales</p>
+            <p id="result-money" class="text-6xl md:text-8xl font-black text-green-400 money-font">0</p>
+        </div>
+        <button onclick="resetGame()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-12 rounded-full text-xl transition-all shadow-lg">
+            Jugar de Nuevo
+        </button>
+    </main>
+
+    <script>
+        // --- BASE DE DATOS DE PREGUNTAS ---
+        const gameQuestions = [
+            {
+                round: 1,
+                text: "¿Qué comando o acción principal se utiliza para invocar a Copilot directamente en el lienzo de aplicaciones como Word o Loop?",
+                options: [
+                    "Presionar la combinación de teclas Alt + C",
+                    "Escribir '/' o hacer clic en el ícono de Copilot",
+                    "Decir 'Hola Cortana, abre Copilot'",
+                    "Acceder únicamente desde el menú Archivo > IA"
+                ],
+                correctIndex: 1
+            },
+            {
+                round: 2,
+                text: "En Microsoft Teams, ¿qué requisito indispensable debe cumplirse para que Copilot pueda generar un resumen detallado y preciso tras finalizar una reunión?",
+                options: [
+                    "Que la reunión haya sido grabada o transcrita",
+                    "Que haya un mínimo de 5 participantes activos",
+                    "Que todos los asistentes tengan asignada una licencia E5",
+                    "Que la reunión tenga una duración superior a 30 minutos"
+                ],
+                correctIndex: 0
+            },
+            {
+                round: 3,
+                text: "¿Cómo garantiza la arquitectura de Microsoft 365 Copilot la seguridad y privacidad de los datos organizacionales cuando generas un prompt?",
+                options: [
+                    "Entrena los modelos públicos de OpenAI con tus datos de forma anónima",
+                    "Almacena temporalmente los prompts en un servidor aislado de la comunidad",
+                    "Hereda automáticamente las políticas de seguridad y cumplimiento de tu usuario en M365",
+                    "Requiere establecer una VPN exclusiva para cifrar cada consulta enviada al LLM"
+                ],
+                correctIndex: 2
+            },
+            {
+                round: 4,
+                text: "¿Qué tecnología estructural subyacente utiliza Microsoft para mapear y conectar el LLM con los datos de tu inquilino (tenant) de forma contextualizada y eficiente?",
+                options: [
+                    "Azure SQL Database for AI",
+                    "Semantic Index for Copilot",
+                    "SharePoint Syntex Knowledge Graph",
+                    "Microsoft Dataverse Direct Query"
+                ],
+                correctIndex: 1
+            }
+        ];
+
+        // --- ESTADO DEL JUEGO ---
+        let state = {
+            currentRound: 0,
+            totalMoney: 1000000,
+            unplacedMoney: 1000000,
+            bets: [0, 0, 0, 0],
+            isResolving: false
+        };
+
+        // --- CONSTANTES ---
+        const INCREMENTS = {
+            small: 25000,
+            large: 100000
+        };
+
+        // --- FUNCIONES DE NAVEGACIÓN Y UI ---
+
+        function showToast(message, type = 'error') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl transition-opacity duration-300 z-50 pointer-events-none font-semibold ${type === 'error' ? 'bg-red-600 text-white' : 'bg-green-600 text-white'}`;
+            toast.style.opacity = '1';
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 3000);
+        }
+
+        function formatMoney(amount) {
+            return amount.toLocaleString('es-ES');
+        }
+
+        function switchScreen(hideId, showId) {
+            const hideEl = document.getElementById(hideId);
+            const showEl = document.getElementById(showId);
+            
+            hideEl.classList.remove('fade-enter-active');
+            hideEl.classList.add('fade-exit-active');
+            
+            setTimeout(() => {
+                hideEl.classList.add('hidden');
+                hideEl.classList.remove('fade-exit-active');
+                
+                showEl.classList.remove('hidden');
+                // Forzar reflujo
+                void showEl.offsetWidth; 
+                showEl.classList.add('fade-enter-active');
+            }, 400); // Coincide con CSS transition
+        }
+
+        // --- LÓGICA PRINCIPAL ---
+
+        function startGame() {
+            state.currentRound = 0;
+            state.totalMoney = 1000000;
+            switchScreen('screen-intro', 'screen-game');
+            setupRound();
+        }
+
+        function setupRound() {
+            state.unplacedMoney = state.totalMoney;
+            state.bets = [0, 0, 0, 0];
+            state.isResolving = false;
+
+            updateGameHeader();
+            renderQuestion();
+            updateLockBtn();
+        }
+
+        function updateGameHeader() {
+            document.getElementById('ui-round').textContent = state.currentRound + 1;
+            document.getElementById('ui-total-money').textContent = formatMoney(state.totalMoney);
+            updateUnplacedMoneyUI();
+        }
+
+        function updateUnplacedMoneyUI() {
+            const unplacedEl = document.getElementById('ui-unplaced-money');
+            unplacedEl.textContent = formatMoney(state.unplacedMoney);
+            
+            if (state.unplacedMoney === 0) {
+                unplacedEl.classList.remove('text-green-400');
+                unplacedEl.classList.add('text-slate-500');
+            } else {
+                unplacedEl.classList.add('text-green-400');
+                unplacedEl.classList.remove('text-slate-500');
+            }
+        }
+
+        function renderQuestion() {
+            const questionData = gameQuestions[state.currentRound];
+            document.getElementById('ui-question').textContent = questionData.text;
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            questionData.options.forEach((optText, index) => {
+                const optHtml = `
+                    <div id="trapdoor-${index}" class="glass-panel rounded-2xl flex flex-col overflow-hidden border border-slate-700 transition-all duration-300 relative">
+                        <div class="p-6 flex-1 flex items-center justify-center text-center bg-slate-800/50">
+                            <span class="text-lg font-medium text-slate-200">${optText}</span>
+                        </div>
+                        
+                        <div class="bg-slate-900 p-4 border-t border-slate-700 flex flex-col items-center">
+                            <div class="text-3xl font-bold text-blue-400 mb-4 money-font" id="bet-display-${index}">
+                                0
+                            </div>
+                            
+                            <div class="flex flex-wrap justify-center gap-2 w-full">
+                                <button onclick="modifyBet(${index}, ${INCREMENTS.small})" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded font-semibold text-sm transition-colors flex-1" ${state.isResolving ? 'disabled' : ''}>+25k</button>
+                                <button onclick="modifyBet(${index}, ${INCREMENTS.large})" class="bg-purple-600 hover:bg-purple-500 text-white px-3 py-2 rounded font-semibold text-sm transition-colors flex-1" ${state.isResolving ? 'disabled' : ''}>+100k</button>
+                            </div>
+                            <div class="flex flex-wrap justify-center gap-2 w-full mt-2">
+                                <button onclick="modifyBet(${index}, -${INCREMENTS.large})" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded font-semibold text-sm transition-colors flex-1" ${state.isResolving ? 'disabled' : ''}>-100k</button>
+                                <button onclick="clearBet(${index})" class="bg-red-900/50 hover:bg-red-800/50 text-red-200 px-3 py-2 rounded font-semibold text-sm transition-colors flex-1" ${state.isResolving ? 'disabled' : ''}>Vaciar</button>
+                            </div>
+                            <div class="w-full mt-2">
+                                <button onclick="allIn(${index})" class="w-full bg-green-700 hover:bg-green-600 text-white px-3 py-2 rounded font-bold text-sm transition-colors" ${state.isResolving ? 'disabled' : ''}>Todo el resto aquí</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', optHtml);
+            });
+        }
+
+        // --- SISTEMA DE APUESTAS ---
+
+        function modifyBet(index, amount) {
+            if (state.isResolving) return;
+
+            let currentBet = state.bets[index];
+            let newBet = currentBet + amount;
+
+            // Limitar por abajo a 0
+            if (newBet < 0) {
+                amount = -currentBet; // Solo resta lo que hay
+                newBet = 0;
+            }
+
+            // Limitar por arriba al dinero disponible
+            if (amount > state.unplacedMoney) {
+                amount = state.unplacedMoney;
+                newBet = currentBet + amount;
+            }
+
+            if (amount === 0) return;
+
+            // Regla: No se puede apostar a TODAS las opciones. Al menos una debe ser 0.
+            if (amount > 0) {
+                let activeBetsIfAdded = state.bets.filter((b, i) => i === index ? (b + amount > 0) : b > 0).length;
+                if (activeBetsIfAdded === 4) {
+                    showToast("Regla: Debes dejar al menos una opción vacía (sin apostar).");
+                    return;
+                }
+            }
+
+            state.bets[index] += amount;
+            state.unplacedMoney -= amount;
+
+            updateBetUI(index);
+        }
+
+        function clearBet(index) {
+            if (state.isResolving || state.bets[index] === 0) return;
+            modifyBet(index, -state.bets[index]);
+        }
+
+        function allIn(index) {
+            if (state.isResolving || state.unplacedMoney === 0) return;
+            modifyBet(index, state.unplacedMoney);
+        }
+
+        function updateBetUI(index) {
+            document.getElementById(`bet-display-${index}`).textContent = formatMoney(state.bets[index]);
+            updateUnplacedMoneyUI();
+            updateLockBtn();
+        }
+
+        function updateLockBtn() {
+            const btn = document.getElementById('btn-lock');
+            if (state.unplacedMoney === 0 && !state.isResolving) {
+                btn.classList.remove('bg-slate-700', 'text-slate-400', 'cursor-not-allowed');
+                btn.classList.add('bg-gradient-to-r', 'from-green-500', 'to-emerald-600', 'text-white', 'shadow-[0_0_15px_rgba(16,185,129,0.5)]', 'hover:scale-105');
+                btn.textContent = "¡Bloquear Apuestas y Resolver!";
+                btn.disabled = false;
+            } else {
+                btn.classList.add('bg-slate-700', 'text-slate-400', 'cursor-not-allowed');
+                btn.classList.remove('bg-gradient-to-r', 'from-green-500', 'to-emerald-600', 'text-white', 'shadow-[0_0_15px_rgba(16,185,129,0.5)]', 'hover:scale-105');
+                
+                if (state.isResolving) {
+                    btn.textContent = "Resolviendo...";
+                } else {
+                    btn.textContent = "Reparte todo el dinero para continuar";
+                }
+                btn.disabled = true;
+            }
+        }
+
+        // --- RESOLUCIÓN Y ANIMACIONES ---
+
+        async function lockBets() {
+            if (state.unplacedMoney !== 0 || state.isResolving) return;
+            
+            state.isResolving = true;
+            updateLockBtn();
+            
+            // Deshabilitar botones visualmente
+            const buttons = document.querySelectorAll('#options-container button');
+            buttons.forEach(b => b.classList.add('opacity-50', 'cursor-not-allowed'));
+
+            const questionData = gameQuestions[state.currentRound];
+            const correctIndex = questionData.correctIndex;
+            
+            // Identificar opciones incorrectas
+            let incorrectIndices = [];
+            for (let i = 0; i < 4; i++) {
+                if (i !== correctIndex) incorrectIndices.push(i);
+            }
+
+            // Orden aleatorio para mayor tensión al caer
+            incorrectIndices.sort(() => Math.random() - 0.5);
+
+            // Animar caída de trampillas incorrectas
+            for (let i = 0; i < incorrectIndices.length; i++) {
+                const trapdoorIndex = incorrectIndices[i];
+                await delay(1200); // Tensión entre caídas
+                
+                const element = document.getElementById(`trapdoor-${trapdoorIndex}`);
+                element.classList.add('trapdoor-drop');
+                element.classList.replace('border-slate-700', 'border-red-600');
+                
+                // Efecto de sonido (opcional, simulado visualmente)
+                if (state.bets[trapdoorIndex] > 0) {
+                    showToast(`Perdiste ${formatMoney(state.bets[trapdoorIndex])} 🪙`, 'error');
+                }
+            }
+
+            await delay(1500); // Pausa dramática final
+
+            // Verificar la correcta
+            const correctElement = document.getElementById(`trapdoor-${correctIndex}`);
+            correctElement.classList.add('correct-pulse');
+            correctElement.classList.replace('border-slate-700', 'border-green-500');
+            
+            const savedMoney = state.bets[correctIndex];
+            state.totalMoney = savedMoney;
+            updateGameHeader();
+
+            await delay(2500);
+
+            if (state.totalMoney === 0) {
+                endGame(false);
+            } else if (state.currentRound === gameQuestions.length - 1) {
+                endGame(true);
+            } else {
+                nextRound();
+            }
+        }
+
+        function nextRound() {
+            state.currentRound++;
+            
+            // Animación de transición de contenedor
+            const container = document.getElementById('options-container');
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(20px)';
+            container.style.transition = 'all 0.5s ease';
+            
+            setTimeout(() => {
+                setupRound();
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 500);
+        }
+
+        function endGame(won) {
+            const titleEl = document.getElementById('result-title');
+            const msgEl = document.getElementById('result-message');
+            const moneyEl = document.getElementById('result-money');
+
+            if (won && state.totalMoney > 0) {
+                titleEl.textContent = "¡Felicidades!";
+                titleEl.className = "text-6xl font-extrabold mb-4 text-center text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600";
+                msgEl.textContent = "Has demostrado ser un experto en M365 Copilot y has logrado salvar tus tokens.";
+                moneyEl.textContent = formatMoney(state.totalMoney);
+                moneyEl.className = "text-6xl md:text-8xl font-black text-green-400 money-font";
+            } else {
+                titleEl.textContent = "Fin del Juego";
+                titleEl.className = "text-6xl font-extrabold mb-4 text-center text-red-500";
+                msgEl.textContent = "Las trampillas se han tragado todo tu dinero. Necesitas repasar la documentación de Copilot.";
+                moneyEl.textContent = "0";
+                moneyEl.className = "text-6xl md:text-8xl font-black text-red-500 money-font";
+            }
+
+            switchScreen('screen-game', 'screen-result');
+        }
+
+        function resetGame() {
+            switchScreen('screen-result', 'screen-intro');
+        }
+
+        // --- UTILIDADES ---
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>
