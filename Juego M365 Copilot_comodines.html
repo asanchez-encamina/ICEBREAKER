@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M365 Copilot: ¿Quién quiere ser Millonario?</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;700&display=swap');
+
+        body {
+            background: radial-gradient(circle, #1a1a2e 0%, #0f0f1a 100%);
+            font-family: 'Exo 2', sans-serif;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .hex-button {
+            clip-path: polygon(5% 0%, 95% 0%, 100% 50%, 95% 100%, 5% 100%, 0% 50%);
+            transition: all 0.3s ease;
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid #3b82f6;
+            cursor: pointer;
+        }
+
+        .hex-button:hover:not(.disabled) {
+            background: #1e40af;
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+
+        .hex-button.correct {
+            background: #15803d !important;
+            border-color: #22c55e !important;
+        }
+
+        .hex-button.wrong {
+            background: #b91c1c !important;
+            border-color: #ef4444 !important;
+        }
+
+        .hex-button.selected {
+            background: #ca8a04 !important;
+            border-color: #facc15 !important;
+        }
+
+        .lifeline {
+            width: 60px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .lifeline:hover:not(.used) {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .lifeline.used {
+            opacity: 0.3;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+
+        .money-step {
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .money-step.active {
+            background: #ca8a04;
+            color: white;
+            font-weight: bold;
+        }
+
+        .money-step.safe {
+            color: #facc15;
+        }
+
+        #audience-graph {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            height: 150px;
+        }
+
+        .bar {
+            background: #3b82f6;
+            width: 30px;
+            transition: height 1s ease-out;
+            position: relative;
+        }
+
+        .bar-label {
+            position: absolute;
+            top: -25px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.7rem;
+        }
+
+        /* Overlay for messages */
+        #modal-overlay {
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body>
+
+<div class="flex flex-col md:flex-row h-full">
+    <!-- Main Game Area -->
+    <div class="flex-grow flex flex-col items-center justify-between p-6 pb-12 relative">
+        
+        <!-- Header / Logo -->
+        <div class="text-center mt-4">
+            <h1 class="text-3xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 uppercase">
+                Copilot Millionaire
+            </h1>
+        </div>
+
+        <!-- Lifelines (Comodines) -->
+        <div class="flex gap-4 mb-8">
+            <div id="life-50" class="lifeline" onclick="useLifeline('50')">50:50</div>
+            <div id="life-audience" class="lifeline" onclick="useLifeline('audience')">👥</div>
+            <div id="life-call" class="lifeline" onclick="useLifeline('call')">📞</div>
+        </div>
+
+        <!-- Question Box -->
+        <div id="question-container" class="w-full max-w-4xl animate__animated animate__fadeIn">
+            <div class="hex-button w-full p-6 text-center text-xl md:text-2xl mb-8 border-l-4 border-r-4">
+                <span id="question-text">Cargando pregunta...</span>
+            </div>
+
+            <!-- Answers Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div id="ans-0" onclick="selectAnswer(0)" class="hex-button p-4 flex items-center">
+                    <span class="text-yellow-500 font-bold mr-3">A:</span> <span id="text-0"></span>
+                </div>
+                <div id="ans-1" onclick="selectAnswer(1)" class="hex-button p-4 flex items-center">
+                    <span class="text-yellow-500 font-bold mr-3">B:</span> <span id="text-1"></span>
+                </div>
+                <div id="ans-2" onclick="selectAnswer(2)" class="hex-button p-4 flex items-center">
+                    <span class="text-yellow-500 font-bold mr-3">C:</span> <span id="text-2"></span>
+                </div>
+                <div id="ans-3" onclick="selectAnswer(3)" class="hex-button p-4 flex items-center">
+                    <span class="text-yellow-500 font-bold mr-3">D:</span> <span id="text-3"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Info -->
+        <div class="mt-8 text-slate-500 text-sm italic">
+            Basado en la infraestructura de Microsoft 365 y Semantic Index.
+        </div>
+    </div>
+
+    <!-- Sidebar / Scoreboard -->
+    <div class="w-full md:w-64 bg-slate-900/50 p-6 flex flex-col justify-center border-l border-slate-700">
+        <div id="money-list" class="flex flex-col-reverse gap-1">
+            <!-- Dinámicamente generado -->
+        </div>
+    </div>
+</div>
+
+<!-- Modales -->
+<div id="modal-overlay" class="fixed inset-0 hidden flex items-center justify-center z-50 p-4">
+    <div id="modal-content" class="bg-slate-800 border-2 border-blue-500 p-8 rounded-lg max-w-md w-full text-center shadow-2xl">
+        <h2 id="modal-title" class="text-2xl font-bold mb-4"></h2>
+        <div id="modal-body" class="mb-6"></div>
+        <button id="modal-btn" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded font-bold transition"></button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        {
+            q: "¿Qué componente de M365 Copilot permite acceder a los datos de tu organización de forma segura?",
+            a: ["Microsoft Graph", "Google Search", "Azure Public Blob", "OneDrive Personal"],
+            correct: 0,
+            level: 1
+        },
+        {
+            q: "¿En qué aplicación de M365 puedes usar Copilot para resumir hilos de chat y llamadas perdidas?",
+            a: ["Excel", "Teams", "PowerPoint", "Publisher"],
+            correct: 1,
+            level: 2
+        },
+        {
+            q: "¿Cuál es el límite de seguridad de Copilot respecto a tus datos empresariales?",
+            a: ["Cualquier usuario puede ver todo", "Solo el Admin puede verlo", "Hereda los permisos existentes del usuario", "Los datos se envían para entrenar el modelo público"],
+            correct: 2,
+            level: 3
+        },
+        {
+            q: "Si quieres que Copilot genere una presentación basada en un Word, ¿dónde debes ejecutarlo?",
+            a: ["Word", "Outlook", "PowerPoint", "Microsoft Forms"],
+            correct: 2,
+            level: 4
+        },
+        {
+            q: "¿Qué nombre recibe el sistema que indexa y mapea las relaciones entre usuarios y datos en M365?",
+            a: ["Active Directory Gold", "Semantic Index", "Copilot Engine 365", "Office Knowledge Map"],
+            correct: 1,
+            level: 5
+        },
+        {
+            q: "¿Cómo se llama la funcionalidad de Copilot en Excel que permite analizar datos?",
+            a: ["AutoScript", "Copilot in Excel (Preview/Standard)", "Power Query Bot", "Excel Genius"],
+            correct: 1,
+            level: 6
+        },
+        {
+            q: "¿Cuál es el requisito principal de licencia para activar M365 Copilot?",
+            a: ["Tener Windows XP", "Licencia Business Standard, Premium o Enterprise", "Cuenta de Gmail", "Solo disponible para Education A1"],
+            correct: 1,
+            level: 7
+        },
+        {
+            q: "En Outlook, ¿qué hace la función 'Coaching' de Copilot?",
+            a: ["Envía el correo automáticamente", "Sugiere mejoras en tono, claridad y sentimiento", "Borra correos spam", "Agenda reuniones sin preguntar"],
+            correct: 1,
+            level: 8
+        },
+        {
+            q: "¿Qué arquitectura utiliza Copilot para procesar una solicitud (Prompt)?",
+            a: ["Grounding -> LLM -> Post-processing", "Upload -> Training -> Result", "Search -> Copy -> Paste", "SQL Query -> JSON -> Display"],
+            correct: 0,
+            level: 9
+        },
+        {
+            q: "¿Cuál de estos NO es un principio de IA Responsable de Microsoft?",
+            a: ["Equidad", "Transparencia", "Rentabilidad Obligatoria", "Privacidad y Seguridad"],
+            correct: 2,
+            level: 10
+        },
+        {
+            q: "¿Qué permite hacer un 'Copilot Studio'?",
+            a: ["Editar videos", "Crear y personalizar copilotos específicos", "Comprar hardware de Microsoft", "Bajar el precio de la suscripción"],
+            correct: 1,
+            level: 11
+        },
+        {
+            q: "¿Qué sucede con la información compartida con Copilot durante una sesión?",
+            a: ["Se publica en LinkedIn", "Se queda dentro del límite de cumplimiento de M365", "Se vende a anunciantes", "Se borra a los 5 segundos"],
+            correct: 1,
+            level: 12
+        },
+        {
+            q: "¿Cómo ayuda el Semantic Index a Copilot?",
+            a: ["Aumenta la velocidad de internet", "Crea una base de conocimientos personalizada de tus archivos", "Traduce textos al latín", "Optimiza la batería del portátil"],
+            correct: 1,
+            level: 13
+        },
+        {
+            q: "¿Qué protocolo usa Copilot para asegurar que el contenido generado sea verídico?",
+            a: ["Grounding", "Sandboxing", "Phishing", "Tunneling"],
+            correct: 0,
+            level: 14
+        },
+        {
+            q: "¿Quién acuñó el término 'El sistema operativo del trabajo' para referirse a esta integración?",
+            a: ["Satya Nadella", "Steve Ballmer", "Bill Gates", "Jared Spataro"],
+            correct: 0,
+            level: 15
+        }
+    ];
+
+    const moneySteps = [
+        "€ 100", "€ 200", "€ 300", "€ 500", "€ 1,000",
+        "€ 2,000", "€ 4,000", "€ 8,000", "€ 16,000", "€ 32,000",
+        "€ 64,000", "€ 125,000", "€ 250,000", "€ 500,000", "€ 1,000,000"
+    ];
+
+    let currentQuestionIndex = 0;
+    let selectedAnswerIndex = null;
+    let lifelinesUsed = { '50': false, 'audience': false, 'call': false };
+    let isProcessing = false;
+
+    function initMoneyList() {
+        const list = document.getElementById('money-list');
+        moneySteps.forEach((step, index) => {
+            const div = document.createElement('div');
+            div.className = `money-step ${[4, 9, 14].includes(index) ? 'safe' : ''}`;
+            div.id = `step-${index}`;
+            div.innerHTML = `<span class="mr-4 text-xs opacity-50">${index + 1}</span> ${step}`;
+            list.appendChild(div);
+        });
+    }
+
+    function loadQuestion() {
+        isProcessing = false;
+        selectedAnswerIndex = null;
+        const qData = questions[currentQuestionIndex];
+        
+        // UI Updates
+        document.getElementById('question-text').innerText = qData.q;
+        const container = document.getElementById('question-container');
+        container.classList.remove('animate__fadeIn');
+        void container.offsetWidth; // Trigger reflow
+        container.classList.add('animate__fadeIn');
+
+        for (let i = 0; i < 4; i++) {
+            const btn = document.getElementById(`ans-${i}`);
+            const text = document.getElementById(`text-${i}`);
+            btn.className = "hex-button p-4 flex items-center";
+            btn.style.visibility = "visible";
+            text.innerText = qData.a[i];
+        }
+
+        // Highlight current money step
+        document.querySelectorAll('.money-step').forEach(s => s.classList.remove('active'));
+        document.getElementById(`step-${currentQuestionIndex}`).classList.add('active');
+    }
+
+    function selectAnswer(index) {
+        if (isProcessing) return;
+        
+        // Play click sound simulation
+        selectedAnswerIndex = index;
+        for (let i = 0; i < 4; i++) {
+            document.getElementById(`ans-${i}`).classList.remove('selected');
+        }
+        document.getElementById(`ans-${index}`).classList.add('selected');
+
+        isProcessing = true;
+        
+        // Wait 2 seconds (tension)
+        setTimeout(() => {
+            checkAnswer(index);
+        }, 2000);
+    }
+
+    function checkAnswer(index) {
+        const correct = questions[currentQuestionIndex].correct;
+        const btn = document.getElementById(`ans-${index}`);
+        
+        if (index === correct) {
+            btn.classList.add('correct');
+            setTimeout(() => {
+                if (currentQuestionIndex === 14) {
+                    showModal("¡INCREÍBLE!", "Has demostrado ser un experto absoluto en Microsoft 365 Copilot. ¡Has ganado 1.000.000€!", "Reiniciar", () => location.reload());
+                } else {
+                    currentQuestionIndex++;
+                    loadQuestion();
+                }
+            }, 1500);
+        } else {
+            btn.classList.add('wrong');
+            document.getElementById(`ans-${correct}`).classList.add('correct');
+            setTimeout(() => {
+                showModal("GAME OVER", `Esa no era la respuesta correcta. Te llevas el último premio seguro alcanzado.`, "Reintentar", () => location.reload());
+            }, 1500);
+        }
+    }
+
+    function useLifeline(type) {
+        if (lifelinesUsed[type] || isProcessing) return;
+        
+        lifelinesUsed[type] = true;
+        document.getElementById(`life-${type}`).classList.add('used');
+
+        const correct = questions[currentQuestionIndex].correct;
+
+        if (type === '50') {
+            let removed = 0;
+            let indices = [0, 1, 2, 3].filter(i => i !== correct);
+            // Sort randomly and take 2
+            indices.sort(() => Math.random() - 0.5);
+            indices.slice(0, 2).forEach(idx => {
+                document.getElementById(`ans-${idx}`).style.visibility = "hidden";
+            });
+        } 
+        else if (type === 'audience') {
+            const level = currentQuestionIndex + 1;
+            // Probability logic: harder questions = audience is less sure
+            let correctWeight = Math.max(30, 90 - (level * 4)); 
+            let remaining = 100 - correctWeight;
+            
+            let votes = [0, 0, 0, 0];
+            votes[correct] = correctWeight;
+            
+            for(let i=0; i<4; i++) {
+                if(i === correct) continue;
+                let share = Math.floor(Math.random() * remaining);
+                votes[i] = share;
+                remaining -= share;
+            }
+            votes[3] += remaining; // Add what's left to the last one
+
+            showAudienceGraph(votes);
+        }
+        else if (type === 'call') {
+            const expertCertainty = Math.max(40, 95 - (currentQuestionIndex * 5));
+            const isCorrect = Math.random() * 100 < expertCertainty;
+            const answerText = isCorrect ? questions[currentQuestionIndex].a[correct] : questions[currentQuestionIndex].a.filter((_, i) => i !== correct)[0];
+            
+            showModal("📞 Llamada a un experto", `Tu contacto te dice: "Estoy un ${expertCertainty}% seguro de que la respuesta es la ${answerText}"`, "Aceptar", closeModal);
+        }
+    }
+
+    function showAudienceGraph(votes) {
+        const labels = ['A', 'B', 'C', 'D'];
+        let graphHtml = '<div id="audience-graph" class="mt-4">';
+        votes.forEach((v, i) => {
+            graphHtml += `
+                <div class="bar" style="height: ${v}%">
+                    <span class="bar-label">${v}%</span>
+                    <div class="absolute -bottom-6 w-full text-center text-xs font-bold">${labels[i]}</div>
+                </div>
+            `;
+        });
+        graphHtml += '</div>';
+        
+        showModal("Resultados del Público", graphHtml, "Continuar", closeModal);
+    }
+
+    function showModal(title, body, btnText, callback) {
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-body').innerHTML = body;
+        const btn = document.getElementById('modal-btn');
+        btn.innerText = btnText;
+        btn.onclick = callback;
+        document.getElementById('modal-overlay').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('modal-overlay').classList.add('hidden');
+    }
+
+    // Inicialización
+    window.onload = () => {
+        initMoneyList();
+        loadQuestion();
+    };
+</script>
+
+</body>
+</html>
