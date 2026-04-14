@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Reunión del Caos - Icebreaker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chaos-phrase {
+            position: absolute;
+            padding: 1rem;
+            background: white;
+            border: 2px solid #000;
+            box-shadow: 4px 4px 0px #000;
+            max-width: 250px;
+            font-weight: bold;
+            z-index: 10;
+            animation: fadeInOut 12s forwards;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: scale(0.9); }
+            10% { opacity: 1; transform: scale(1); }
+            90% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: #000;
+            width: 0%;
+            transition: width 12s linear;
+        }
+
+        .card-container {
+            width: 90%;
+            max-width: 500px;
+            background: white;
+            border: 3px solid #000;
+            padding: 2.5rem;
+            box-shadow: 10px 10px 0px #000;
+            z-index: 20;
+        }
+
+        .btn-black {
+            background: #000;
+            color: #fff;
+            padding: 0.75rem 1.5rem;
+            font-weight: bold;
+            transition: all 0.2s;
+            border: 2px solid #000;
+        }
+
+        .btn-black:hover {
+            background: #fff;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pantalla Inicial -->
+    <div id="start-screen" class="text-center">
+        <h1 class="text-5xl font-black mb-8 uppercase tracking-tighter">La Reunión del Caos</h1>
+        <button onclick="startChallenge()" class="btn-black text-xl px-12 py-4">ACTIVAR DESAFÍO</button>
+        <p class="mt-6 text-gray-500 italic">Tienes 12 segundos para memorizarlo todo.</p>
+    </div>
+
+    <!-- Contenedor de Frases (Caos) -->
+    <div id="chaos-container" class="hidden">
+        <div class="progress-bar" id="timer-bar"></div>
+    </div>
+
+    <!-- Pantalla de Preguntas -->
+    <div id="quiz-screen" class="hidden card-container">
+        <div id="quiz-content">
+            <span id="question-number" class="text-sm font-bold uppercase text-gray-400">Pregunta 1 de 4</span>
+            <h2 id="question-text" class="text-2xl font-bold mt-2 mb-6">¿Cuál era el presupuesto final?</h2>
+            
+            <input type="text" id="user-answer" placeholder="Escribe tu respuesta aquí..." 
+                   class="w-full border-2 border-black p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-gray-200">
+            
+            <div id="feedback" class="hidden mb-4 p-3 bg-gray-100 border-l-4 border-black text-sm">
+                <strong>Respuesta correcta:</strong> <span id="correct-answer-text"></span>
+            </div>
+
+            <button id="action-btn" onclick="handleQuizAction()" class="btn-black w-full">VALIDAR</button>
+        </div>
+    </div>
+
+    <!-- Pantalla Final -->
+    <div id="result-screen" class="hidden card-container text-center">
+        <h2 class="text-4xl font-black mb-4">RESULTADO</h2>
+        <div class="text-6xl font-black mb-4" id="final-score">0/4</div>
+        <p id="result-message" class="text-lg mb-8 font-medium px-4"></p>
+        <button onclick="resetGame()" class="btn-black w-full">REINTENTAR</button>
+    </div>
+
+    <script>
+        const data = {
+            phrases: [
+                "Presupuesto cerrado: 45.300€",
+                "Nueva fecha de entrega: 14 de Octubre",
+                "Responsable del proyecto: Laura Méndez",
+                "Lugar del evento: Sala 'Cibeles'",
+                "Catering: Opción vegana confirmada",
+                "Código de acceso: 8821#",
+                "Proveedor principal: TechNova Solutions"
+            ],
+            questions: [
+                { q: "¿Cuál es el presupuesto exacto que se mencionó?", a: "45.300€" },
+                { q: "¿En qué fecha exacta es la nueva entrega?", a: "14 de Octubre" },
+                { q: "¿Cómo se llama la responsable del proyecto?", a: "Laura Méndez" },
+                { q: "¿Cuál es el código de acceso a la reunión?", a: "8821#" }
+            ]
+        };
+
+        let currentQuestion = 0;
+        let score = 0;
+        let isValidating = true; // Alterna entre Validar y Siguiente
+
+        function startChallenge() {
+            document.getElementById('start-screen').classList.add('hidden');
+            const container = document.getElementById('chaos-container');
+            container.classList.remove('hidden');
+            
+            // Generar frases en posiciones aleatorias
+            data.phrases.forEach((text, i) => {
+                const div = document.createElement('div');
+                div.className = 'chaos-phrase';
+                div.innerText = text;
+                
+                // Evitar que se salgan demasiado de los bordes
+                const top = Math.random() * 70 + 10; 
+                const left = Math.random() * 70 + 5;
+                
+                div.style.top = `${top}%`;
+                div.style.left = `${left}%`;
+                div.style.animationDelay = `${i * 0.2}s`;
+                
+                container.appendChild(div);
+            });
+
+            // Animación de la barra de progreso
+            setTimeout(() => {
+                document.getElementById('timer-bar').style.width = '100%';
+            }, 50);
+
+            // Pasar a preguntas tras 12 segundos
+            setTimeout(() => {
+                showQuiz();
+            }, 12000);
+        }
+
+        function showQuiz() {
+            document.getElementById('chaos-container').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = data.questions[currentQuestion];
+            document.getElementById('question-number').innerText = `Pregunta ${currentQuestion + 1} de ${data.questions.length}`;
+            document.getElementById('question-text').innerText = q.q;
+            document.getElementById('user-answer').value = '';
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('action-btn').innerText = 'VALIDAR';
+            isValidating = true;
+        }
+
+        function handleQuizAction() {
+            if (isValidating) {
+                // Lógica de validación (basada en si el campo no está vacío)
+                const userAns = document.getElementById('user-answer').value.trim().toLowerCase();
+                const correctAns = data.questions[currentQuestion].a;
+                
+                // Mostrar feedback
+                document.getElementById('correct-answer-text').innerText = correctAns;
+                document.getElementById('feedback').classList.remove('hidden');
+                
+                // Un pequeño sistema de puntos (puedes ajustarlo)
+                if (userAns && correctAns.toLowerCase().includes(userAns)) {
+                    score++;
+                }
+
+                document.getElementById('action-btn').innerText = 'SIGUIENTE';
+                isValidating = false;
+            } else {
+                currentQuestion++;
+                if (currentQuestion < data.questions.length) {
+                    loadQuestion();
+                } else {
+                    showResults();
+                }
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            const resultScreen = document.getElementById('result-screen');
+            resultScreen.classList.remove('hidden');
+            
+            document.getElementById('final-score').innerText = `${score}/${data.questions.length}`;
+            
+            let message = "";
+            if (score === 0) message = "Vaya... ¿seguro que estabas mirando la pantalla? No pasa nada, eran muchos datos de golpe.";
+            else if (score < 3) message = "No es que tengas poca atención, es que el caos es real. ¡Casi lo logras!";
+            else if (score === 3) message = "¡Muy bien! Tienes una memoria selectiva digna de un project manager.";
+            else message = "¡Bravo! Tienes mejor memoria que Copilot y ChatGPT juntos. ¿Eres humano?";
+            
+            document.getElementById('result-message').innerText = message;
+        }
+
+        function resetGame() {
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('chaos-container').innerHTML = '<div class="progress-bar" id="timer-bar"></div>';
+            document.getElementById('timer-bar').style.width = '0%';
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
