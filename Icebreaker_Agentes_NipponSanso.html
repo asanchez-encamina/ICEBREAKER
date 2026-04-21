@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control · Agente de Seguridad FDS · Nippon Gases</title>
+    <style>
+        :root {
+            --bg-dark: #0a1628;
+            --bg-darker: #050d1a;
+            --panel-bg: #13253d;
+            --panel-raised: #1a2f4d;
+            --text-light: #f1f5f9;
+            --text-dim: #94a3b8;
+            --accent-red: #E60012;        /* Nippon red */
+            --accent-amber: #f59e0b;      /* Industrial warning */
+            --accent-cyan: #22d3ee;       /* Readout blue */
+            --safe-green: #10b981;
+            --danger: #ef4444;
+            --pipe: #475569;
+            --pipe-glow: #64748b;
+            --metal: #64748b;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-dark);
+            background-image:
+                radial-gradient(circle at 20% 10%, rgba(230, 0, 18, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 90%, rgba(34, 211, 238, 0.05) 0%, transparent 40%),
+                linear-gradient(rgba(71, 85, 105, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(71, 85, 105, 0.08) 1px, transparent 1px);
+            background-size: auto, auto, 40px 40px, 40px 40px;
+            color: var(--text-light);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* ======= HEADER ======= */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            max-width: 1000px;
+            width: 100%;
+            position: relative;
+        }
+
+        .brand-strip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: linear-gradient(90deg, var(--accent-red) 0%, #8b0000 100%);
+            border-radius: 6px 6px 0 0;
+            font-family: 'Consolas', monospace;
+            font-weight: 700;
+            letter-spacing: 2px;
+            font-size: 0.85em;
+            color: white;
+            box-shadow: 0 0 20px rgba(230, 0, 18, 0.3);
+        }
+
+        .brand-left { display: flex; gap: 15px; align-items: center; }
+        .brand-right { display: flex; gap: 12px; align-items: center; }
+
+        .led {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--safe-green);
+            box-shadow: 0 0 8px var(--safe-green);
+            animation: blink-led 2s infinite;
+        }
+        .led.amber { background: var(--accent-amber); box-shadow: 0 0 8px var(--accent-amber); }
+        .led.red { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
+        @keyframes blink-led {
+            0%, 90%, 100% { opacity: 1; }
+            95% { opacity: 0.3; }
+        }
+
+        .header-main {
+            background: var(--panel-bg);
+            border: 1px solid var(--pipe);
+            border-top: none;
+            padding: 25px 30px;
+            border-radius: 0 0 6px 6px;
+        }
+
+        .header h1 {
+            color: var(--text-light);
+            margin: 0 0 8px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.8em;
+        }
+        .header h1 .accent { color: var(--accent-red); }
+        .header .subtitle {
+            color: var(--text-dim);
+            font-size: 1em;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .mission-box {
+            background: var(--bg-darker);
+            border: 1px solid var(--accent-cyan);
+            border-left: 4px solid var(--accent-cyan);
+            padding: 14px 18px;
+            border-radius: 3px;
+            margin-top: 18px;
+            font-family: 'Consolas', monospace;
+            font-size: 1em;
+            color: #a5f3fc;
+            text-align: left;
+            box-shadow: inset 0 0 20px rgba(34, 211, 238, 0.08);
+        }
+        .mission-box strong { color: var(--accent-cyan); }
+
+        /* ======= WORKSPACE ======= */
+        .workspace {
+            display: grid;
+            grid-template-columns: 480px 1fr;
+            gap: 30px;
+            width: 100%;
+            max-width: 1350px;
+        }
+
+        /* ======= PANEL DE CONTROL (Placa industrial) ======= */
+        .control-panel {
+            background: linear-gradient(160deg, #1a2f4d 0%, #0f1f35 100%);
+            border: 2px solid var(--metal);
+            border-radius: 10px;
+            padding: 25px;
+            position: relative;
+            box-shadow:
+                inset 0 2px 0 rgba(255, 255, 255, 0.05),
+                inset 0 -2px 0 rgba(0, 0, 0, 0.4),
+                0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Rivets (tornillos) en las esquinas */
+        .control-panel::before,
+        .control-panel::after {
+            content: "";
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #94a3b8, #334155);
+            box-shadow: inset 0 0 2px rgba(0,0,0,0.8);
+        }
+        .control-panel::before { top: 8px; left: 8px; }
+        .control-panel::after { top: 8px; right: 8px; }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--pipe);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+        .panel-header h2 {
+            margin: 0;
+            color: var(--accent-cyan);
+            font-family: 'Consolas', monospace;
+            font-size: 1.1em;
+            letter-spacing: 1px;
+        }
+        .pressure-readout {
+            font-family: 'Consolas', monospace;
+            font-size: 0.8em;
+            color: var(--accent-amber);
+            background: black;
+            padding: 3px 10px;
+            border-radius: 3px;
+            border: 1px solid var(--accent-amber);
+        }
+
+        .slot-container {
+            margin-bottom: 28px;
+            position: relative;
+        }
+
+        .slot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .slot-label {
+            font-family: 'Consolas', monospace;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            font-size: 0.82em;
+            letter-spacing: 1.5px;
+        }
+        .slot-label .icon { margin-right: 6px; font-size: 1.1em; }
+        .slot-label .module-id { color: var(--accent-amber); font-weight: 700; }
+
+        .slot-status {
+            font-family: 'Consolas', monospace;
+            font-size: 0.7em;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Sockets industriales */
+        .drop-slot {
+            background:
+                repeating-linear-gradient(45deg, rgba(0,0,0,0.3), rgba(0,0,0,0.3) 6px, rgba(0,0,0,0.15) 6px, rgba(0,0,0,0.15) 12px);
+            min-height: 85px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            position: relative;
+            padding: 8px;
+        }
+
+        .drop-slot::before {
+            content: "— INSERTAR MÓDULO —";
+            color: #334155;
+            font-family: 'Consolas', monospace;
+            font-size: 0.95em;
+            letter-spacing: 2px;
+            position: absolute;
+            z-index: 0;
+        }
+        .drop-slot:has(.component)::before { display: none; }
+        .drop-slot.drag-over {
+            background:
+                repeating-linear-gradient(45deg, rgba(34, 211, 238, 0.15), rgba(34, 211, 238, 0.15) 6px, rgba(34, 211, 238, 0.05) 6px, rgba(34, 211, 238, 0.05) 12px);
+            box-shadow: inset 0 0 15px rgba(34, 211, 238, 0.3);
+        }
+
+        /* Formas distintas para cada socket (y su componente) */
+        #slot-role {
+            border: 3px dashed #a855f7;
+            border-radius: 50px;
+            box-shadow: inset 0 0 10px rgba(168, 85, 247, 0.2);
+        }
+        #slot-data {
+            border: 3px dashed var(--accent-amber);
+            border-radius: 6px 24px 6px 24px;
+            box-shadow: inset 0 0 10px rgba(245, 158, 11, 0.2);
+        }
+        #slot-rule {
+            border: 3px dashed var(--safe-green);
+            border-left-width: 10px;
+            border-right-width: 10px;
+            border-radius: 3px;
+            box-shadow: inset 0 0 10px rgba(16, 185, 129, 0.2);
+        }
+
+        /* Tubería decorativa entre sockets */
+        .pipe-connector {
+            width: 4px;
+            height: 22px;
+            background: linear-gradient(90deg, var(--pipe) 0%, var(--pipe-glow) 50%, var(--pipe) 100%);
+            margin: -14px auto -8px;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 0 4px rgba(0,0,0,0.6);
+        }
+        .pipe-connector::before,
+        .pipe-connector::after {
+            content: "";
+            position: absolute;
+            left: -4px;
+            width: 12px;
+            height: 4px;
+            background: var(--metal);
+            border-radius: 1px;
+        }
+        .pipe-connector::before { top: 3px; }
+        .pipe-connector::after { bottom: 3px; }
+
+        /* ======= INVENTARIO ======= */
+        .inventory {
+            background: var(--panel-bg);
+            border: 1px solid var(--pipe);
+            border-radius: 10px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .inventory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--pipe);
+            padding-bottom: 10px;
+            margin-bottom: -4px;
+        }
+        .inventory-header h2 {
+            margin: 0;
+            color: var(--accent-amber);
+            font-family: 'Consolas', monospace;
+            font-size: 1.05em;
+            letter-spacing: 1px;
+        }
+        .inventory-header .tag {
+            font-family: 'Consolas', monospace;
+            font-size: 0.7em;
+            color: var(--text-dim);
+            padding: 3px 8px;
+            border: 1px solid var(--pipe);
+            border-radius: 3px;
+        }
+
+        .component-group h3 {
+            margin: 0 0 12px 0;
+            font-size: 0.82em;
+            color: var(--text-dim);
+            border-bottom: 1px dashed var(--pipe);
+            padding-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-family: 'Consolas', monospace;
+        }
+        .component-group h3 .ref-code {
+            color: var(--accent-amber);
+            font-weight: 700;
+        }
+
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 14px;
+            min-height: 60px;
+            padding-bottom: 8px;
+        }
+
+        /* Piezas (módulos industriales) */
+        .component {
+            background-color: #1e293b;
+            padding: 14px 16px;
+            cursor: grab;
+            font-size: 0.88em;
+            user-select: none;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+            display: flex;
+            align-items: center;
+            line-height: 1.4;
+            color: #e2e8f0;
+        }
+
+        .component:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
+            filter: brightness(1.15);
+        }
+        .component:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+            box-shadow: none;
+        }
+
+        /* IDENTIDAD: forma de chip/píldora con gradiente morado */
+        .type-role {
+            border: 2px solid #a855f7;
+            border-radius: 50px;
+            background: linear-gradient(145deg, #3b0764, #1e293b);
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        /* CONOCIMIENTO: forma de cartucho/tarjeta con gradiente ámbar */
+        .type-data {
+            border: 2px solid var(--accent-amber);
+            border-radius: 6px 24px 6px 24px;
+            background: linear-gradient(145deg, #78350f, #1e293b);
+            border-bottom-width: 6px;
+        }
+
+        /* RESTRICCIÓN: forma de válvula de seguridad con gradiente verde */
+        .type-rule {
+            border: 2px solid var(--safe-green);
+            border-left: 10px solid var(--safe-green);
+            border-right: 10px solid var(--safe-green);
+            border-radius: 3px;
+            background: linear-gradient(145deg, #064e3b, #1e293b);
+        }
+
+        /* ======= CONTROLES ======= */
+        .controls {
+            margin-top: 40px;
+            text-align: center;
+            width: 100%;
+            max-width: 1350px;
+        }
+
+        .btn-start {
+            background: linear-gradient(180deg, var(--accent-red) 0%, #a80009 100%);
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            font-size: 1.2em;
+            font-weight: 800;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow:
+                0 5px 0 #6b0008,
+                0 8px 20px rgba(230, 0, 18, 0.4);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        .btn-start:hover {
+            transform: translateY(2px);
+            box-shadow:
+                0 3px 0 #6b0008,
+                0 5px 15px rgba(230, 0, 18, 0.5);
+        }
+        .btn-start:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 transparent;
+        }
+        .btn-start .icon { margin-right: 8px; }
+
+        /* ======= TERMINAL ======= */
+        .terminal {
+            margin-top: 25px;
+            background: linear-gradient(180deg, #000000 0%, #0a0a0a 100%);
+            border: 1px solid var(--pipe);
+            border-left: 4px solid var(--accent-cyan);
+            border-radius: 0 6px 6px 0;
+            padding: 22px 26px;
+            font-family: 'Consolas', monospace;
+            font-size: 1.05em;
+            min-height: 90px;
+            display: none;
+            text-align: left;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+            box-shadow: inset 0 0 30px rgba(34, 211, 238, 0.05);
+        }
+        .terminal-header {
+            color: var(--text-dim);
+            font-size: 0.8em;
+            border-bottom: 1px dashed #334155;
+            padding-bottom: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .text-success { color: var(--safe-green); text-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
+        .text-error { color: var(--danger); text-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+        .text-warning { color: var(--accent-amber); text-shadow: 0 0 8px rgba(245, 158, 11, 0.5); }
+        .text-info { color: var(--accent-cyan); }
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+
+        /* ======= RESPONSIVE ======= */
+        @media (max-width: 1050px) {
+            .workspace { grid-template-columns: 1fr; }
+            .brand-strip { flex-direction: column; gap: 8px; padding: 10px; }
+            .header h1 { font-size: 1.4em; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="brand-strip">
+            <div class="brand-left">
+                <span>■ NIPPON GASES EUROPE</span>
+                <span>·</span>
+                <span>PLANT SAFETY SYSTEM</span>
+            </div>
+            <div class="brand-right">
+                <span class="led"></span>
+                <span>ONLINE</span>
+                <span class="led amber"></span>
+                <span>BUILD MODE</span>
+            </div>
+        </div>
+        <div class="header-main">
+            <h1>Panel de Control · Ensamblaje de <span class="accent">Agente FDS</span></h1>
+            <p class="subtitle">
+                Los operarios de planta necesitan un copiloto que les resuelva dudas sobre manipulación segura de gases.
+                Selecciona los <strong>3 módulos correctos</strong> e insértalos en los sockets del panel. Un error en producción puede costar muy caro.
+            </p>
+            <div class="mission-box">
+                &gt; <strong>OBJETIVO:</strong> Compilar agente "<strong>SafetyBot FDS</strong>" para asistir a operarios en consultas sobre manipulación segura de gases industriales (O₂, N₂, Ar, H₂, CO₂) y gases medicinales/alimentarios (BIOGON<sup>®</sup>).
+            </div>
+        </div>
+    </div>
+
+    <div class="workspace">
+
+        <!-- PANEL DE CONTROL (antes motherboard) -->
+        <div class="control-panel">
+            <div class="panel-header">
+                <h2>&gt; SOCKETS DE MÓDULO</h2>
+                <span class="pressure-readout">P: 0.0 BAR</span>
+            </div>
+
+            <div class="slot-container">
+                <div class="slot-header">
+                    <span class="slot-label"><span class="icon">⚙️</span><span class="module-id">MOD-01</span> · IDENTIDAD Y TONO</span>
+                    <span class="slot-status"><span class="led red"></span>SIN MÓDULO</span>
+                </div>
+                <div class="drop-slot" id="slot-role" data-type="role" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+            </div>
+
+            <div class="pipe-connector"></div>
+
+            <div class="slot-container">
+                <div class="slot-header">
+                    <span class="slot-label"><span class="icon">📚</span><span class="module-id">MOD-02</span> · FUENTE DE CONOCIMIENTO</span>
+                    <span class="slot-status"><span class="led red"></span>SIN MÓDULO</span>
+                </div>
+                <div class="drop-slot" id="slot-data" data-type="data" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+            </div>
+
+            <div class="pipe-connector"></div>
+
+            <div class="slot-container">
+                <div class="slot-header">
+                    <span class="slot-label"><span class="icon">🛡️</span><span class="module-id">MOD-03</span> · VÁLVULA DE SEGURIDAD</span>
+                    <span class="slot-status"><span class="led red"></span>SIN MÓDULO</span>
+                </div>
+                <div class="drop-slot" id="slot-rule" data-type="rule" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+            </div>
+        </div>
+
+        <!-- INVENTARIO -->
+        <div class="inventory">
+            <div class="inventory-header">
+                <h2>&gt; INVENTARIO DE MÓDULOS</h2>
+                <span class="tag">ALMACÉN · PLANTA MADRID</span>
+            </div>
+
+            <div class="component-group">
+                <h3>&gt; <span class="ref-code">[MOD-01]</span> Chips de Identidad (Arrastrar al Socket)</h3>
+                <div class="components-grid drop-slot-inv" id="inv-role" data-type="role" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <div class="component type-role" draggable="true" ondragstart="drag(event)" id="role-commercial">💼 Comercial entusiasta que destaca las ventajas competitivas de cada gas del catálogo.</div>
+                    <div class="component type-role" draggable="true" ondragstart="drag(event)" id="role-coach">🎤 Coach motivacional que evita alarmar al equipo y minimiza los riesgos para mantener la moral.</div>
+                    <div class="component type-role" draggable="true" ondragstart="drag(event)" id="role-correct">👷 Técnico de prevención riguroso, claro y orientado al cumplimiento normativo (ATEX, REACH, RD 374/2001).</div>
+                </div>
+            </div>
+
+            <div class="component-group">
+                <h3>&gt; <span class="ref-code">[MOD-02]</span> Cartuchos de Conocimiento (Arrastrar al Socket)</h3>
+                <div class="components-grid drop-slot-inv" id="inv-data" data-type="data" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <div class="component type-data" draggable="true" ondragstart="drag(event)" id="data-privacy">🗂️ Historial_Medico_Operarios_Planta_2025.xlsx</div>
+                    <div class="component type-data" draggable="true" ondragstart="drag(event)" id="data-forum">💬 Foro_Aficionados_Soldadura_TIG_y_MIG.html</div>
+                    <div class="component type-data" draggable="true" ondragstart="drag(event)" id="data-correct">📘 FDS_Oficiales_Nippon_Gases_2025.pdf (Fichas de Datos de Seguridad)</div>
+                </div>
+            </div>
+
+            <div class="component-group">
+                <h3>&gt; <span class="ref-code">[MOD-03]</span> Válvulas de Seguridad (Arrastrar al Socket)</h3>
+                <div class="components-grid drop-slot-inv" id="inv-rule" data-type="rule" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <div class="component type-rule" draggable="true" ondragstart="drag(event)" id="rule-improvise">⚠️ Si la FDS no cubre un caso concreto, estima los límites de exposición extrapolando de gases similares.</div>
+                    <div class="component type-rule" draggable="true" ondragstart="drag(event)" id="rule-jargon">🔒 Responde siempre con nomenclatura IUPAC completa y referencias CAS/EINECS sin simplificar al operario.</div>
+                    <div class="component type-rule" draggable="true" ondragstart="drag(event)" id="rule-correct">🛡️ Ante cualquier duda crítica, deriva al Dpto. de Prevención y activa el protocolo de emergencia. No improvises.</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="controls">
+        <button class="btn-start" onclick="arrancarAgente()">
+            <span class="icon">▶</span>Presurizar Sistema y Ejecutar
+        </button>
+        <div class="terminal" id="terminal"></div>
+    </div>
+
+    <script>
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+            ev.dataTransfer.setData("type",
+                ev.target.classList.contains('type-role') ? 'role' :
+                ev.target.classList.contains('type-data') ? 'data' : 'rule');
+        }
+
+        function dragEnter(ev) {
+            ev.preventDefault();
+            let slot = ev.target.closest('.drop-slot');
+            if (slot) slot.classList.add('drag-over');
+        }
+
+        function dragLeave(ev) {
+            let slot = ev.target.closest('.drop-slot');
+            if (slot) slot.classList.remove('drag-over');
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            let draggedId = ev.dataTransfer.getData("text");
+            let draggedType = ev.dataTransfer.getData("type");
+
+            let dropZone = ev.target.closest('.drop-slot') || ev.target.closest('.drop-slot-inv');
+
+            if (dropZone) {
+                if (dropZone.classList.contains('drop-slot')) dropZone.classList.remove('drag-over');
+
+                let zoneType = dropZone.getAttribute('data-type');
+                if (zoneType === draggedType) {
+                    if (dropZone.id.startsWith('slot-') && dropZone.children.length > 0) {
+                        let existingChild = dropZone.children[0];
+                        document.getElementById('inv-' + zoneType).appendChild(existingChild);
+                    }
+                    dropZone.appendChild(document.getElementById(draggedId));
+                    updateSlotStatus();
+                }
+            }
+            document.getElementById('terminal').style.display = 'none';
+        }
+
+        function updateSlotStatus() {
+            // Actualiza los LEDs de estado de cada socket
+            ['role', 'data', 'rule'].forEach(type => {
+                let slot = document.getElementById('slot-' + type);
+                let statusEl = slot.parentElement.querySelector('.slot-status');
+                if (slot.children.length > 0) {
+                    statusEl.innerHTML = '<span class="led"></span>MÓDULO OK';
+                } else {
+                    statusEl.innerHTML = '<span class="led red"></span>SIN MÓDULO';
+                }
+            });
+        }
+
+        function arrancarAgente() {
+            let slotRole = document.getElementById('slot-role').children[0];
+            let slotData = document.getElementById('slot-data').children[0];
+            let slotRule = document.getElementById('slot-rule').children[0];
+            let terminal = document.getElementById('terminal');
+
+            terminal.style.display = 'block';
+            terminal.innerHTML =
+                "<div class='terminal-header'><span>[SAFETY-BOT v1.0 · NIPPON GASES]</span><span>PRESURIZANDO SISTEMA...</span></div>" +
+                "<span class='text-info'>&gt; Abriendo válvulas principales...</span><br>" +
+                "<span class='text-info'>&gt; Compilando módulos del agente</span> <span class='blink'>_</span>";
+
+            if (!slotRole || !slotData || !slotRule) {
+                setTimeout(() => {
+                    terminal.innerHTML +=
+                        "<br><br><span class='text-error'>[ERROR 0x01] HARDWARE INCOMPLETO. Faltan módulos en los sockets del panel. Revisa los 3 zócalos antes de presurizar.</span>";
+                }, 400);
+                return;
+            }
+
+            let idRole = slotRole.id;
+            let idData = slotData.id;
+            let idRule = slotRule.id;
+
+            setTimeout(() => {
+                terminal.innerHTML =
+                    "<div class='terminal-header'><span>[SAFETY-BOT v1.0 · NIPPON GASES]</span><span>DIAGNÓSTICO EN CURSO</span></div>" +
+                    "<span class='text-info'>&gt; Analizando configuración del agente...</span><br><br>";
+
+                // Prioridad: fallos de DATOS (privacidad/fuente) > REGLAS > ROL
+                if (idData === 'data-privacy') {
+                    terminal.innerHTML +=
+                        "<span class='text-error'>[FUGA DE DATOS · RGPD] ❌<br>" +
+                        "Violación grave de privacidad detectada. El agente acaba de exponer el historial médico completo de los operarios de planta a un contratista externo que preguntó por 'los límites de oxígeno'.<br>" +
+                        "→ Comité de Empresa convocado. AEPD notificada. Auditoría legal en curso.</span>";
+                } else if (idData === 'data-forum') {
+                    terminal.innerHTML +=
+                        "<span class='text-error'>[CONTAMINACIÓN DE DATOS] ❌<br>" +
+                        "El agente ha recomendado 'purgar una línea de argón con un chorrito de oxígeno porque en un foro dicen que va más rápido'.<br>" +
+                        "→ Atmósfera potencialmente inflamable en nave 3. Evacuación inmediata. La fuente de conocimiento NO es oficial.</span>";
+                } else if (idRule === 'rule-improvise') {
+                    terminal.innerHTML +=
+                        "<span class='text-error'>[ACCIDENTE GRAVE · CRIOGENIA] ❌<br>" +
+                        "El agente ha afirmado que 'un contacto breve con nitrógeno líquido es parecido a tocar hielo'.<br>" +
+                        "→ Quemadura criogénica de grado 3 reportada. Hospitalización. Inspección de Trabajo en planta. La IA NUNCA debe inventar datos de seguridad.</span>";
+                } else if (idRule === 'rule-jargon') {
+                    terminal.innerHTML +=
+                        "<span class='text-warning'>[FALLO DE COMUNICACIÓN · ASFIXIA] ⚠️<br>" +
+                        "Un operario preguntó '¿puedo entrar a la sala de argón?' y recibió una respuesta de 40 líneas con CAS 7440-37-1, curvas TLV-TWA y fórmulas de Nernst.<br>" +
+                        "→ No entendió nada, entró igualmente. Atmósfera sub-oxigenada. Desvanecimiento. Rescatado a tiempo, por los pelos.</span>";
+                } else if (idRole === 'role-commercial') {
+                    terminal.innerHTML +=
+                        "<span class='text-warning'>[QUEJA FORMAL] ⚠️<br>" +
+                        "El agente ha intentado venderle un upgrade a BIOGON<sup>®</sup> premium a un operario que solo preguntaba si podía quitarse la mascarilla para almorzar.<br>" +
+                        "→ Queja formal del Comité de Seguridad y Salud. Departamento comercial confundido.</span>";
+                } else if (idRole === 'role-coach') {
+                    terminal.innerHTML +=
+                        "<span class='text-error'>[INCIDENTE EN ESPACIO CONFINADO] ❌<br>" +
+                        "El agente respondió con un emoji sonriente: '¡Tranqui! El argón es un gas noble, totalmente inofensivo 😊 ¡A por ello, campeón!'.<br>" +
+                        "→ Dos operarios hospitalizados por asfixia en espacio confinado. El argón desplaza el oxígeno. No era inofensivo.</span>";
+                } else if (idRole === 'role-correct' && idData === 'data-correct' && idRule === 'rule-correct') {
+                    terminal.innerHTML +=
+                        "<span class='text-success'>[SISTEMA OPERATIVO] ✅<br>" +
+                        "&gt; SafetyBot FDS compilado correctamente.<br>" +
+                        "&gt; Conectado a fichas oficiales de Nippon Gases Europe.<br>" +
+                        "&gt; Válvula de seguridad activa: derivación a Prevención habilitada.<br>" +
+                        "&gt; Tono técnico y normativo: ATEX / REACH / RD 374/2001.<br>" +
+                        "&gt; <strong>Planta protegida. Operarios asistidos. Cumplimiento garantizado.</strong></span>" +
+                        "<br><br><span class='text-info'>&gt; Siguiente paso en el Agentathon: construir tu propio agente en Copilot Agent Builder. 🚀</span>";
+                    // Actualizar readout de presión
+                    document.querySelector('.pressure-readout').textContent = 'P: 12.5 BAR';
+                    document.querySelector('.pressure-readout').style.color = 'var(--safe-green)';
+                    document.querySelector('.pressure-readout').style.borderColor = 'var(--safe-green)';
+                } else {
+                    terminal.innerHTML +=
+                        "<span class='text-error'>[ERROR] Conflicto de hardware desconocido. Revisa la combinación de módulos.</span>";
+                }
+            }, 900);
+        }
+    </script>
+</body>
+</html>
