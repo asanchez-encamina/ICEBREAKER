@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Misión UNIONE · El Arte del Prompting</title>
+<style>
+  :root {
+    --primary: #000000;
+    --primary-light: #1a1a1a;
+    --accent: #53afa2;
+    --accent-dark: #3e8d82;
+    --accent-soft: #e8f4f2;
+    --highlight: #f5f5f5;
+    --success: #2f855a;
+    --warning: #b7791f;
+    --danger: #c53030;
+    --bg: #ffffff;
+    --card: #ffffff;
+    --border: #e5e5e5;
+    --text: #000000;
+    --muted: #4a4a4a;
+    --muted-light: #7a7a7a;
+    --silver: #b5bcc3;
+    --shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  header {
+    background: #000000;
+    color: white;
+    padding: 28px 24px 20px;
+    box-shadow: var(--shadow);
+    border-bottom: 3px solid var(--accent);
+  }
+  .header-inner { max-width: 980px; margin: 0 auto; }
+  .kicker { font-size: 13px; letter-spacing: 3px; text-transform: uppercase; opacity: 0.85; color: var(--accent); font-weight: 600; }
+  h1 { font-size: 30px; margin: 4px 0 6px; font-weight: 700; }
+  .subtitle { font-size: 15px; opacity: 0.9; max-width: 640px; margin: 0; }
+  .progress-wrap {
+    max-width: 980px; margin: 18px auto 0;
+    display: flex; gap: 10px; align-items: center;
+  }
+  .progress-step {
+    flex: 1; padding: 10px 12px; background: rgba(255,255,255,0.1);
+    border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);
+    font-size: 13px; color: rgba(255,255,255,0.8);
+    display: flex; align-items: center; gap: 10px;
+    transition: all 0.25s ease;
+  }
+  .progress-step.active { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
+  .progress-step.done { background: var(--accent-dark); border-color: var(--accent); color: white; }
+  .progress-step .num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(255,255,255,0.2); display: inline-flex;
+    align-items: center; justify-content: center; font-weight: 700; font-size: 12px;
+  }
+  .progress-step.done .num::before { content: "✓"; }
+  .progress-step.done .num { font-size: 0; }
+  .progress-step.done .num::before { font-size: 13px; }
+
+  main { max-width: 980px; margin: 28px auto; padding: 0 24px 60px; }
+  .card {
+    background: var(--card); border-radius: 12px; padding: 28px;
+    box-shadow: var(--shadow); margin-bottom: 22px;
+  }
+  .card h2 { margin: 0 0 6px; font-size: 22px; color: var(--primary); }
+  .card h3 { margin: 20px 0 8px; font-size: 17px; color: var(--primary); }
+  .card p { margin: 0 0 14px; color: var(--muted); }
+  .intro-badge {
+    display: inline-block; background: var(--accent); color: white;
+    padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--primary); color: white; border: none;
+    padding: 11px 22px; border-radius: 8px; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s ease; text-decoration: none;
+  }
+  .btn:hover { background: var(--primary-light); transform: translateY(-1px); }
+  .btn.accent { background: var(--accent); }
+  .btn.accent:hover { background: var(--accent-dark); }
+  .btn.ghost { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); }
+  .btn.ghost:hover { background: var(--primary); color: white; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
+  .hidden { display: none !important; }
+
+  /* Fragmentos clasificación */
+  .scenario-title {
+    background: var(--highlight); border-left: 4px solid var(--accent);
+    padding: 12px 16px; border-radius: 6px; margin-bottom: 18px;
+    font-size: 14px;
+  }
+  .scenario-title strong { color: var(--primary); }
+  .fragment {
+    background: var(--highlight); border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 12px; transition: all 0.2s ease;
+  }
+  .fragment.answered.correct { border-color: var(--accent); background: var(--accent-soft); }
+  .fragment.answered.wrong { border-color: var(--primary); background: var(--highlight); }
+  .fragment-text { font-size: 14.5px; color: var(--text); margin-bottom: 10px; }
+  .fragment-buttons {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .tag-btn {
+    background: white; border: 1.5px solid var(--border); color: var(--muted);
+    padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .tag-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .tag-btn.selected {
+    background: var(--primary); border-color: var(--primary); color: white;
+  }
+  .fragment.answered .tag-btn { pointer-events: none; opacity: 0.6; }
+  .fragment.answered .tag-btn.selected { opacity: 1; }
+  .feedback {
+    margin-top: 10px; font-size: 13px; padding: 8px 12px; border-radius: 6px;
+    background: white; color: var(--muted);
+  }
+  .feedback.correct { background: var(--accent-soft); color: var(--accent-dark); border-left: 3px solid var(--accent); }
+  .feedback.wrong { background: #000000; color: #ffffff; border-left: 3px solid var(--accent); }
+  .feedback.wrong strong { color: var(--accent); }
+
+  .score-bar {
+    margin-top: 20px; padding: 16px 18px; background: var(--highlight);
+    border-radius: 8px; display: flex; justify-content: space-between; align-items: center;
+    border-left: 4px solid var(--accent);
+  }
+  .score-bar .label { font-weight: 600; color: var(--primary); }
+  .score-bar .value { font-size: 22px; font-weight: 700; color: var(--primary); }
+
+  /* Constructor */
+  .builder-grid { display: grid; gap: 16px; }
+  .builder-field label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-weight: 600; color: var(--primary); margin-bottom: 6px; font-size: 14px;
+  }
+  .builder-field label .letter {
+    display: inline-block; width: 26px; height: 26px;
+    background: var(--accent); color: white; border-radius: 50%;
+    text-align: center; line-height: 26px; font-weight: 700; font-size: 13px;
+    margin-right: 8px;
+  }
+  .builder-field label .hint { font-weight: 400; color: var(--muted-light); font-size: 12px; }
+  .builder-field textarea, .builder-field select {
+    width: 100%; padding: 10px 12px; font-size: 14px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-family: inherit; resize: vertical; background: white; color: var(--text);
+  }
+  .builder-field textarea:focus, .builder-field select:focus {
+    outline: none; border-color: var(--primary);
+  }
+  .builder-field textarea { min-height: 60px; }
+  .builder-field .row { display: flex; gap: 8px; align-items: flex-start; }
+  .builder-field select { flex: 0 0 200px; padding: 8px; font-size: 13px; }
+
+  .output-block {
+    margin-top: 22px; padding: 18px; background: #1a202c; color: #e2e8f0;
+    border-radius: 10px; font-family: "SF Mono", Consolas, Monaco, monospace;
+    font-size: 13.5px; line-height: 1.7; white-space: pre-wrap; word-wrap: break-word;
+    max-height: 360px; overflow-y: auto;
+  }
+  .output-block .hl { color: var(--accent); font-weight: 700; }
+
+  .checklist { margin-top: 18px; }
+  .checklist-item {
+    display: flex; align-items: center; gap: 10px; padding: 8px 0;
+    font-size: 14px; border-bottom: 1px solid var(--border);
+  }
+  .checklist-item:last-child { border-bottom: none; }
+  .check-icon {
+    width: 22px; height: 22px; border-radius: 50%; display: inline-flex;
+    align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0;
+  }
+  .check-icon.ok { background: var(--accent-soft); color: var(--accent-dark); }
+  .check-icon.warn { background: var(--highlight); color: var(--primary); border: 1.5px solid var(--primary); }
+  .check-icon.ko { background: var(--primary); color: #ffffff; }
+
+  /* Auditor */
+  .audit-result { margin-top: 18px; }
+  .big-score {
+    text-align: center; padding: 26px; background: #000000;
+    border-radius: 12px; margin-bottom: 20px; color: white;
+    border-bottom: 3px solid var(--accent);
+  }
+  .big-score .n { font-size: 54px; font-weight: 800; color: var(--accent); line-height: 1; }
+  .big-score .max { font-size: 22px; color: #b5bcc3; font-weight: 500; }
+  .big-score .label { margin-top: 6px; font-size: 14px; color: #b5bcc3; text-transform: uppercase; letter-spacing: 1.5px; }
+
+  .tip-box {
+    background: #000000; border-left: 4px solid var(--accent); padding: 14px 18px;
+    border-radius: 6px; margin-top: 16px; font-size: 14px; color: #ffffff;
+  }
+  .tip-box strong { color: var(--accent); }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 20px; }
+  .summary-card {
+    background: var(--highlight); border-radius: 10px; padding: 16px; text-align: center;
+    border: 1.5px solid var(--border);
+  }
+  .summary-card .big { font-size: 28px; font-weight: 700; color: var(--accent); }
+  .summary-card .lbl { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  footer {
+    text-align: center; padding: 20px; color: var(--muted-light); font-size: 13px;
+  }
+
+  @media (max-width: 680px) {
+    h1 { font-size: 24px; }
+    .card { padding: 20px; }
+    .progress-step { font-size: 0; padding: 10px; justify-content: center; }
+    .progress-step .num { font-size: 12px !important; }
+    .progress-step.active::after, .progress-step.done::after {
+      display: none;
+    }
+    .builder-field .row { flex-direction: column; }
+    .builder-field select { flex: 1; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="kicker">UNIONE · EL ARTE DEL PROMPTING</div>
+    <h1>Misión UNIONE</h1>
+    <p class="subtitle">Un reto en 3 fases para pasar del prompt improvisado al prompt reutilizable y auditable.</p>
+    <div class="progress-wrap">
+      <div class="progress-step active" id="step-bar-1"><span class="num">1</span> Clasificar</div>
+      <div class="progress-step" id="step-bar-2"><span class="num">2</span> Construir</div>
+      <div class="progress-step" id="step-bar-3"><span class="num">3</span> Auditar</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- INTRO -->
+  <section id="section-intro" class="card">
+    <span class="intro-badge">Briefing</span>
+    <h2>Bienvenido, agente</h2>
+    <p>Eres parte del equipo que está sacando el máximo partido a Copilot en <strong>UNIONE Movilidad</strong>. Tu misión tiene 3 fases:</p>
+    <ol style="color: var(--muted); padding-left: 22px;">
+      <li><strong>Clasificar</strong> · Identifica las piezas ROCEF en prompts reales del sector.</li>
+      <li><strong>Construir</strong> · Ensambla tu propio prompt ROCEF para un caso UNIONE.</li>
+      <li><strong>Auditar</strong> · Pasa tu prompt por un metaprompt de revisión.</li>
+    </ol>
+    <p style="margin-top: 14px; font-size: 13px; color: var(--muted-light);">Dura unos 5-7 min. No se envía nada: todo ocurre en tu navegador.</p>
+    <div class="btn-row">
+      <button class="btn accent" onclick="goTo(1)">Empezar misión &rarr;</button>
+    </div>
+  </section>
+
+  <!-- FASE 1: CLASIFICAR -->
+  <section id="section-1" class="card hidden">
+    <span class="intro-badge">Fase 1 / 3</span>
+    <h2>Clasifica las piezas del método ROCEF</h2>
+    <p>Lee cada fragmento y asígnale la etiqueta correcta: <strong>R</strong>ol, <strong>O</strong>bjetivo, <strong>C</strong>ontexto, <strong>E</strong>jemplos o <strong>F</strong>ormato.</p>
+
+    <div class="scenario-title" id="scenario-title">
+      <strong>Escenario A · Cierre mensual</strong><br>
+      Un analista debe revisar los datos de cierre de una unidad de negocio de UNIONE Movilidad.
+    </div>
+
+    <div id="fragments-container"></div>
+
+    <div class="score-bar">
+      <span class="label">Aciertos en esta ronda</span>
+      <span class="value"><span id="round-score">0</span> / 5</span>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn ghost" id="btn-next-scenario" onclick="nextScenario()" disabled>Siguiente escenario &rarr;</button>
+      <button class="btn accent hidden" id="btn-to-phase-2" onclick="goTo(2)">Pasar a fase 2 &rarr;</button>
+    </div>
+  </section>
+
+  <!-- FASE 2: CONSTRUIR -->
+  <section id="section-2" class="card hidden">
+    <span class="intro-badge">Fase 2 / 3</span>
+    <h2>Construye tu prompt ROCEF</h2>
+    <p>Rellena cada caja. Puedes escribir desde cero o cargar una plantilla UNIONE para editarla.</p>
+
+    <div class="builder-grid">
+
+      <div class="builder-field">
+        <label><span><span class="letter">R</span>Rol</span><span class="hint">¿Quién queremos que sea Copilot?</span></label>
+        <div class="row">
+          <textarea id="f-rol" placeholder="Ej.: Experto en control de gestión para concesionarios de automoción…"></textarea>
+          <select onchange="fillField('f-rol', this)">
+            <option value="">Sugerencias…</option>
+            <option>Analista Senior de Control de Gestión y Auditoría Fiscal, especializado en Automotive Retail.</option>
+            <option>Experto en experiencia de cliente de postventa en talleres multimarca con 15 años asesorando a grupos de automoción.</option>
+            <option>Responsable de marketing digital para concesionarios, especializado en campañas de captación local y fidelización.</option>
+            <option>Consultor fiscal especializado en REBU, automatrículas y operativa de compraventa de VO.</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="builder-field">
+        <label><span><span class="letter">O</span>Objetivo</span><span class="hint">¿Qué tiene que entregarte exactamente?</span></label>
+        <div class="row">
+          <textarea id="f-objetivo" placeholder="Ej.: Detectar anomalías en el margen del cierre de marzo y proponer 3 acciones correctivas."></textarea>
+          <select onchange="fillField('f-objetivo', this)">
+            <option value="">Sugerencias…</option>
+            <option>Detectar ineficiencias operativas, anomalías en el margen comercial y riesgos fiscales (REBU y automatrículas) a partir de los datos de cierre mensual.</option>
+            <option>Identificar los 3 principales puntos de fricción en la recepción de vehículos y proponer acciones concretas para reducir los tiempos de espera.</option>
+            <option>Redactar una campaña de email en 3 impactos para reactivar clientes de postventa que no han pasado por taller en 12 meses.</option>
+            <option>Generar un informe ejecutivo con la evolución de rappels por marca y un plan de acción para el próximo trimestre.</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="builder-field">
+        <label><span><span class="letter">C</span>Contexto</span><span class="hint">Sector, datos, restricciones, estacionalidad…</span></label>
+        <div class="row">
+          <textarea id="f-contexto" placeholder="Ej.: Sector automoción con alta estacionalidad y dependencia de rappels por objetivos de marca."></textarea>
+          <select onchange="fillField('f-contexto', this)">
+            <option value="">Sugerencias…</option>
+            <option>El análisis se realiza para una unidad de negocio de UNIONE Movilidad. El sector tiene alta dependencia de rappels por objetivos y estacionalidad muy marcada (picos en marzo y septiembre).</option>
+            <option>Trabajamos sobre encuestas NPS del último trimestre en varios concesionarios de UNIONE Movilidad. La temporada alta de revisiones se concentra en abril y octubre, coincidiendo con el cambio de neumáticos.</option>
+            <option>La base de clientes incluye particulares y flotas de empresa. La competencia local ha bajado precios un 8% y notamos caída de entradas en postventa.</option>
+            <option>Los datos provienen del cierre mensual. El mix incluye VN, VO (con REBU) y automatrículas, que tienen tratamiento fiscal distinto.</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="builder-field">
+        <label><span><span class="letter">E</span>Ejemplos / Estilo</span><span class="hint">Tono, ejemplos de buena salida, lo que NO quieres</span></label>
+        <div class="row">
+          <textarea id="f-ejemplos" placeholder="Ej.: Tono ejecutivo y crítico. En lugar de 'bajaron las ventas', di '-60% en agosto por paralización estacional'."></textarea>
+          <select onchange="fillField('f-ejemplos', this)">
+            <option value="">Sugerencias…</option>
+            <option>El tono debe ser ejecutivo, directo y crítico. No te limites a describir los datos: interprétalos. Ejemplo: en lugar de "las ventas bajaron en agosto" di "la caída del 60% en agosto sugiere una paralización estacional no cubierta por postventa".</option>
+            <option>Agrupa los comentarios por causa raíz. Ejemplo: en lugar de "los clientes esperan mucho", escribe "47% de las quejas mencionan >20 min en recepción, concentradas entre 8:30 y 9:30".</option>
+            <option>Tono cercano pero profesional. Evita tecnicismos. Ejemplo: en lugar de "amortización acelerada", di "adelantar la deducción del coste del coche".</option>
+            <option>Sé firme y estructurado. No inventes datos: si falta información, márcala como "dato pendiente de confirmar" en vez de rellenarla.</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="builder-field">
+        <label><span><span class="letter">F</span>Formato</span><span class="hint">Estructura, longitud, apartados obligatorios</span></label>
+        <div class="row">
+          <textarea id="f-formato" placeholder="Ej.: Informe con (1) Resumen ejecutivo 5 líneas, (2) Tabla de hallazgos, (3) Próximos pasos."></textarea>
+          <select onchange="fillField('f-formato', this)">
+            <option value="">Sugerencias…</option>
+            <option>Informe técnico con: (1) Resumen ejecutivo máx. 5 líneas, (2) Tabla de anomalías, (3) Bloque de alertas fiscales, (4) Checklist de documentación pendiente.</option>
+            <option>Formato: (1) Top 3 fricciones con % de menciones, (2) Causa raíz probable, (3) Acción recomendada con responsable, (4) Métrica de éxito a 30 días.</option>
+            <option>Entrégalo como 3 correos listos para enviar, cada uno con asunto, cuerpo de máx. 120 palabras y CTA claro.</option>
+            <option>Tabla markdown con columnas: Marca · Objetivo · Real · Desviación · Riesgo · Acción sugerida.</option>
+          </select>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="btn-row">
+      <button class="btn accent" onclick="buildPrompt()">Ensamblar prompt &amp; validar</button>
+      <button class="btn ghost" onclick="loadExample()">Cargar ejemplo completo</button>
+      <button class="btn ghost" onclick="clearBuilder()">Limpiar</button>
+    </div>
+
+    <div id="build-output" class="hidden">
+      <h3>Tu prompt ROCEF listo para pegar en Copilot</h3>
+      <div class="output-block" id="built-prompt-text"></div>
+      <div class="btn-row">
+        <button class="btn" onclick="copyBuilt()">Copiar al portapapeles</button>
+        <button class="btn ghost" onclick="sendToAuditor()">Llevar al auditor &rarr;</button>
+      </div>
+      <h3>Checklist de calidad ROCEF</h3>
+      <div class="checklist" id="build-checklist"></div>
+    </div>
+
+    <div class="btn-row" style="margin-top: 24px;">
+      <button class="btn ghost" onclick="goTo(1)">&larr; Volver</button>
+      <button class="btn accent" onclick="goTo(3)">Pasar a fase 3 &rarr;</button>
+    </div>
+  </section>
+
+  <!-- FASE 3: AUDITAR -->
+  <section id="section-3" class="card hidden">
+    <span class="intro-badge">Fase 3 / 3</span>
+    <h2>Audita cualquier prompt con un metaprompt</h2>
+    <p>Pega aquí <strong>cualquier prompt</strong> (el que acabas de construir, uno tuyo real, uno que te haya funcionado regular…). Lo evalúo con reglas locales y te genero el metaprompt de auditoría para que lo ejecutes directamente en Copilot.</p>
+
+    <div class="builder-field">
+      <label><span>Prompt a auditar</span><span class="hint">Pega tu prompt aquí</span></label>
+      <textarea id="audit-input" style="min-height: 160px;" placeholder="Pega aquí el prompt que quieres revisar…"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn accent" onclick="runAudit()">Auditar prompt</button>
+      <button class="btn ghost" onclick="document.getElementById('audit-input').value=''; document.getElementById('audit-result').classList.add('hidden');">Limpiar</button>
+    </div>
+
+    <div id="audit-result" class="hidden audit-result">
+      <div class="big-score">
+        <div><span class="n" id="audit-score">0</span><span class="max">/10</span></div>
+        <div class="label" id="audit-label">Puntuación ROCEF</div>
+      </div>
+
+      <h3>Diagnóstico automático</h3>
+      <div class="checklist" id="audit-checklist"></div>
+
+      <div class="tip-box" id="audit-tip"></div>
+
+      <h3>Metaprompt listo para Copilot</h3>
+      <p>Copia este bloque y pégalo tal cual en Copilot Chat. Te devolverá mejoras concretas y una versión pulida.</p>
+      <div class="output-block" id="metaprompt-text"></div>
+      <div class="btn-row">
+        <button class="btn" onclick="copyMetaprompt()">Copiar metaprompt</button>
+        <button class="btn accent" onclick="finishMission()">Completar misión &rarr;</button>
+      </div>
+    </div>
+
+    <div class="btn-row" style="margin-top: 24px;">
+      <button class="btn ghost" onclick="goTo(2)">&larr; Volver</button>
+    </div>
+  </section>
+
+  <!-- FINAL -->
+  <section id="section-final" class="card hidden">
+    <div style="text-align: center;">
+      <div style="font-size: 60px;">🏁</div>
+      <h2 style="font-size: 28px;">Misión completada</h2>
+      <p style="font-size: 16px;">Ya has recorrido las tres fases del prompting avanzado en UNIONE.</p>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="big" id="final-classified">0</div>
+        <div class="lbl">Fragmentos clasificados</div>
+      </div>
+      <div class="summary-card">
+        <div class="big" id="final-built">0</div>
+        <div class="lbl">Prompts construidos</div>
+      </div>
+      <div class="summary-card">
+        <div class="big" id="final-audited">0</div>
+        <div class="lbl">Prompts auditados</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 28px;">Lo que te llevas de esta sesión</h3>
+    <ul style="color: var(--muted); line-height: 1.9;">
+      <li><strong>ROCEF</strong> no es teoría: es un chequeo rápido antes de enviar cualquier prompt importante.</li>
+      <li>Los prompts que funcionan deben <strong>guardarse y parametrizarse</strong> (Prompt Lab / Prompt Gallery).</li>
+      <li>Si un prompt te falla, no lo reescribas a ciegas: <strong>audítalo con un metaprompt</strong>.</li>
+      <li>Siempre <strong>aterriza el contexto a UNIONE</strong>: rappels, REBU, automatrículas, concesionarios, postventa…</li>
+    </ul>
+
+    <div class="btn-row" style="justify-content: center;">
+      <button class="btn ghost" onclick="restart()">Volver a empezar</button>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Misión UNIONE · Taller "El Arte del Prompting" · Ejecuta todo en local, sin enviar datos.
+</footer>
+
+<script>
+  // ========= ESTADO =========
+  const state = {
+    phase: 0,
+    classifyRound: 0,
+    classifyAnswers: {},
+    roundScore: 0,
+    totalClassified: 0,
+    totalBuilt: 0,
+    totalAudited: 0
+  };
+
+  const ROCEF_TAGS = [
+    { key: "R", name: "Rol" },
+    { key: "O", name: "Objetivo" },
+    { key: "C", name: "Contexto" },
+    { key: "E", name: "Ejemplos" },
+    { key: "F", name: "Formato" }
+  ];
+
+  const SCENARIOS = [
+    {
+      title: "Escenario A · Cierre mensual en Automotive Retail",
+      subtitle: "Un analista debe revisar los datos de cierre de una unidad de negocio de UNIONE Movilidad.",
+      fragments: [
+        { text: "Analista Senior de Control de Gestión y Auditoría Fiscal, especializado en el sector Automotive Retail.", correct: "R", explain: "Define QUIÉN es Copilot: perfil, especialidad y seniority." },
+        { text: "Detectar ineficiencias operativas, anomalías en el margen comercial y riesgos fiscales (REBU y automatrículas) a partir de los datos de cierre.", correct: "O", explain: "Dice QUÉ tiene que conseguir: detectar ineficiencias, anomalías y riesgos." },
+        { text: "El análisis se realiza para una unidad de negocio de UNIONE Movilidad. El sector automotriz tiene alta dependencia de rappels por objetivos y una estacionalidad muy marcada.", correct: "C", explain: "Aporta el fondo del negocio: sector, cliente, peculiaridades." },
+        { text: "El tono debe ser ejecutivo, directo y crítico. En lugar de decir 'las ventas bajaron en agosto', di 'la caída del 60% en agosto sugiere una paralización estacional no cubierta por postventa'.", correct: "E", explain: "Muestra EL ESTILO que se espera con un ejemplo concreto de buena/mala redacción." },
+        { text: "Un informe técnico estructurado con: Resumen ejecutivo, Tabla de anomalías, Bloque de alertas fiscales y Checklist de documentación pendiente.", correct: "F", explain: "Define CÓMO debe entregarse: estructura y secciones concretas." }
+      ]
+    },
+    {
+      title: "Escenario B · Postventa y experiencia de cliente",
+      subtitle: "Un responsable de postventa quiere accionar las encuestas NPS de los talleres.",
+      fragments: [
+        { text: "Experto en experiencia de cliente y calidad de servicio en talleres multimarca, con 15 años asesorando a grupos de automoción.", correct: "R", explain: "Rol con especialización y experiencia." },
+        { text: "Identificar los 3 principales puntos de fricción en la recepción de vehículos y proponer acciones concretas para reducir tiempos de espera.", correct: "O", explain: "Objetivo acotado y medible: top 3 + acciones." },
+        { text: "Trabajamos sobre encuestas NPS del último trimestre en varios concesionarios de UNIONE Movilidad. La temporada alta de revisiones se concentra en abril y octubre, coincidiendo con el cambio de neumáticos.", correct: "C", explain: "Fuente de datos y peculiaridad de negocio (estacionalidad)." },
+        { text: "No te limites a listar quejas: agrupa los comentarios por causa raíz. Ejemplo: en lugar de 'los clientes esperan mucho', escribe '47% de las quejas mencionan >20 min en recepción, concentradas entre 8:30 y 9:30'.", correct: "E", explain: "Guía de estilo con un ejemplo contrastado." },
+        { text: "Entrega: (1) Top 3 fricciones con % de menciones, (2) Causa raíz probable, (3) Acción recomendada con responsable sugerido, (4) Métrica de éxito a 30 días.", correct: "F", explain: "Formato estructurado y accionable." }
+      ]
+    }
+  ];
+
+  // ========= NAV =========
+  function goTo(phase) {
+    state.phase = phase;
+    document.getElementById("section-intro").classList.toggle("hidden", phase !== 0);
+    document.getElementById("section-1").classList.toggle("hidden", phase !== 1);
+    document.getElementById("section-2").classList.toggle("hidden", phase !== 2);
+    document.getElementById("section-3").classList.toggle("hidden", phase !== 3);
+    document.getElementById("section-final").classList.toggle("hidden", phase !== 4);
+    updateProgressBar();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (phase === 1 && state.classifyRound === 0) renderScenario(0);
+  }
+
+  function updateProgressBar() {
+    const bars = [1, 2, 3];
+    bars.forEach(n => {
+      const el = document.getElementById("step-bar-" + n);
+      el.classList.remove("active", "done");
+      if (state.phase > n) el.classList.add("done");
+      else if (state.phase === n) el.classList.add("active");
+      if (state.phase === 4) el.classList.add("done");
+    });
+  }
+
+  // ========= FASE 1 =========
+  function renderScenario(idx) {
+    state.classifyRound = idx;
+    state.classifyAnswers = {};
+    state.roundScore = 0;
+    const sc = SCENARIOS[idx];
+    document.getElementById("scenario-title").innerHTML =
+      "<strong>" + sc.title + "</strong><br>" + sc.subtitle;
+
+    const container = document.getElementById("fragments-container");
+    container.innerHTML = "";
+    // Shuffle fragments
+    const order = [...sc.fragments.keys()].sort(() => Math.random() - 0.5);
+    order.forEach(i => {
+      const f = sc.fragments[i];
+      const div = document.createElement("div");
+      div.className = "fragment";
+      div.dataset.index = i;
+      const btns = ROCEF_TAGS.map(t =>
+        `<button class="tag-btn" onclick="pickTag(${i}, '${t.key}', this)">${t.key} · ${t.name}</button>`
+      ).join("");
+      div.innerHTML = `
+        <div class="fragment-text">"${f.text}"</div>
+        <div class="fragment-buttons">${btns}</div>
+      `;
+      container.appendChild(div);
+    });
+    document.getElementById("round-score").textContent = "0";
+    document.getElementById("btn-next-scenario").disabled = true;
+    document.getElementById("btn-to-phase-2").classList.add("hidden");
+  }
+
+  function pickTag(fragIndex, tagKey, btnEl) {
+    if (state.classifyAnswers[fragIndex]) return; // ya respondido
+    const sc = SCENARIOS[state.classifyRound];
+    const frag = sc.fragments[fragIndex];
+    const container = btnEl.closest(".fragment");
+    const correct = frag.correct === tagKey;
+    state.classifyAnswers[fragIndex] = { picked: tagKey, correct };
+    state.totalClassified++;
+    if (correct) state.roundScore++;
+    // Mark
+    btnEl.classList.add("selected");
+    container.classList.add("answered", correct ? "correct" : "wrong");
+    // If wrong, also highlight correct
+    if (!correct) {
+      container.querySelectorAll(".tag-btn").forEach(b => {
+        if (b.textContent.startsWith(frag.correct + " ")) {
+          b.classList.add("selected");
+          b.style.background = "var(--success)";
+          b.style.borderColor = "var(--success)";
+        }
+      });
+    }
+    // Feedback
+    const fb = document.createElement("div");
+    fb.className = "feedback " + (correct ? "correct" : "wrong");
+    fb.innerHTML = (correct ? "✓ Correcto · " : "✗ Era <strong>" + tagName(frag.correct) + "</strong> · ") + frag.explain;
+    container.appendChild(fb);
+    // Update score
+    document.getElementById("round-score").textContent = state.roundScore;
+    // Check completion
+    if (Object.keys(state.classifyAnswers).length === sc.fragments.length) {
+      if (state.classifyRound < SCENARIOS.length - 1) {
+        document.getElementById("btn-next-scenario").disabled = false;
+      } else {
+        document.getElementById("btn-to-phase-2").classList.remove("hidden");
+      }
+    }
+  }
+
+  function tagName(key) {
+    return ROCEF_TAGS.find(t => t.key === key).name;
+  }
+
+  function nextScenario() {
+    renderScenario(state.classifyRound + 1);
+  }
+
+  // ========= FASE 2 =========
+  function fillField(id, selectEl) {
+    if (selectEl.value) {
+      document.getElementById(id).value = selectEl.value;
+      selectEl.value = "";
+    }
+  }
+
+  function clearBuilder() {
+    ["f-rol", "f-objetivo", "f-contexto", "f-ejemplos", "f-formato"].forEach(id => {
+      document.getElementById(id).value = "";
+    });
+    document.getElementById("build-output").classList.add("hidden");
+  }
+
+  function loadExample() {
+    document.getElementById("f-rol").value = "Analista Senior de Control de Gestión y Auditoría Fiscal, especializado en el sector Automotive Retail.";
+    document.getElementById("f-objetivo").value = "Detectar ineficiencias operativas, anomalías en el margen comercial y riesgos fiscales (REBU y automatrículas) a partir de los datos del cierre mensual.";
+    document.getElementById("f-contexto").value = "El análisis se realiza para una unidad de negocio de UNIONE Movilidad. El sector tiene alta dependencia de rappels por objetivos y estacionalidad marcada (picos en marzo y septiembre).";
+    document.getElementById("f-ejemplos").value = "El tono debe ser ejecutivo, directo y crítico. No te limites a describir los datos: interprétalos. Ejemplo: en lugar de \"las ventas bajaron en agosto\" di \"la caída del 60% en agosto sugiere una paralización estacional no cubierta por postventa\".";
+    document.getElementById("f-formato").value = "Informe técnico estructurado con: (1) Resumen ejecutivo máx. 5 líneas, (2) Tabla de anomalías, (3) Bloque de alertas fiscales, (4) Checklist de documentación pendiente.";
+  }
+
+  function buildPrompt() {
+    const rol = document.getElementById("f-rol").value.trim();
+    const obj = document.getElementById("f-objetivo").value.trim();
+    const ctx = document.getElementById("f-contexto").value.trim();
+    const ej = document.getElementById("f-ejemplos").value.trim();
+    const fmt = document.getElementById("f-formato").value.trim();
+
+    const prompt =
+`# ROL
+Actúa como ${rol || "[pendiente de definir]"}.
+
+# OBJETIVO
+${obj || "[pendiente de definir]"}
+
+# CONTEXTO
+${ctx || "[pendiente de definir]"}
+
+# ESTILO Y EJEMPLOS
+${ej || "[pendiente de definir]"}
+
+# FORMATO DE SALIDA
+${fmt || "[pendiente de definir]"}
+
+Si te falta información para completar cualquier apartado, no la inventes: pregúntame o márcala como "dato pendiente".`;
+
+    document.getElementById("built-prompt-text").textContent = prompt;
+    document.getElementById("build-output").classList.remove("hidden");
+
+    // Checklist
+    const checks = [
+      checkField("Rol presente y con especialización", rol, v => v.length >= 20),
+      checkField("Objetivo claro (verbo + resultado medible)", obj, v => v.length >= 25 && /\b(detectar|generar|redactar|analizar|identificar|proponer|resumir|crear|escribir|revisar|auditar|comparar|clasificar|traducir)\b/i.test(v)),
+      checkField("Contexto específico del sector / cliente", ctx, v => v.length >= 30),
+      checkField("Ejemplos o guía de estilo incluidos", ej, v => v.length >= 20),
+      checkField("Formato de salida definido", fmt, v => v.length >= 20),
+      checkField("Referencia a UNIONE / automoción", rol + " " + obj + " " + ctx, v => /unione|automo|taller|concesionario|rappel|rebu|postventa|flota|vn|vo|marca/i.test(v))
+    ];
+    renderChecklist("build-checklist", checks);
+    state.totalBuilt++;
+  }
+
+  function checkField(label, value, testFn) {
+    if (!value) return { label, status: "ko", msg: "vacío" };
+    if (!testFn(value)) return { label, status: "warn", msg: "poco específico" };
+    return { label, status: "ok", msg: "ok" };
+  }
+
+  function renderChecklist(containerId, checks) {
+    const c = document.getElementById(containerId);
+    c.innerHTML = "";
+    checks.forEach(ch => {
+      const icon = ch.status === "ok" ? "✓" : ch.status === "warn" ? "!" : "×";
+      const cls = ch.status === "ok" ? "ok" : ch.status === "warn" ? "warn" : "ko";
+      const item = document.createElement("div");
+      item.className = "checklist-item";
+      item.innerHTML = `<span class="check-icon ${cls}">${icon}</span><span><strong>${ch.label}</strong> · <span style="color: var(--muted);">${ch.msg}</span></span>`;
+      c.appendChild(item);
+    });
+  }
+
+  function copyBuilt() {
+    const text = document.getElementById("built-prompt-text").textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = event.target;
+      const orig = btn.textContent;
+      btn.textContent = "✓ Copiado";
+      setTimeout(() => btn.textContent = orig, 1800);
+    });
+  }
+
+  function sendToAuditor() {
+    const text = document.getElementById("built-prompt-text").textContent;
+    document.getElementById("audit-input").value = text;
+    goTo(3);
+  }
+
+  // ========= FASE 3 =========
+  function runAudit() {
+    const text = document.getElementById("audit-input").value.trim();
+    if (!text) {
+      alert("Pega primero un prompt para auditar.");
+      return;
+    }
+
+    const checks = [];
+    let score = 0;
+
+    // 1. Longitud
+    if (text.length < 60) {
+      checks.push({ label: "Longitud suficiente", status: "ko", msg: "demasiado corto (<60 caracteres): probablemente te falta contexto" });
+    } else if (text.length < 150) {
+      checks.push({ label: "Longitud suficiente", status: "warn", msg: "corto: ¿has incluido rol, objetivo, contexto y formato?" });
+      score += 1;
+    } else {
+      checks.push({ label: "Longitud suficiente", status: "ok", msg: `${text.length} caracteres` });
+      score += 2;
+    }
+
+    // 2. Rol
+    if (/\b(act(ú|u)a como|eres (un|una)|como (un|una) |ponte en el rol|especializado|experto|senior|consultor|analista)\b/i.test(text)) {
+      checks.push({ label: "Rol definido", status: "ok", msg: "detecto asignación de rol" });
+      score += 2;
+    } else {
+      checks.push({ label: "Rol definido", status: "ko", msg: "no detecto rol: añade \"Actúa como…\" o \"Eres un/a…\"" });
+    }
+
+    // 3. Objetivo / verbo claro
+    if (/\b(detectar?|detect(a|ar)|generar?|genera|redactar?|redacta|analizar?|analiza|identificar?|identifica|proponer?|propone|resumir?|resume|crear?|crea|escribir?|escribe|revisar?|revisa|auditar?|audita|comparar?|compara|clasificar?|clasifica|traducir?|traduce|listar?|lista|explicar?|explica)\b/i.test(text)) {
+      checks.push({ label: "Verbo de objetivo claro", status: "ok", msg: "detecto un verbo de acción" });
+      score += 2;
+    } else {
+      checks.push({ label: "Verbo de objetivo claro", status: "ko", msg: "empieza con un verbo (analiza, genera, redacta, identifica…)" });
+    }
+
+    // 4. Formato
+    if (/\b(formato|estructura|tabla|lista|informe|markdown|bullet|p(á|a)rrafo|secci(ó|o)n|resumen|checklist|columnas|l(í|i)neas|palabras|asunto|cuerpo|apartado)\b/i.test(text)) {
+      checks.push({ label: "Formato de salida solicitado", status: "ok", msg: "detecto petición de formato" });
+      score += 2;
+    } else {
+      checks.push({ label: "Formato de salida solicitado", status: "warn", msg: "indica cómo quieres la salida (tabla, informe, lista, máx. X líneas…)" });
+      score += 1;
+    }
+
+    // 5. Multitarea
+    const verbs = (text.match(/\b(detecta|genera|redacta|analiza|identifica|propone|resume|crea|escribe|revisa|audita|compara|clasifica|traduce|lista|explica)\b/gi) || []).length;
+    if (verbs >= 4) {
+      checks.push({ label: "Una tarea por prompt", status: "warn", msg: `detecto ${verbs} verbos de acción: considera dividir en pasos` });
+      score += 1;
+    } else {
+      checks.push({ label: "Una tarea por prompt", status: "ok", msg: verbs + (verbs === 1 ? " tarea principal" : " tareas (asumible)") });
+      score += 1;
+    }
+
+    // 6. Ambigüedades
+    const ambig = (text.match(/\b(algo|cosas|eso|muchas|varias|un poco|rápidamente|r(á|a)pido|bueno|simp(a|á)tico|interesante)\b/gi) || []);
+    if (ambig.length >= 2) {
+      checks.push({ label: "Sin términos ambiguos", status: "warn", msg: "expresiones vagas detectadas: " + ambig.slice(0,3).join(", ") });
+    } else {
+      checks.push({ label: "Sin términos ambiguos", status: "ok", msg: "lenguaje suficientemente concreto" });
+      score += 1;
+    }
+
+    // Clamp
+    score = Math.min(10, score);
+    document.getElementById("audit-score").textContent = score;
+    const label = score >= 8 ? "Prompt sólido" : score >= 5 ? "Prompt mejorable" : "Prompt débil";
+    document.getElementById("audit-label").textContent = label;
+    renderChecklist("audit-checklist", checks);
+
+    // Tip
+    const tip = document.getElementById("audit-tip");
+    if (score >= 8) {
+      tip.innerHTML = "<strong>Bien trabajado.</strong> Este prompt ya es reutilizable. Considera guardarlo en la Prompt Gallery con variables dinámicas ([FECHA], [PRODUCTO], [DESTINATARIO]…) para que todo el equipo lo pueda usar.";
+    } else if (score >= 5) {
+      tip.innerHTML = "<strong>Vas por buen camino.</strong> Refuerza las cajas ROCEF que aparecen en amarillo o rojo. Y pasa el metaprompt por Copilot: te va a sugerir mejoras concretas.";
+    } else {
+      tip.innerHTML = "<strong>Este prompt necesita trabajo.</strong> Vuelve a la fase 2 y ensambla las 5 piezas (Rol, Objetivo, Contexto, Ejemplos, Formato). Un prompt corto y sin rol raramente da buenos resultados.";
+    }
+
+    // Metaprompt
+    const metaprompt =
+`Actúa como revisor experto de prompts para Microsoft 365 Copilot.
+
+Analiza este prompt:
+- Detecta ambigüedades, supuestos, riesgos de inventar datos y puntos donde el formato pueda fallar.
+- Sugiere EXACTAMENTE 3 mejoras concretas (no genéricas), explicando el impacto de cada una.
+- Devuélveme una versión final mejorada del prompt, manteniendo la intención original.
+- Añade una mini-checklist de validación (5 puntos) para comprobar si la salida es "aprobable".
+
+PROMPT A AUDITAR:
+"""
+${text}
+"""`;
+
+    document.getElementById("metaprompt-text").textContent = metaprompt;
+    document.getElementById("audit-result").classList.remove("hidden");
+    state.totalAudited++;
+  }
+
+  function copyMetaprompt() {
+    const text = document.getElementById("metaprompt-text").textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = event.target;
+      const orig = btn.textContent;
+      btn.textContent = "✓ Copiado";
+      setTimeout(() => btn.textContent = orig, 1800);
+    });
+  }
+
+  function finishMission() {
+    document.getElementById("final-classified").textContent = state.totalClassified;
+    document.getElementById("final-built").textContent = state.totalBuilt;
+    document.getElementById("final-audited").textContent = state.totalAudited;
+    goTo(4);
+  }
+
+  function restart() {
+    state.phase = 0;
+    state.classifyRound = 0;
+    state.classifyAnswers = {};
+    state.roundScore = 0;
+    state.totalClassified = 0;
+    state.totalBuilt = 0;
+    state.totalAudited = 0;
+    clearBuilder();
+    document.getElementById("audit-input").value = "";
+    document.getElementById("audit-result").classList.add("hidden");
+    renderScenario(0);
+    goTo(0);
+  }
+
+  // Init
+  goTo(0);
+</script>
+
+</body>
+</html>
