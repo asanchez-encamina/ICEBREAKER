@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>El Medidor de Caos Digital · Securitas</title>
+<style>
+  :root{
+    --sec-red:#FC273F;
+    --sec-red-dark:#C41B2E;
+    --sec-red-light:#ff5d70;
+    --sec-navy:#031F30;
+    --sec-navy-2:#062c46;
+    --sec-navy-3:#0b3b5c;
+    --sec-purple:#8D5FFF;
+    --sec-purple-dark:#6a3fd1;
+    --sec-grey-dark:#53565A;
+    --sec-grey-mid:#9C9EA0;
+    --sec-grey-light:#D7D8D6;
+    --ink:#0f172a;
+    --muted:#94a3b8;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;overflow:hidden}
+  body{
+    font-family:"Segoe UI",Inter,system-ui,-apple-system,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 10% -10%,rgba(252,39,63,.18),transparent 60%),
+      radial-gradient(900px 500px at 110% 110%,rgba(141,95,255,.20),transparent 60%),
+      linear-gradient(180deg,var(--sec-navy),#010e17);
+    color:#e5e7eb;
+  }
+
+  /* Logo Securitas */
+  .brand{
+    position:fixed;top:18px;left:22px;z-index:60;
+    display:flex;align-items:center;gap:12px;
+  }
+  .brand .logo{
+    background:#000;color:#fff;padding:7px 14px;border-radius:3px;
+    display:inline-flex;align-items:center;gap:9px;
+    font-weight:700;font-size:14px;letter-spacing:.5px;
+  }
+  .brand .dots3{display:inline-flex;gap:3px}
+  .brand .dots3 span{
+    width:7px;height:7px;border-radius:50%;background:var(--sec-red);
+    box-shadow:0 0 0 1px rgba(255,255,255,.1);
+  }
+  .brand .pill{
+    background:linear-gradient(135deg,var(--sec-red),var(--sec-red-dark));
+    padding:4px 12px;border-radius:999px;font-size:11px;color:#fff;font-weight:600;
+    letter-spacing:.3px;
+  }
+
+  /* Progress bar */
+  .progress-wrap{
+    position:fixed;top:0;left:0;right:0;height:4px;background:rgba(255,255,255,.06);z-index:55;
+  }
+  .progress-bar{
+    height:100%;width:0;
+    background:linear-gradient(90deg,var(--sec-red),var(--sec-purple));
+    transition:width .6s cubic-bezier(.2,.9,.3,1);
+    box-shadow:0 0 18px rgba(252,39,63,.5);
+  }
+  .progress-label{
+    position:fixed;top:18px;right:22px;z-index:60;font-size:12px;color:var(--muted);
+    letter-spacing:.5px;text-transform:uppercase;font-weight:600;
+  }
+  .progress-label .cur{color:var(--sec-red)}
+
+  /* Stage & scenes */
+  .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:80px 40px 60px}
+  .scene{
+    position:absolute;inset:80px 40px 60px;display:flex;align-items:center;justify-content:center;
+    opacity:0;transform:translateY(24px) scale(.98);
+    transition:opacity .55s ease,transform .55s ease;
+    pointer-events:none;
+  }
+  .scene.active{opacity:1;transform:none;pointer-events:auto}
+
+  /* ================ INTRO ================ */
+  .intro{text-align:center;max-width:1000px;padding:20px}
+  .intro .eyebrow{
+    display:inline-flex;align-items:center;gap:10px;padding:6px 14px;
+    background:rgba(252,39,63,.12);border:1px solid rgba(252,39,63,.3);
+    border-radius:999px;color:var(--sec-red-light);font-size:12.5px;font-weight:700;
+    letter-spacing:.6px;text-transform:uppercase;margin-bottom:20px;
+  }
+  .intro .eyebrow .pulse{
+    width:8px;height:8px;border-radius:50%;background:var(--sec-red);
+    animation:pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(252,39,63,.6)}50%{box-shadow:0 0 0 8px rgba(252,39,63,0)}}
+
+  .intro h1{
+    font-size:clamp(38px,6vw,78px);margin:0 0 14px;line-height:1;font-weight:800;letter-spacing:-1.5px;
+    background:linear-gradient(135deg,#fff 0%,#ffd6db 40%,#c5a7ff 80%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .intro p.lead{font-size:clamp(16px,1.6vw,20px);color:#cbd5e1;margin:0 0 34px;line-height:1.5}
+  .intro .meter-preview{
+    width:min(520px,90%);margin:0 auto 38px;position:relative;
+    height:60px;
+  }
+  .meter-preview .track{
+    position:absolute;inset:0;top:24px;height:12px;border-radius:999px;
+    background:linear-gradient(90deg,var(--sec-red) 0%,#ff7a3d 35%,var(--sec-purple) 70%,#22c55e 100%);
+    box-shadow:0 0 30px rgba(252,39,63,.35);
+  }
+  .meter-preview .ticks{
+    position:absolute;inset:0;display:flex;justify-content:space-between;font-size:11px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.5px;padding:0 2px;font-weight:700;
+  }
+  .meter-preview .needle{
+    position:absolute;top:14px;left:12%;width:3px;height:32px;background:#fff;border-radius:3px;
+    box-shadow:0 0 12px rgba(255,255,255,.8);
+    animation:needle 3.2s ease-in-out infinite alternate;
+  }
+  @keyframes needle{
+    0%{left:8%}50%{left:78%}100%{left:22%}
+  }
+  .btn-start{
+    background:linear-gradient(135deg,var(--sec-red),var(--sec-red-dark));
+    color:#fff;border:none;border-radius:12px;padding:16px 32px;font-size:16px;font-weight:700;
+    cursor:pointer;box-shadow:0 14px 30px rgba(252,39,63,.35),inset 0 -3px 0 rgba(0,0,0,.15);
+    display:inline-flex;align-items:center;gap:10px;transition:transform .15s ease,box-shadow .15s ease;
+    letter-spacing:.3px;
+  }
+  .btn-start:hover{transform:translateY(-2px);box-shadow:0 18px 40px rgba(252,39,63,.5)}
+  .btn-start .arr{display:inline-block;transition:transform .2s ease}
+  .btn-start:hover .arr{transform:translateX(4px)}
+  .intro .meta{margin-top:20px;font-size:12.5px;color:var(--muted);letter-spacing:.3px}
+  .intro .meta strong{color:#e5e7eb}
+
+  /* ================ QUESTION ================ */
+  .qbox{max-width:1100px;width:100%;padding:20px}
+  .qtag{
+    display:inline-flex;align-items:center;gap:10px;padding:6px 14px;
+    background:linear-gradient(135deg,rgba(141,95,255,.18),rgba(252,39,63,.12));
+    border:1px solid rgba(141,95,255,.35);
+    border-radius:999px;color:#d4bfff;font-size:11.5px;font-weight:700;
+    letter-spacing:.6px;text-transform:uppercase;margin-bottom:18px;
+  }
+  .qtag .num{
+    background:var(--sec-red);color:#fff;width:22px;height:22px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;font-size:11px;
+  }
+  .qtitle{
+    font-size:clamp(24px,3.2vw,40px);margin:0 0 8px;color:#fff;font-weight:700;
+    letter-spacing:-.5px;line-height:1.15;
+  }
+  .qsub{font-size:clamp(15px,1.5vw,18px);color:#cbd5e1;margin:0 0 26px;line-height:1.5}
+  .options{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .opt{
+    background:rgba(6,44,70,.75);
+    border:1.5px solid rgba(255,255,255,.08);
+    border-radius:14px;padding:18px 20px;cursor:pointer;
+    transition:all .2s ease;display:flex;gap:16px;align-items:flex-start;
+    text-align:left;color:#e5e7eb;font-family:inherit;
+    position:relative;overflow:hidden;
+  }
+  .opt::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:var(--color,var(--sec-grey-mid));opacity:.55;transition:opacity .2s ease;
+  }
+  .opt:hover{
+    transform:translateY(-3px);
+    border-color:rgba(252,39,63,.45);
+    background:rgba(11,59,92,.85);
+    box-shadow:0 12px 30px rgba(0,0,0,.35);
+  }
+  .opt:hover::before{opacity:1}
+  .opt .emoji{
+    flex:0 0 auto;width:42px;height:42px;border-radius:10px;
+    background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;
+    font-size:22px;border:1px solid rgba(255,255,255,.08);
+  }
+  .opt .txt{flex:1;min-width:0}
+  .opt .label{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--color,#cbd5e1);margin-bottom:4px}
+  .opt .quote{font-size:15px;line-height:1.5;color:#f1f5f9}
+  .opt.selected{
+    border-color:var(--color,var(--sec-red));
+    background:rgba(252,39,63,.12);
+    transform:translateY(-3px);
+  }
+
+  .opt[data-score="1"]{--color:#ff5d70}
+  .opt[data-score="2"]{--color:#f59e0b}
+  .opt[data-score="3"]{--color:var(--sec-purple)}
+  .opt[data-score="4"]{--color:#22c55e}
+
+  /* ================ RESULT ================ */
+  .result{max-width:1200px;width:100%;padding:20px}
+  .result-grid{display:grid;grid-template-columns:420px 1fr;gap:30px;align-items:start}
+
+  .badge-card{
+    background:linear-gradient(160deg,rgba(252,39,63,.12),rgba(141,95,255,.1));
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:20px;padding:28px;text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.4);
+    position:relative;overflow:hidden;
+  }
+  .badge-card::before{
+    content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+    background:conic-gradient(from 0deg,transparent 0deg,rgba(252,39,63,.15) 60deg,transparent 120deg,
+      transparent 180deg,rgba(141,95,255,.15) 240deg,transparent 300deg,transparent 360deg);
+    animation:spin 12s linear infinite;pointer-events:none;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .badge-card > *{position:relative;z-index:1}
+  .badge-tag{
+    display:inline-block;font-size:11px;font-weight:700;letter-spacing:.8px;
+    text-transform:uppercase;color:var(--sec-red-light);margin-bottom:10px;
+  }
+  .badge-visual{
+    width:170px;height:170px;margin:0 auto 18px;position:relative;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--sec-red),var(--sec-red-dark));
+    border-radius:50%;
+    box-shadow:0 14px 40px rgba(252,39,63,.45),inset 0 -6px 0 rgba(0,0,0,.2),
+      0 0 0 6px rgba(255,255,255,.05),0 0 0 10px rgba(252,39,63,.15);
+  }
+  .badge-visual svg{width:80px;height:80px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .badge-visual .ribbon-bar{
+    position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);
+    background:#000;color:#fff;padding:4px 14px;border-radius:3px;font-size:10.5px;font-weight:700;
+    letter-spacing:.6px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+  }
+  .badge-visual .ribbon-bar .dots3{display:inline-flex;gap:2px}
+  .badge-visual .ribbon-bar .dots3 span{width:4px;height:4px;border-radius:50%;background:var(--sec-red)}
+  .badge-name{
+    font-size:26px;font-weight:800;color:#fff;margin:16px 0 6px;letter-spacing:-.3px;line-height:1.15;
+  }
+  .badge-tier{font-size:13px;color:#cbd5e1;margin:0 0 0}
+  .badge-score{
+    margin-top:16px;padding-top:16px;border-top:1px dashed rgba(255,255,255,.1);
+    display:flex;justify-content:space-around;font-size:11px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.5px;font-weight:700;
+  }
+  .badge-score strong{display:block;font-size:22px;color:#fff;margin-bottom:2px;letter-spacing:-.3px}
+
+  .result-right{display:flex;flex-direction:column;gap:18px}
+  .verdict{
+    background:rgba(6,44,70,.7);border:1px solid rgba(255,255,255,.08);
+    border-radius:16px;padding:24px 26px;
+  }
+  .verdict h2{
+    font-size:28px;margin:0 0 10px;font-weight:700;color:#fff;letter-spacing:-.3px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .verdict h2 .sp{
+    width:8px;height:28px;border-radius:3px;
+    background:linear-gradient(180deg,var(--sec-red),var(--sec-purple));
+  }
+  .verdict p{font-size:15.5px;line-height:1.6;color:#cbd5e1;margin:0 0 10px}
+  .verdict p strong{color:#fff}
+
+  .time-card{
+    background:linear-gradient(135deg,rgba(252,39,63,.16),rgba(141,95,255,.12));
+    border:1px solid rgba(252,39,63,.3);border-radius:16px;padding:22px 26px;
+    display:flex;align-items:center;gap:22px;
+  }
+  .time-card .clockwrap{
+    width:84px;height:84px;border-radius:50%;
+    background:conic-gradient(from 0deg,var(--sec-red) 0deg,var(--sec-purple) 220deg,rgba(255,255,255,.08) 220deg);
+    display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+    box-shadow:0 0 24px rgba(252,39,63,.3);
+  }
+  .time-card .clockinner{
+    width:66px;height:66px;border-radius:50%;background:var(--sec-navy);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .time-card .clockinner svg{width:34px;height:34px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .time-card .big{
+    font-size:42px;font-weight:800;color:#fff;line-height:1;letter-spacing:-1px;
+    background:linear-gradient(135deg,#fff,#ffd6db);-webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .time-card .big .unit{font-size:18px;color:#cbd5e1;font-weight:600;margin-left:4px;-webkit-text-fill-color:#cbd5e1}
+  .time-card .lbl{font-size:12.5px;color:#cbd5e1;margin-top:4px;line-height:1.4}
+  .time-card .lbl strong{color:#fff}
+
+  .cta-line{
+    background:rgba(3,31,48,.6);border:1px solid rgba(255,255,255,.08);border-radius:16px;
+    padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:20px;
+  }
+  .cta-line .msg{font-size:14.5px;color:#cbd5e1;line-height:1.45}
+  .cta-line .msg strong{color:#fff}
+  .cta-line .tools{display:flex;gap:8px;flex-wrap:wrap}
+  .tool-chip{
+    background:#fff;color:#0f172a;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:700;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .tool-chip .d{width:10px;height:10px;border-radius:2px}
+  .tool-chip .d.excel{background:#107C41}
+  .tool-chip .d.onedrive{background:#0078D4}
+  .tool-chip .d.onenote{background:#7719AA}
+
+  .result-foot{
+    margin-top:6px;text-align:center;font-size:12.5px;color:var(--muted);
+  }
+  .result-foot kbd{
+    background:#0b2036;border:1px solid #1e3a50;color:#e5e7eb;
+    padding:2px 8px;border-radius:6px;font-size:11px;font-family:inherit;
+  }
+
+  /* Confetti canvas */
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:40}
+
+  /* Fade */
+  .fade-in{animation:fadein .6s ease both}
+  @keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* Hidden helper */
+  .hidden{display:none !important}
+
+  @media (max-width:900px){
+    .options{grid-template-columns:1fr}
+    .result-grid{grid-template-columns:1fr}
+    .cta-line{flex-direction:column;align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+
+<div class="brand">
+  <span class="logo"><span class="dots3"><span></span><span></span><span></span></span> SECURITAS</span>
+  <span class="pill">Icebreaker</span>
+</div>
+
+<div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+<div class="progress-label" id="progressLabel"></div>
+
+<canvas id="confetti"></canvas>
+
+<div class="stage" id="stage">
+
+  <!-- ========== INTRO ========== -->
+  <section class="scene active" data-scene="intro">
+    <div class="intro fade-in">
+      <span class="eyebrow"><span class="pulse"></span> Icebreaker · 90 segundos</span>
+      <h1>El Medidor<br/>de Caos Digital</h1>
+      <p class="lead">Un pequeño diagnóstico para descubrir qué tipo de<br/><strong style="color:#fff">superviviente digital</strong> eres antes de conocer a Copilot.</p>
+      <div class="meter-preview">
+        <div class="track"></div>
+        <div class="needle"></div>
+        <div class="ticks" style="top:42px">
+          <span style="color:#ff5d70">Caos</span>
+          <span style="color:#f59e0b">En ruta</span>
+          <span style="color:#a78bfa">Equilibrio</span>
+          <span style="color:#4ade80">Maestría</span>
+        </div>
+      </div>
+      <button class="btn-start" id="startBtn">Empezar el test <span class="arr">→</span></button>
+      <p class="meta"><strong>3 preguntas</strong> · Excel · OneDrive · OneNote</p>
+    </div>
+  </section>
+
+  <!-- ========== Q1 · OneDrive ========== -->
+  <section class="scene" data-scene="q1">
+    <div class="qbox fade-in">
+      <span class="qtag"><span class="num">1</span> El enigma de tus archivos · OneDrive</span>
+      <h2 class="qtitle">¿Cómo describirías tu método de búsqueda en OneDrive cuando necesitas un archivo de hace 6 meses?</h2>
+      <p class="qsub">Sé sincero/a. Nadie mira.</p>
+      <div class="options">
+        <button class="opt" data-q="q1" data-score="1">
+          <span class="emoji">🙏</span>
+          <span class="txt">
+            <span class="label">Caos</span>
+            <span class="quote">“Uso el buscador, rezo un poco y, si no sale, asumo que el archivo ha dejado de existir.”</span>
+          </span>
+        </button>
+        <button class="opt" data-q="q1" data-score="2">
+          <span class="emoji">🗂️</span>
+          <span class="txt">
+            <span class="label">Manual</span>
+            <span class="quote">“Voy carpeta por carpeta intentando recordar si lo guardé en 'Proyectos', 'Varios' o 'Final_Final_v2'.”</span>
+          </span>
+        </button>
+        <button class="opt" data-q="q1" data-score="3">
+          <span class="emoji">⚖️</span>
+          <span class="txt">
+            <span class="label">Equilibrado</span>
+            <span class="quote">“Tengo estructura lógica, aunque a veces dudo si lo guardé en la nube o en el escritorio.”</span>
+          </span>
+        </button>
+        <button class="opt" data-q="q1" data-score="4">
+          <span class="emoji">✨</span>
+          <span class="txt">
+            <span class="label">Optimista</span>
+            <span class="quote">“Confío ciegamente en mi organización, tardo poco, pero el volumen de archivos me empieza a desbordar.”</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Q2 · Excel ========== -->
+  <section class="scene" data-scene="q2">
+    <div class="qbox fade-in">
+      <span class="qtag"><span class="num">2</span> El laberinto de las celdas · Excel</span>
+      <h2 class="qtitle">Te piden un análisis rápido de tendencias para una reunión en 15 minutos. ¿Qué pasa por tu mente?</h2>
+      <p class="qsub">Ese sudor frío cuenta como respuesta.</p>
+      <div class="options">
+        <button class="opt" data-q="q2" data-score="1">
+          <span class="emoji">😱</span>
+          <span class="txt">
+            <span class="label">Pánico</span>
+            <span class="quote">“Visualizo errores de #¡REF! y #VALOR! en mis pesadillas.”</span>
+          </span>
+        </button>
+        <button class="opt" data-q="q2" data-score="2">
+          <span class="emoji">⚙️</span>
+          <span class="txt">
+            <span class="label">Esfuerzo</span>
+            <span class="quote">“Sé que puedo, pero me va a costar 14 minutos de fórmulas manuales y 1 minuto de café.”</span>
+          </span>
+        </button>
+        <button class="opt" data-q="q2" data-score="3">
+          <span class="emoji">📊</span>
+          <span class="txt">
+            <span class="label">Equilibrado</span>
+            <span class="quote">“Tengo mis tablas dinámicas listas, pero me vendría bien una segunda opinión que valide lo que hago.”</span>
+          </span>
+        </button>
+        <button class="opt" data-q="q2" data-score="4">
+          <span class="emoji">🧠</span>
+          <span class="txt">
+            <span class="label">Avanzado</span>
+            <span class="quote">“Manejo los datos, pero desearía no tener que perder tiempo limpiando el formato antes de analizar.”</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Q3 · OneNote ========== -->
+  <section class="scene" data-scene="q3">
+    <div class="qbox fade-in">
+      <span class="qtag"><span class="num">3</span> El baúl de los recuerdos · OneNote</span>
+      <h2 class="qtitle">¿Dónde terminan las ideas brillantes que surgen en tus reuniones de equipo?</h2>
+      <p class="qsub">Esas que prometiste desarrollar "luego".</p>
+      <div class="options">
+        <button class="opt" data-q="q3" data-score="1">
+          <span class="emoji">📝</span>
+          <span class="txt">
+            <span class="label">Volátil</span>
+            <span class="quote">“En post-its que pierden el pegamento o en un cuaderno físico que nunca vuelvo a abrir.”</span>
+          </span>
+        </button>
+        <button class="opt" data-q="q3" data-score="2">
+          <span class="emoji">💬</span>
+          <span class="txt">
+            <span class="label">Fragmentado</span>
+            <span class="quote">“Repartidas entre correos enviados a mí mismo, chats de Teams y notas sin título.”</span>
+          </span>
+        </button>
+        <button class="opt" data-q="q3" data-score="3">
+          <span class="emoji">📓</span>
+          <span class="txt">
+            <span class="label">Equilibrado</span>
+            <span class="quote">“En OneNote, aunque tengo una sección 'Notas Varias' que parece un agujero negro.”</span>
+          </span>
+        </button>
+        <button class="opt" data-q="q3" data-score="4">
+          <span class="emoji">🏛️</span>
+          <span class="txt">
+            <span class="label">Estructurado</span>
+            <span class="quote">“Lo registro todo en blocs compartidos, pero me cuesta sintetizar lo importante para pasar a la acción.”</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== RESULT ========== -->
+  <section class="scene" data-scene="result">
+    <div class="result">
+      <div class="result-grid">
+        <div class="badge-card fade-in">
+          <div class="badge-tag">Tu perfil digital</div>
+          <div class="badge-visual">
+            <svg id="badgeIcon" viewBox="0 0 64 64"></svg>
+            <div class="ribbon-bar"><span class="dots3"><span></span><span></span><span></span></span> SECURITAS</div>
+          </div>
+          <div class="badge-name" id="badgeName">—</div>
+          <div class="badge-tier" id="badgeTier">—</div>
+          <div class="badge-score">
+            <div><strong id="scoreNum">0</strong> Puntuación</div>
+            <div><strong id="scoreMax">12</strong> Máximo</div>
+          </div>
+        </div>
+
+        <div class="result-right fade-in">
+          <div class="verdict">
+            <h2><span class="sp"></span> <span id="verdictTitle">—</span></h2>
+            <p id="verdictBody">—</p>
+          </div>
+
+          <div class="time-card">
+            <div class="clockwrap">
+              <div class="clockinner">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              </div>
+            </div>
+            <div>
+              <div class="big"><span id="timeCounter">0</span><span class="unit"> min/día</span></div>
+              <div class="lbl">de <strong>tiempo recuperable</strong> que hoy pierdes en estas tareas. Copilot los devuelve.</div>
+            </div>
+          </div>
+
+          <div class="cta-line">
+            <div class="msg">Hoy, <strong>Copilot será tu brújula</strong> en:</div>
+            <div class="tools">
+              <span class="tool-chip"><span class="d excel"></span> Excel</span>
+              <span class="tool-chip"><span class="d onedrive"></span> OneDrive</span>
+              <span class="tool-chip"><span class="d onenote"></span> OneNote</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="result-foot">Pulsa <kbd>R</kbd> para repetir el test</div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ==================== DATA ==================== */
+const scenes = [
+  {id:'intro',  total:0},
+  {id:'q1',     total:3},
+  {id:'q2',     total:3},
+  {id:'q3',     total:3},
+  {id:'result', total:3}
+];
+const TIME_PER_SCORE = {1:20, 2:12, 3:6, 4:3}; // minutos/día recuperables
+
+const PROFILES = {
+  hero:{
+    tier:'3 – 5 pts',
+    name:'Héroe en Apuros',
+    verdictTitle:'Sobrevives por puro instinto',
+    verdictBody:'Tienes el talento, las ganas y el contexto. Lo que te está frenando son las herramientas. Hoy <strong>Copilot será tu rescatador personal</strong>: buscará lo que no encuentras en OneDrive, resolverá tus fórmulas en Excel y pondrá orden en tu OneNote. Vienes a la sesión en el momento perfecto.',
+    iconSvg:`<path d="M32 6 L12 16 v16 c0 12 9 22 20 26 11-4 20-14 20-26 V16 Z"/><path d="M22 32 l7 7 13-14"/>`
+  },
+  explorer:{
+    tier:'6 – 8 pts',
+    name:'Explorador en Ruta',
+    verdictTitle:'Vas por buen camino, pero te falta brújula',
+    verdictBody:'No estás perdido, pero gastas energía en decisiones pequeñas: dónde guardar, cómo estructurar, a quién preguntar. Hoy <strong>Copilot será tu copiloto de navegación</strong>: te ayudará a tomar atajos cuando tengan sentido y a no perder el rumbo cuando el día se tuerza.',
+    iconSvg:`<circle cx="32" cy="32" r="22"/><path d="M42 22 L28 36 22 42 28 28 Z"/><circle cx="32" cy="32" r="2" fill="#fff" stroke="none"/>`
+  },
+  balance:{
+    tier:'9 – 10 pts',
+    name:'Equilibrista Digital',
+    verdictTitle:'Dominas el orden, pero cuesta caro',
+    verdictBody:'Eres de los que mantienen el barco a flote. Estructuras, nombras archivos con cabeza, tomas notas ordenadas. El problema: <strong>gastas demasiada energía en mantener el orden</strong>. Hoy Copilot se encarga del mantenimiento para que tú te encargues de lo que de verdad aporta: pensar, decidir y crear.',
+    iconSvg:`<path d="M32 10 v44"/><path d="M14 24 h36"/><path d="M14 24 L8 40 a6 6 0 0 0 12 0 Z"/><path d="M50 24 L44 40 a6 6 0 0 0 12 0 Z"/>`
+  },
+  architect:{
+    tier:'11 – 12 pts',
+    name:'Arquitecto Digital',
+    verdictTitle:'Tu sistema es envidiable',
+    verdictBody:'Has construido un método que funciona. Poca gente llega aquí. Lo que te pide el cuerpo ahora es <strong>escalar tu criterio</strong>, no repetir tareas. Hoy Copilot aparece como tu aprendiz de confianza: se encarga del trabajo repetitivo para que multipliques el impacto de cada decisión que tomas.',
+    iconSvg:`<rect x="10" y="18" width="44" height="32" rx="2"/><path d="M10 26 h44"/><path d="M18 34 h10 M18 40 h16 M38 34 h10"/><path d="M28 10 l4 6 4-6"/>`
+  }
+};
+
+function getProfile(score){
+  if(score<=5) return {key:'hero', ...PROFILES.hero};
+  if(score<=8) return {key:'explorer', ...PROFILES.explorer};
+  if(score<=10) return {key:'balance', ...PROFILES.balance};
+  return {key:'architect', ...PROFILES.architect};
+}
+
+/* ==================== STATE ==================== */
+let current = 0;
+const answers = {q1:null, q2:null, q3:null};
+const sceneEls = document.querySelectorAll('.scene');
+const progressBar = document.getElementById('progressBar');
+const progressLabel = document.getElementById('progressLabel');
+
+function render(){
+  sceneEls.forEach((s,i)=>s.classList.toggle('active', i===current));
+  const sc = scenes[current];
+  // progress bar
+  if(sc.id==='intro'){ progressBar.style.width='0'; progressLabel.textContent=''; }
+  else if(sc.id==='result'){ progressBar.style.width='100%'; progressLabel.innerHTML='Diagnóstico'; }
+  else {
+    const qNum = Number(sc.id.slice(1));
+    progressBar.style.width = ((qNum)/(scenes.length-2)*100)+'%';
+    progressLabel.innerHTML = `Pregunta <span class="cur">${qNum}</span> / ${scenes.length-2}`;
+  }
+}
+function go(to){
+  current = Math.max(0, Math.min(scenes.length-1, to));
+  render();
+  if(scenes[current].id==='result') showResult();
+}
+function reset(){
+  current=0;
+  answers.q1=answers.q2=answers.q3=null;
+  document.querySelectorAll('.opt').forEach(o=>o.classList.remove('selected'));
+  document.getElementById('timeCounter').textContent='0';
+  document.getElementById('scoreNum').textContent='0';
+  clearConfetti();
+  render();
+}
+
+/* ==================== EVENTS ==================== */
+document.getElementById('startBtn').addEventListener('click', ()=>go(1));
+
+document.querySelectorAll('.opt').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const q = btn.dataset.q;
+    const score = Number(btn.dataset.score);
+    answers[q] = score;
+    // visual
+    btn.parentElement.querySelectorAll('.opt').forEach(o=>o.classList.remove('selected'));
+    btn.classList.add('selected');
+    // avanzar con pequeña pausa
+    setTimeout(()=>go(current+1), 420);
+  });
+});
+
+document.addEventListener('keydown', e=>{
+  if(e.key==='r' || e.key==='R'){ e.preventDefault(); reset(); }
+  if(e.code==='ArrowLeft' && current>0){ e.preventDefault(); go(current-1); }
+  if(e.code==='ArrowRight' && current<scenes.length-1){
+    // solo avanzar si la pregunta actual tiene respuesta o no es pregunta
+    const sc=scenes[current];
+    if(!sc.id.startsWith('q') || answers[sc.id]!=null){ e.preventDefault(); go(current+1); }
+  }
+});
+
+/* ==================== RESULT ==================== */
+function showResult(){
+  const total = (answers.q1||0) + (answers.q2||0) + (answers.q3||0);
+  const profile = getProfile(total);
+  // Fill texts
+  document.getElementById('badgeName').textContent = profile.name;
+  document.getElementById('badgeTier').textContent = profile.tier;
+  document.getElementById('verdictTitle').textContent = profile.verdictTitle;
+  document.getElementById('verdictBody').innerHTML = profile.verdictBody;
+  document.getElementById('badgeIcon').innerHTML = profile.iconSvg;
+  document.getElementById('scoreNum').textContent = total;
+
+  // Tiempo recuperable
+  const mins = (TIME_PER_SCORE[answers.q1]||0) + (TIME_PER_SCORE[answers.q2]||0) + (TIME_PER_SCORE[answers.q3]||0);
+  animateNumber('timeCounter', 0, mins, 1400);
+
+  // Confetti: lanzamiento tras un pequeño delay
+  setTimeout(()=>launchConfetti(), 250);
+}
+function animateNumber(id, from, to, dur){
+  const el=document.getElementById(id);
+  const start=performance.now();
+  function tick(now){
+    const t=Math.min(1,(now-start)/dur);
+    const eased=1 - Math.pow(1-t,3);
+    el.textContent = Math.round(from + (to-from)*eased);
+    if(t<1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ==================== CONFETTI ==================== */
+const canvas = document.getElementById('confetti');
+const ctx = canvas.getContext('2d');
+let confettiPieces = [];
+let confettiRunning = false;
+
+function resizeCanvas(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+const CONFETTI_COLORS = ['#FC273F','#8D5FFF','#ffffff','#ffd6db','#C41B2E'];
+
+function launchConfetti(){
+  confettiPieces = [];
+  const count = 140;
+  for(let i=0;i<count;i++){
+    confettiPieces.push({
+      x: canvas.width/2 + (Math.random()-.5)*200,
+      y: canvas.height/2 - 40 + (Math.random()-.5)*80,
+      vx: (Math.random()-.5)*14,
+      vy: -Math.random()*14 - 4,
+      g: .28 + Math.random()*.15,
+      w: 6 + Math.random()*6,
+      h: 8 + Math.random()*10,
+      rot: Math.random()*Math.PI*2,
+      vr: (Math.random()-.5)*.3,
+      color: CONFETTI_COLORS[Math.floor(Math.random()*CONFETTI_COLORS.length)],
+      life: 180 + Math.random()*60
+    });
+  }
+  if(!confettiRunning){ confettiRunning=true; requestAnimationFrame(confettiLoop); }
+}
+function confettiLoop(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(const p of confettiPieces){
+    p.vy += p.g;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.rot += p.vr;
+    p.life--;
+    ctx.save();
+    ctx.translate(p.x,p.y);
+    ctx.rotate(p.rot);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+    ctx.restore();
+  }
+  confettiPieces = confettiPieces.filter(p=>p.life>0 && p.y<canvas.height+30);
+  if(confettiPieces.length>0){ requestAnimationFrame(confettiLoop); }
+  else { confettiRunning=false; ctx.clearRect(0,0,canvas.width,canvas.height); }
+}
+function clearConfetti(){ confettiPieces=[]; ctx.clearRect(0,0,canvas.width,canvas.height); }
+
+render();
+</script>
+
+</body>
+</html>
