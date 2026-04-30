@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha a tu Gabinete · Securitas · Agentes Copilot</title>
+    <style>
+        :root {
+            --securitas-red: #E1261C;
+            --securitas-red-dark: #B71C13;
+            --securitas-black: #1A1A1A;
+            --securitas-grey: #4A4A4A;
+            --securitas-grey-light: #F4F4F4;
+            --securitas-grey-border: #D8D8D8;
+            --ok: #2E7D32;
+            --ko: #C62828;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #ffffff;
+            color: var(--securitas-black);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Cabecera Securitas */
+        .top-bar {
+            width: 100%;
+            background-color: var(--securitas-black);
+            height: 6px;
+        }
+        .header {
+            width: 100%;
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--securitas-grey-border);
+            padding: 18px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .brand-logo {
+            font-weight: 800;
+            font-size: 1.6em;
+            letter-spacing: 1px;
+            color: var(--securitas-black);
+        }
+        .brand-dots {
+            display: flex;
+            gap: 4px;
+        }
+        .dot {
+            width: 9px;
+            height: 9px;
+            background: var(--securitas-red);
+            border-radius: 50%;
+        }
+        .session-tag {
+            font-size: 0.85em;
+            color: var(--securitas-grey);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        /* Hero */
+        .hero {
+            width: 100%;
+            padding: 32px 30px 24px;
+            text-align: center;
+            border-bottom: 4px solid var(--securitas-red);
+            background: linear-gradient(180deg, #fff 0%, #fafafa 100%);
+        }
+        h1 {
+            margin: 0 0 8px;
+            color: var(--securitas-black);
+            font-size: 2em;
+            font-weight: 700;
+        }
+        h1 .accent { color: var(--securitas-red); }
+        .subtitle {
+            margin: 0 auto;
+            max-width: 780px;
+            color: var(--securitas-grey);
+            font-size: 1.05em;
+            line-height: 1.5;
+        }
+
+        /* Barra de progreso */
+        .progress-bar {
+            width: 100%;
+            max-width: 1400px;
+            margin: 20px auto 0;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .progress-text {
+            font-weight: 600;
+            color: var(--securitas-black);
+            white-space: nowrap;
+        }
+        .progress-track {
+            flex: 1;
+            height: 8px;
+            background: var(--securitas-grey-light);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--securitas-red);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Layout */
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            gap: 20px;
+            align-items: flex-start;
+            padding: 24px 20px 40px;
+        }
+
+        /* Pool de tareas */
+        .tasks-pool {
+            flex: 0 0 320px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid var(--securitas-grey-border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            position: sticky;
+            top: 20px;
+        }
+        .tasks-pool h2 {
+            margin: 0 0 14px;
+            font-size: 1.05em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--securitas-black);
+            border-bottom: 3px solid var(--securitas-red);
+            padding-bottom: 10px;
+        }
+        .pool-help {
+            font-size: 0.8em;
+            color: var(--securitas-grey);
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        /* Grid de agentes */
+        .cabinet-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+            gap: 16px;
+        }
+
+        .agent-bucket {
+            background-color: #ffffff;
+            border: 2px dashed var(--securitas-grey-border);
+            border-radius: 6px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.2s ease;
+            min-height: 260px;
+        }
+        .agent-bucket.drag-over {
+            background-color: #FFF4F3;
+            border-color: var(--securitas-red);
+            border-style: solid;
+            transform: scale(1.01);
+        }
+        .agent-header {
+            text-align: center;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--securitas-grey-light);
+        }
+        .agent-icon {
+            font-size: 2em;
+            margin-bottom: 6px;
+        }
+        .agent-name {
+            font-weight: 700;
+            font-size: 1.1em;
+            color: var(--securitas-red);
+            min-height: 26px;
+            letter-spacing: 0.3px;
+        }
+        .agent-name.revealed {
+            color: var(--securitas-black);
+        }
+        .agent-name.revealed::before {
+            content: "› ";
+            color: var(--securitas-red);
+        }
+        .agent-desc {
+            font-size: 0.82em;
+            color: var(--securitas-grey);
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+        .agent-rationale {
+            display: none;
+            background: #FFF4F3;
+            border-left: 3px solid var(--securitas-red);
+            padding: 10px 12px;
+            margin-top: 10px;
+            font-size: 0.8em;
+            color: var(--securitas-black);
+            line-height: 1.45;
+            border-radius: 3px;
+        }
+        .agent-rationale.show { display: block; }
+        .agent-rationale strong { color: var(--securitas-red); }
+        .agent-rationale .prompt-sample {
+            display: block;
+            margin-top: 8px;
+            padding: 8px;
+            background: #fff;
+            border: 1px dashed var(--securitas-grey-border);
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.95em;
+            color: var(--securitas-grey);
+            border-radius: 3px;
+        }
+
+        /* Tarjetas de tareas */
+        .task-card {
+            background-color: #ffffff;
+            border: 1px solid var(--securitas-grey-border);
+            border-left: 4px solid var(--securitas-red);
+            padding: 11px 12px;
+            margin-bottom: 10px;
+            border-radius: 3px;
+            cursor: grab;
+            font-size: 0.88em;
+            line-height: 1.4;
+            user-select: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+        .task-card:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        .task-card:active { cursor: grabbing; transform: scale(0.98); }
+        .task-card .dept {
+            display: inline-block;
+            background: var(--securitas-black);
+            color: #fff;
+            font-size: 0.72em;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 2px;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        .task-card.correct {
+            border-left-color: var(--ok);
+            background: #F1F8E9;
+        }
+        .task-card.correct::after {
+            content: " ✓";
+            color: var(--ok);
+            font-weight: 700;
+        }
+        .task-card.incorrect {
+            border-left-color: var(--ko);
+            background: #FFEBEE;
+        }
+        .task-card.incorrect::after {
+            content: " ✗";
+            color: var(--ko);
+            font-weight: 700;
+        }
+        .task-card.dual-valid {
+            border-left-color: #F9A825;
+            background: #FFF8E1;
+        }
+        .task-card.dual-valid::after {
+            content: " ◐";
+            color: #F9A825;
+            font-weight: 700;
+        }
+
+        /* Botones */
+        .actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 10px 0 40px;
+        }
+        .btn {
+            padding: 12px 28px;
+            font-size: 1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background-color: var(--securitas-red);
+            color: white;
+            box-shadow: 0 2px 6px rgba(225,38,28,0.3);
+        }
+        .btn-primary:hover { background-color: var(--securitas-red-dark); }
+        .btn-primary:disabled {
+            background-color: var(--securitas-grey);
+            cursor: default;
+            box-shadow: none;
+        }
+        .btn-secondary {
+            background-color: #fff;
+            color: var(--securitas-black);
+            border: 1px solid var(--securitas-grey-border);
+        }
+        .btn-secondary:hover {
+            background-color: var(--securitas-grey-light);
+            border-color: var(--securitas-black);
+        }
+
+        /* Score badge */
+        .score-banner {
+            display: none;
+            margin: 10px auto;
+            max-width: 600px;
+            padding: 16px 20px;
+            text-align: center;
+            border-radius: 4px;
+            font-size: 1.05em;
+            font-weight: 600;
+            background: var(--securitas-grey-light);
+            border: 1px solid var(--securitas-grey-border);
+        }
+        .score-banner.show { display: block; }
+        .score-banner .score-num {
+            color: var(--securitas-red);
+            font-size: 1.4em;
+            font-weight: 800;
+        }
+        .score-banner .score-msg {
+            display: block;
+            font-weight: 400;
+            font-size: 0.9em;
+            color: var(--securitas-grey);
+            margin-top: 4px;
+        }
+
+        .drop-zone {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 100px;
+        }
+
+        /* Footer */
+        .footer {
+            width: 100%;
+            background: var(--securitas-black);
+            color: #bbb;
+            padding: 14px 30px;
+            font-size: 0.78em;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+        .footer .dot { margin: 0 2px; vertical-align: middle; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar"></div>
+
+    <div class="header">
+        <div class="brand">
+            <div class="brand-logo">SECURITAS</div>
+            <div class="brand-dots">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            </div>
+        </div>
+        <div class="session-tag">Sesión 1 · Agentes preconstruidos de Copilot</div>
+    </div>
+
+    <div class="hero">
+        <h1>Ficha a tu <span class="accent">Gabinete de Agentes</span></h1>
+        <p class="subtitle">
+            Vuestro equipo recibe peticiones del día a día desde toda la organización.
+            Arrastrad cada tarea al agente especialista que mejor pueda resolverla.
+            Al final, descubriremos quién es realmente cada uno.
+        </p>
+    </div>
+
+    <div class="progress-bar">
+        <span class="progress-text" id="progressText">0 / 6 tareas asignadas</span>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+
+    <div class="container">
+        <!-- Pool de Tareas -->
+        <div class="tasks-pool">
+            <h2>Bandeja de Pendientes</h2>
+            <div class="pool-help">Arrastra cada tarjeta al agente que crees que la resolverá mejor.</div>
+            <div class="drop-zone" id="pool" ondrop="drop(event)" ondragover="allowDrop(event)">
+
+                <div class="task-card" draggable="true" ondragstart="drag(event)" id="t1" data-correct="sondeador">
+                    <span class="dept">RRHH</span><br>
+                    Lanzar un cuestionario para medir el clima laboral de los equipos de vigilancia tras la integración de la nueva delegación.
+                </div>
+
+                <div class="task-card" draggable="true" ondragstart="drag(event)" id="t2" data-correct="visionario">
+                    <span class="dept">Marketing</span><br>
+                    Generar una imagen fotorrealista de un vigilante revisando cámaras CCTV en un centro de control para la nueva landing.
+                </div>
+
+                <div class="task-card" draggable="true" ondragstart="drag(event)" id="t3" data-correct="estratega">
+                    <span class="dept">Finanzas</span><br>
+                    Cruzar los datos de servicios facturados de vigilancia presencial del Q3 con el gasto en campañas comerciales del mismo periodo.
+                </div>
+
+                <div class="task-card" draggable="true" ondragstart="drag(event)" id="t4" data-correct="maquetador">
+                    <span class="dept">Comercial</span><br>
+                    Convertir el hilo de correos del proyecto 'Hospital Universitario' en un portal interno bonito para que el equipo lo consulte.
+                </div>
+
+                <div class="task-card" draggable="true" ondragstart="drag(event)" id="t5" data-correct="coach" data-also="arquitecto">
+                    <span class="dept">Operaciones</span><br>
+                    Tengo un prompt que pide resúmenes de incidencias de turnos de noche pero el resultado es siempre genérico. Ayúdame a mejorarlo.
+                </div>
+
+                <div class="task-card" draggable="true" ondragstart="drag(event)" id="t6" data-correct="arquitecto">
+                    <span class="dept">Legal</span><br>
+                    Necesitamos un asistente interno propio que revise si los contratos con clientes incluyen las cláusulas de protección de datos y videovigilancia.
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Grid de Agentes -->
+        <div class="cabinet-grid">
+
+            <!-- Analista -->
+            <div class="agent-bucket" data-agent="estratega" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                <div class="agent-header">
+                    <div class="agent-icon">📊</div>
+                    <div class="agent-name" id="name-estratega">El Estratega</div>
+                    <div class="agent-desc">Procesa hojas de cálculo, encuentra patrones y cruza métricas con código Python.</div>
+                </div>
+                <div class="drop-zone"></div>
+                <div class="agent-rationale" id="rat-estratega">
+                    <strong>¿Por qué encaja?</strong> Cuando hay que cruzar dos datasets (ventas vs. campañas) y obtener correlaciones, el <em>Analista</em> ejecuta análisis en Python sobre tus datos en tiempo real.
+                    <span class="prompt-sample">Cruza ventas Q3 con gasto en campañas y dame correlación por línea de negocio.</span>
+                </div>
+            </div>
+
+            <!-- Prompt Coach -->
+            <div class="agent-bucket" data-agent="coach" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                <div class="agent-header">
+                    <div class="agent-icon">🧭</div>
+                    <div class="agent-name" id="name-coach">El Mentor</div>
+                    <div class="agent-desc">Te enseña a escribir mejores instrucciones y refina prompts que no funcionan bien.</div>
+                </div>
+                <div class="drop-zone"></div>
+                <div class="agent-rationale" id="rat-coach">
+                    <strong>¿Por qué encaja?</strong> Cuando un prompt da resultados pobres, <em>Prompt Coach</em> diagnostica qué falta (rol, contexto, formato, ejemplos) y propone una versión mejorada — la mejor puerta de entrada al resto de agentes.
+                    <span class="prompt-sample">Aquí va mi prompt actual: "..."  Ayúdame a mejorarlo para que sea más específico.</span>
+                </div>
+            </div>
+
+            <!-- Crear -->
+            <div class="agent-bucket" data-agent="visionario" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                <div class="agent-header">
+                    <div class="agent-icon">🎨</div>
+                    <div class="agent-name" id="name-visionario">El Visionario</div>
+                    <div class="agent-desc">Transforma descripciones de texto en imágenes y conceptos visuales.</div>
+                </div>
+                <div class="drop-zone"></div>
+                <div class="agent-rationale" id="rat-visionario">
+                    <strong>¿Por qué encaja?</strong> Una imagen fotorrealista para una landing no se resuelve con texto: el agente <em>Crear</em> (Designer) genera imágenes a partir de un brief detallado.
+                    <span class="prompt-sample">Imagen fotorrealista de un vigilante en un centro de control CCTV, iluminación azulada, formato 16:9.</span>
+                </div>
+            </div>
+
+            <!-- Encuestas -->
+            <div class="agent-bucket" data-agent="sondeador" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                <div class="agent-header">
+                    <div class="agent-icon">📋</div>
+                    <div class="agent-name" id="name-sondeador">El Sondeador</div>
+                    <div class="agent-desc">Estructura preguntas y crea formularios para recolectar feedback.</div>
+                </div>
+                <div class="drop-zone"></div>
+                <div class="agent-rationale" id="rat-sondeador">
+                    <strong>¿Por qué encaja?</strong> Para medir clima laboral hay que diseñar preguntas, escalas y un formulario distribuible. El agente de <em>Encuestas</em> (Forms) lo crea listo para enviar.
+                    <span class="prompt-sample">Crea una encuesta de clima laboral de 10 preguntas con escalas Likert para equipos operativos.</span>
+                </div>
+            </div>
+
+            <!-- SharePoint -->
+            <div class="agent-bucket" data-agent="maquetador" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                <div class="agent-header">
+                    <div class="agent-icon">🌐</div>
+                    <div class="agent-name" id="name-maquetador">El Maquetador</div>
+                    <div class="agent-desc">Convierte conversaciones desestructuradas en portales y páginas internas.</div>
+                </div>
+                <div class="drop-zone"></div>
+                <div class="agent-rationale" id="rat-maquetador">
+                    <strong>¿Por qué encaja?</strong> El agente de <em>SharePoint</em> toma un hilo de correo o un documento y lo convierte en una página de portal con secciones, enlaces y diseño corporativo.
+                    <span class="prompt-sample">Convierte este hilo de correo en una página de proyecto para SharePoint con secciones de objetivos, equipo y estado.</span>
+                </div>
+            </div>
+
+            <!-- Hazlo tú mismo -->
+            <div class="agent-bucket" data-agent="arquitecto" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                <div class="agent-header">
+                    <div class="agent-icon">⚙️</div>
+                    <div class="agent-name" id="name-arquitecto">El Arquitecto</div>
+                    <div class="agent-desc">Construye agentes a medida cuando ningún agente preconstruido encaja.</div>
+                </div>
+                <div class="drop-zone"></div>
+                <div class="agent-rationale" id="rat-arquitecto">
+                    <strong>¿Por qué encaja?</strong> Cuando necesitas un asistente con conocimiento propio (contratos, normativa interna, instrucciones específicas), <em>Hazlo tú mismo</em> (Copilot Studio / agentes personalizados) lo crea sobre tus fuentes.
+                    <span class="prompt-sample">Crea un agente que revise contratos de la biblioteca "Legal" buscando cláusulas de protección de datos y videovigilancia.</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="score-banner" id="scoreBanner">
+        <span><span class="score-num" id="scoreNum">0/6</span> aciertos</span>
+        <span class="score-msg" id="scoreMsg"></span>
+    </div>
+
+    <div class="actions">
+        <button class="btn btn-primary" id="revealBtn" onclick="revelar()">Revelar agentes reales</button>
+        <button class="btn btn-secondary" onclick="reiniciar()">Reiniciar</button>
+    </div>
+
+    <div class="footer">
+        ENCAMINA <span class="dot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#E1261C;"></span>
+        Sesión formativa para Securitas — Agentes preconstruidos de Microsoft 365 Copilot
+    </div>
+
+    <script>
+        const realNames = {
+            estratega: "Analista",
+            coach: "Prompt Coach",
+            visionario: "Crear",
+            sondeador: "Encuestas",
+            maquetador: "SharePoint Page Agent",
+            arquitecto: "Hazlo tú mismo"
+        };
+
+        let revealed = false;
+
+        function allowDrop(ev) { ev.preventDefault(); }
+
+        function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+
+        function drop(ev) {
+            ev.preventDefault();
+            if (revealed) return;
+            const data = ev.dataTransfer.getData("text");
+            const dropTarget = ev.target.closest('.drop-zone') || ev.target.querySelector('.drop-zone');
+            if (dropTarget) dropTarget.appendChild(document.getElementById(data));
+            document.querySelectorAll('.agent-bucket').forEach(b => b.classList.remove('drag-over'));
+            actualizarProgreso();
+        }
+
+        function dragEnter(ev) {
+            ev.preventDefault();
+            const bucket = ev.target.closest('.agent-bucket');
+            if (bucket) bucket.classList.add('drag-over');
+        }
+
+        function dragLeave(ev) {
+            const bucket = ev.target.closest('.agent-bucket');
+            if (bucket) bucket.classList.remove('drag-over');
+        }
+
+        function actualizarProgreso() {
+            const total = document.querySelectorAll('.task-card').length;
+            const colocadas = document.querySelectorAll('.agent-bucket .task-card').length;
+            document.getElementById('progressText').innerText = colocadas + ' / ' + total + ' tareas asignadas';
+            document.getElementById('progressFill').style.width = (colocadas / total * 100) + '%';
+        }
+
+        function revelar() {
+            revealed = true;
+            // Renombrar agentes
+            Object.keys(realNames).forEach(key => {
+                const el = document.getElementById('name-' + key);
+                el.innerText = realNames[key];
+                el.classList.add('revealed');
+                document.getElementById('rat-' + key).classList.add('show');
+            });
+
+            // Evaluar tarjetas
+            let aciertos = 0;
+            const tarjetas = document.querySelectorAll('.task-card');
+            tarjetas.forEach(card => {
+                const correct = card.dataset.correct;
+                const also = card.dataset.also;
+                const bucket = card.closest('.agent-bucket');
+                if (!bucket) return;
+                const placedIn = bucket.dataset.agent;
+                if (placedIn === correct) {
+                    card.classList.add('correct');
+                    aciertos++;
+                } else if (also && placedIn === also) {
+                    card.classList.add('dual-valid');
+                    aciertos++;
+                } else {
+                    card.classList.add('incorrect');
+                }
+            });
+
+            // Score banner
+            const total = tarjetas.length;
+            document.getElementById('scoreNum').innerText = aciertos + '/' + total;
+            let msg = '';
+            if (aciertos === total) msg = '¡Gabinete impecable! Conoces bien los agentes.';
+            else if (aciertos >= total - 1) msg = 'Casi perfecto. Repasa las tarjetas marcadas para afinar.';
+            else if (aciertos >= total / 2) msg = 'Buen punto de partida. Vamos a profundizar en cada agente.';
+            else msg = 'Perfecto, hay mucho por descubrir en esta sesión.';
+            document.getElementById('scoreMsg').innerText = msg + '  ✓ acierto · ◐ válido alternativo · ✗ revisar';
+            document.getElementById('scoreBanner').classList.add('show');
+
+            const btn = document.getElementById('revealBtn');
+            btn.innerText = '¡Agentes revelados!';
+            btn.disabled = true;
+        }
+
+        function reiniciar() {
+            revealed = false;
+            // Devolver tarjetas al pool
+            const pool = document.getElementById('pool');
+            document.querySelectorAll('.task-card').forEach(card => {
+                card.classList.remove('correct', 'incorrect', 'dual-valid');
+                pool.appendChild(card);
+            });
+            // Restaurar nombres
+            const codeNames = {
+                estratega: "El Estratega",
+                coach: "El Mentor",
+                visionario: "El Visionario",
+                sondeador: "El Sondeador",
+                maquetador: "El Maquetador",
+                arquitecto: "El Arquitecto"
+            };
+            Object.keys(codeNames).forEach(key => {
+                const el = document.getElementById('name-' + key);
+                el.innerText = codeNames[key];
+                el.classList.remove('revealed');
+                document.getElementById('rat-' + key).classList.remove('show');
+            });
+            document.getElementById('scoreBanner').classList.remove('show');
+            const btn = document.getElementById('revealBtn');
+            btn.innerText = 'Revelar agentes reales';
+            btn.disabled = false;
+            actualizarProgreso();
+        }
+
+        actualizarProgreso();
+    </script>
+</body>
+</html>
