@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OneDrive · ¿Dominas los iconos? | CEAMSA</title>
+<style>
+  /* ===== CEAMSA-inspired palette =====
+     Azul corporativo profundo + acento verde natural (algas/sostenibilidad)
+     Tipografía limpia tipo corporativa */
+  :root {
+    --ceamsa-blue: #003F5C;
+    --ceamsa-blue-light: #0077B6;
+    --ceamsa-green: #7CB342;
+    --ceamsa-green-dark: #5A8C2E;
+    --ceamsa-aqua: #00B4D8;
+    --bg: #F4F8FB;
+    --card: #FFFFFF;
+    --text: #1F2A37;
+    --muted: #5B6B7A;
+    --border: #E1E8EF;
+    --success: #16a34a;
+    --error: #dc2626;
+    --warning: #f59e0b;
+    --shadow: 0 6px 24px rgba(0, 63, 92, 0.08);
+    --shadow-hover: 0 12px 32px rgba(0, 63, 92, 0.16);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ===== Header ===== */
+  .header {
+    background: linear-gradient(135deg, var(--ceamsa-blue) 0%, var(--ceamsa-blue-light) 100%);
+    color: #fff;
+    padding: 48px 24px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0; right: 0;
+    height: 40px;
+    background: var(--bg);
+    clip-path: polygon(0 100%, 100% 100%, 100% 40%, 0 80%);
+  }
+  .header-inner {
+    max-width: 980px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .brand-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    opacity: 0.9;
+    margin-bottom: 24px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .brand-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--ceamsa-green);
+    box-shadow: 0 0 0 4px rgba(124, 179, 66, 0.25);
+  }
+  h1 {
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    line-height: 1.15;
+  }
+  .subtitle {
+    font-size: clamp(15px, 1.6vw, 18px);
+    opacity: 0.92;
+    max-width: 720px;
+  }
+  .progress-strip {
+    max-width: 980px;
+    margin: -36px auto 0;
+    padding: 0 24px;
+    position: relative;
+    z-index: 2;
+  }
+  .progress-card {
+    background: var(--card);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .progress-bar-wrapper { flex: 1; min-width: 200px; }
+  .progress-label {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .progress-track {
+    height: 8px;
+    background: #E8EFF4;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--ceamsa-green) 0%, var(--ceamsa-aqua) 100%);
+    width: 0%;
+    transition: width 0.5s ease;
+    border-radius: 4px;
+  }
+  .score-pill {
+    background: var(--bg);
+    color: var(--ceamsa-blue);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 14px;
+    border: 2px solid var(--border);
+  }
+
+  /* ===== Container ===== */
+  main {
+    max-width: 980px;
+    margin: 32px auto 64px;
+    padding: 0 24px;
+  }
+
+  /* ===== Section ===== */
+  .section {
+    margin-top: 48px;
+  }
+  .section-tag {
+    display: inline-block;
+    background: var(--ceamsa-green);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: clamp(22px, 2.6vw, 28px);
+    color: var(--ceamsa-blue);
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+  .section-desc {
+    color: var(--muted);
+    margin-bottom: 24px;
+    font-size: 15px;
+  }
+
+  /* ===== Card de pregunta ===== */
+  .question {
+    background: var(--card);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    padding: 28px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+    transition: box-shadow 0.3s ease;
+  }
+  .question:hover { box-shadow: var(--shadow-hover); }
+  .q-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .q-number {
+    flex-shrink: 0;
+    width: 36px; height: 36px;
+    background: var(--ceamsa-blue);
+    color: #fff;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .q-text {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+  }
+
+  /* ===== Icon showcase ===== */
+  .icon-showcase {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #F0F7FB 0%, #E8F2F8 100%);
+    border-radius: 12px;
+    padding: 36px 24px;
+    margin-bottom: 20px;
+    gap: 24px;
+    flex-wrap: wrap;
+    border: 1px dashed #C7DAE6;
+  }
+  .file-mock {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fff;
+    padding: 12px 18px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    font-size: 14px;
+    color: var(--text);
+    min-width: 200px;
+  }
+  .file-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .file-icon.excel { background: linear-gradient(135deg, #107C41 0%, #0B5C30 100%); }
+  .file-icon.ppt { background: linear-gradient(135deg, #D24726 0%, #B23A1F 100%); }
+  .file-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ===== OneDrive status icons (recreados) ===== */
+  .od-icon {
+    width: 22px; height: 22px;
+    flex-shrink: 0;
+    position: relative;
+    display: inline-block;
+  }
+  .od-icon-large { width: 64px; height: 64px; }
+
+  /* Tick blanco sobre verde - Siempre disponible en este dispositivo */
+  .od-always-available {
+    background: var(--success);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .od-always-available::before {
+    content: "";
+    width: 50%; height: 30%;
+    border-left: 2.5px solid #fff;
+    border-bottom: 2.5px solid #fff;
+    transform: rotate(-45deg) translate(2px, -2px);
+    margin-top: -3px;
+  }
+
+  /* Tick verde sobre blanco con borde - Disponible en este dispositivo */
+  .od-locally-available {
+    background: #fff;
+    border: 2px solid var(--success);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .od-locally-available::before {
+    content: "";
+    width: 50%; height: 30%;
+    border-left: 2px solid var(--success);
+    border-bottom: 2px solid var(--success);
+    transform: rotate(-45deg) translate(2px, -2px);
+    margin-top: -3px;
+  }
+
+  /* Nube azul - Solo online */
+  .od-cloud {
+    color: var(--ceamsa-blue-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .od-cloud svg { width: 100%; height: 100%; }
+
+  /* Personas - Compartido */
+  .od-shared {
+    color: var(--ceamsa-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .od-shared svg { width: 100%; height: 100%; }
+
+  /* Aspa blanca sobre rojo - Error sincronización */
+  .od-error {
+    background: var(--error);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+  }
+  .od-error::before {
+    content: "✕";
+    font-size: 60%;
+  }
+
+  /* Flechas circulares - Sincronizando */
+  .od-syncing {
+    color: var(--ceamsa-blue-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: spin 2s linear infinite;
+  }
+  .od-syncing svg { width: 100%; height: 100%; }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Pausa */
+  .od-paused {
+    background: #6B7280;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+  .od-paused::before, .od-paused::after {
+    content: "";
+    width: 14%; height: 40%;
+    background: #fff;
+  }
+
+  /* Candado - Bloqueado */
+  .od-locked {
+    color: #6B7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .od-locked svg { width: 100%; height: 100%; }
+
+  /* ===== Opciones (multiple choice) ===== */
+  .options {
+    display: grid;
+    gap: 10px;
+  }
+  .option {
+    background: #fff;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 15px;
+    color: var(--text);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: inherit;
+    width: 100%;
+  }
+  .option:hover:not(:disabled) {
+    border-color: var(--ceamsa-blue-light);
+    background: #F0F7FB;
+    transform: translateX(2px);
+  }
+  .option:disabled { cursor: not-allowed; }
+  .option .opt-letter {
+    width: 26px; height: 26px;
+    background: var(--bg);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .option.correct {
+    border-color: var(--success);
+    background: #ECFDF5;
+  }
+  .option.correct .opt-letter {
+    background: var(--success);
+    color: #fff;
+  }
+  .option.incorrect {
+    border-color: var(--error);
+    background: #FEF2F2;
+  }
+  .option.incorrect .opt-letter {
+    background: var(--error);
+    color: #fff;
+  }
+  .option.dimmed { opacity: 0.5; }
+
+  /* ===== Feedback ===== */
+  .feedback {
+    margin-top: 16px;
+    padding: 16px 18px;
+    border-radius: 10px;
+    display: none;
+    font-size: 14px;
+    line-height: 1.55;
+    border-left: 4px solid;
+  }
+  .feedback.show { display: block; animation: fadeIn 0.3s ease; }
+  .feedback.correct {
+    background: #ECFDF5;
+    color: #065f46;
+    border-color: var(--success);
+  }
+  .feedback.incorrect {
+    background: #FEF2F2;
+    color: #991b1b;
+    border-color: var(--error);
+  }
+  .feedback strong { display: block; margin-bottom: 4px; font-size: 15px; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== Match (drag-equivalent vía clic) ===== */
+  .match-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 720px) {
+    .match-grid { grid-template-columns: 1fr; }
+  }
+  .match-col-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+  }
+  .match-item {
+    background: #fff;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    font-family: inherit;
+    width: 100%;
+    text-align: left;
+  }
+  .match-item:hover:not(:disabled) {
+    border-color: var(--ceamsa-blue-light);
+    transform: translateX(2px);
+  }
+  .match-item.selected {
+    border-color: var(--ceamsa-aqua);
+    background: #E0F4F9;
+    box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.15);
+  }
+  .match-item.matched-correct {
+    border-color: var(--success);
+    background: #ECFDF5;
+    cursor: default;
+  }
+  .match-item.matched-wrong {
+    border-color: var(--error);
+    background: #FEF2F2;
+    animation: shake 0.4s;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+  .match-item:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* ===== Final ===== */
+  .final-card {
+    background: linear-gradient(135deg, var(--ceamsa-blue) 0%, var(--ceamsa-blue-light) 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 40px 32px;
+    text-align: center;
+    margin-top: 48px;
+    display: none;
+  }
+  .final-card.show { display: block; animation: fadeIn 0.5s ease; }
+  .final-emoji { font-size: 56px; margin-bottom: 12px; }
+  .final-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .final-score {
+    font-size: 18px;
+    opacity: 0.95;
+    margin-bottom: 24px;
+  }
+  .final-score strong { font-size: 24px; color: var(--ceamsa-green); }
+  .restart-btn {
+    background: #fff;
+    color: var(--ceamsa-blue);
+    border: none;
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    font-family: inherit;
+  }
+  .restart-btn:hover { transform: scale(1.04); }
+
+  /* ===== Reference legend (al final) ===== */
+  .legend {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-top: 32px;
+    box-shadow: var(--shadow);
+  }
+  .legend-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ceamsa-blue);
+    margin-bottom: 16px;
+  }
+  .legend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-radius: 8px;
+  }
+  .legend-text { font-size: 13.5px; line-height: 1.4; }
+  .legend-text strong { display: block; color: var(--ceamsa-blue); margin-bottom: 2px; }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 24px;
+    margin-top: 32px;
+  }
+  footer span { color: var(--ceamsa-green); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="brand-row">
+      <span class="brand-dot"></span>
+      <span>CEAMSA · Formación Microsoft 365</span>
+    </div>
+    <h1>OneDrive: ¿dominas los iconos de sincronización?</h1>
+    <p class="subtitle">Mini-reto rápido para comprobar lo que hemos visto en sesión. Identifica los iconos, decide qué pasa con el archivo y resuelve casos reales del día a día. <strong>10 retos · 5 minutos.</strong></p>
+  </div>
+</header>
+
+<div class="progress-strip">
+  <div class="progress-card">
+    <div class="progress-bar-wrapper">
+      <div class="progress-label">Progreso · <span id="progress-text">0 / 10</span></div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+    <div class="score-pill">Aciertos: <span id="score">0</span></div>
+  </div>
+</div>
+
+<main>
+
+  <!-- ============ SECCIÓN A: Identifica el icono ============ -->
+  <section class="section">
+    <span class="section-tag">Bloque 1 · Reconocer</span>
+    <h2 class="section-title">¿Qué significa este icono?</h2>
+    <p class="section-desc">Mira la captura simulada del Explorador de Windows e identifica el estado del archivo.</p>
+
+    <!-- Q1: Nube azul -->
+    <article class="question" data-q="1">
+      <div class="q-header">
+        <div class="q-number">1</div>
+        <div class="q-text">Abres el Explorador y ves este archivo. ¿Qué te está diciendo OneDrive?</div>
+      </div>
+      <div class="icon-showcase">
+        <div class="file-mock">
+          <div class="file-icon excel">XLS</div>
+          <div class="file-name">Stock_Carragenina_2026.xlsx</div>
+          <div class="od-icon od-cloud" aria-label="cloud icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="options">
+        <button class="option" data-correct="true">
+          <span class="opt-letter">A</span>
+          <span>Está <strong>solo en la nube</strong>: lo veo, pero ocupa 0 bytes en mi disco. Necesito conexión a internet para abrirlo.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">B</span>
+          <span>Hay un error de sincronización con la nube.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Está descargado y ocupa espacio en mi equipo.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q2: Tick verde sobre blanco -->
+    <article class="question" data-q="2">
+      <div class="q-header">
+        <div class="q-number">2</div>
+        <div class="q-text">Has abierto el archivo una vez para revisarlo. Ahora aparece así. ¿Qué significa?</div>
+      </div>
+      <div class="icon-showcase">
+        <div class="file-mock">
+          <div class="file-icon">DOC</div>
+          <div class="file-name">Acta_Visita_Cliente_Mayo.docx</div>
+          <div class="od-icon od-locally-available"></div>
+        </div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Es un archivo nuevo que no se ha subido todavía.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>Está <strong>disponible localmente</strong> (se descargó al abrirlo). Puedo abrirlo sin conexión, pero si necesito espacio Windows lo liberará automáticamente.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Es un archivo que he marcado para que <em>siempre</em> esté en mi equipo, ocurra lo que ocurra.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q3: Tick blanco sobre verde -->
+    <article class="question" data-q="3">
+      <div class="q-header">
+        <div class="q-number">3</div>
+        <div class="q-text">Mañana viajas a Bruselas para visitar a un cliente y necesitas tener este informe disponible <strong>seguro</strong> en el avión. Has hecho clic derecho → <em>Conservar siempre en este dispositivo</em>. Aparece este icono. ¿Es correcto?</div>
+      </div>
+      <div class="icon-showcase">
+        <div class="file-mock">
+          <div class="file-icon ppt">PPT</div>
+          <div class="file-name">Propuesta_Comercial_Bruselas.pptx</div>
+          <div class="od-icon od-always-available"></div>
+        </div>
+      </div>
+      <div class="options">
+        <button class="option" data-correct="true">
+          <span class="opt-letter">A</span>
+          <span>Sí. <strong>Siempre disponible en este dispositivo</strong>: ocupa espacio físico y nunca se libera, aunque pierdas conexión.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">B</span>
+          <span>No. Este icono significa que está sincronizándose ahora mismo.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>No. Ese tick verde solo lo ven los archivos compartidos.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q4: Aspa roja -->
+    <article class="question" data-q="4">
+      <div class="q-header">
+        <div class="q-number">4</div>
+        <div class="q-text">Llegas a la oficina, abres OneDrive y ves este icono junto a un fichero. ¿Qué hago?</div>
+      </div>
+      <div class="icon-showcase">
+        <div class="file-mock">
+          <div class="file-icon excel">XLS</div>
+          <div class="file-name">Pedido_OEM_Lácteos.xlsx</div>
+          <div class="od-icon od-error"></div>
+        </div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Nada, el archivo se borró correctamente.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span><strong>Hay un error de sincronización</strong>. Pulso sobre el icono de OneDrive en la barra de tareas para ver el detalle (suele ser nombre con caracteres no permitidos, archivo demasiado grande o ruta excesivamente larga).</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Significa que el archivo es privado y solo lo veo yo.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q5: Personas (compartido) -->
+    <article class="question" data-q="5">
+      <div class="q-header">
+        <div class="q-number">5</div>
+        <div class="q-text">¿Qué te indica este icono junto al archivo?</div>
+      </div>
+      <div class="icon-showcase">
+        <div class="file-mock">
+          <div class="file-icon">DOC</div>
+          <div class="file-name">Procedimiento_Calidad_Algas.docx</div>
+          <div class="od-icon od-shared">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>El archivo está protegido y nadie puede verlo.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">B</span>
+          <span>Tiene comentarios pendientes de revisar.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">C</span>
+          <span><strong>Está compartido</strong> con otras personas. Antes de tocarlo es buena idea revisar quién más tiene acceso (botón derecho → Administrar acceso).</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+  </section>
+
+  <!-- ============ SECCIÓN B: Empareja ============ -->
+  <section class="section">
+    <span class="section-tag">Bloque 2 · Emparejar</span>
+    <h2 class="section-title">Empareja icono ↔ situación</h2>
+    <p class="section-desc">Pulsa primero un icono de la izquierda y luego la situación que lo describe. Si aciertas se quedan unidos en verde.</p>
+
+    <article class="question" data-q="match">
+      <div class="match-grid">
+        <div>
+          <div class="match-col-title">Icono</div>
+          <button class="match-item" data-side="left" data-id="syncing">
+            <span class="od-icon od-syncing">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
+            </span>
+            <span>Flechas circulares girando</span>
+          </button>
+          <button class="match-item" data-side="left" data-id="paused">
+            <span class="od-icon od-paused"></span>
+            <span>Círculo gris con dos barras</span>
+          </button>
+          <button class="match-item" data-side="left" data-id="locked">
+            <span class="od-icon od-locked">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </span>
+            <span>Candado pequeño</span>
+          </button>
+          <button class="match-item" data-side="left" data-id="cloud">
+            <span class="od-icon od-cloud">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+            </span>
+            <span>Nube azul</span>
+          </button>
+        </div>
+        <div>
+          <div class="match-col-title">Situación</div>
+          <button class="match-item" data-side="right" data-id="cloud">
+            <span>📎 No ocupa espacio en mi disco. Solo veo el "atajo".</span>
+          </button>
+          <button class="match-item" data-side="right" data-id="locked">
+            <span>🔒 El admin ha aplicado una política (p. ej. retención u ofensivo) y no se puede modificar.</span>
+          </button>
+          <button class="match-item" data-side="right" data-id="paused">
+            <span>⏸️ He pausado la sincronización (típico cuando tengo poca batería o uso datos móviles).</span>
+          </button>
+          <button class="match-item" data-side="right" data-id="syncing">
+            <span>🔄 OneDrive está copiando ahora mismo cambios entre el equipo y la nube.</span>
+          </button>
+        </div>
+      </div>
+      <div class="feedback"></div>
+    </article>
+  </section>
+
+  <!-- ============ SECCIÓN C: Casos reales ============ -->
+  <section class="section">
+    <span class="section-tag">Bloque 3 · Aplicar</span>
+    <h2 class="section-title">Casos reales en CEAMSA</h2>
+    <p class="section-desc">Aquí no hay icono que reconocer: hay que <strong>decidir qué hacer</strong>. Son situaciones del día a día.</p>
+
+    <!-- Q6: Espacio en disco (nota cliente: "liberar espacio") -->
+    <article class="question" data-q="6">
+      <div class="q-header">
+        <div class="q-number">6</div>
+        <div class="q-text">Tu portátil te avisa de que <strong>se está quedando sin espacio</strong> en disco. Tienes 80 GB en OneDrive sincronizados. ¿Qué es lo más sensato?</div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Borrar archivos antiguos directamente desde el Explorador.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>Botón derecho sobre las carpetas que no uso a diario → <strong>"Liberar espacio"</strong>. Los archivos siguen visibles (con icono de nube), pero dejan de ocupar disco. Se descargan al abrirlos si tengo conexión.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Desinstalar OneDrive del equipo para recuperar espacio.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q7: Escritorio remoto SAP (nota cliente) -->
+    <article class="question" data-q="7">
+      <div class="q-header">
+        <div class="q-number">7</div>
+        <div class="q-text">Necesitas trabajar con un fichero del escritorio remoto donde está <strong>SAP</strong>. Ese servidor está compartido por varias personas. ¿Cuál es la práctica recomendada?</div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Guardarlo en el escritorio del servidor remoto, así lo encuentro rápido la próxima vez.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>Descargar el archivo desde OneDrive/Teams al servidor remoto, trabajar con él y, al terminar, <strong>volver a subirlo a OneDrive o al canal de Teams correspondiente</strong>. Después, eliminarlo de la sesión remota para no dejar copias.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Enviármelo por correo a mí mismo y trabajar desde Outlook.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q8: ¿Dónde lo guardo? Personal vs Teams -->
+    <article class="question" data-q="8">
+      <div class="q-header">
+        <div class="q-number">8</div>
+        <div class="q-text">Estás preparando una <strong>oferta para un cliente</strong>. Trabajaréis en ella varias personas del equipo comercial y luego habrá que mostrársela a Dirección. ¿Dónde la guardas?</div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>En mi OneDrive personal. Cuando esté lista la comparto.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>En el <strong>canal de Teams del equipo Comercial</strong> (que vive en SharePoint). Así todos editan la misma versión, se ve el historial y nadie se queda fuera si yo me voy de vacaciones.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>En una carpeta del escritorio y luego se la mando por email a todos.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q9: Versión anterior -->
+    <article class="question" data-q="9">
+      <div class="q-header">
+        <div class="q-number">9</div>
+        <div class="q-text">Un compañero ha sobrescrito por error la <strong>versión final</strong> de un Excel de pedidos compartido. ¿Está perdido?</div>
+      </div>
+      <div class="options">
+        <button class="option" data-correct="true">
+          <span class="opt-letter">A</span>
+          <span>No. Botón derecho sobre el archivo → <strong>Historial de versiones</strong>. Ahí puedo restaurar cualquier versión anterior, incluso de hace semanas.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">B</span>
+          <span>Sí, hay que rehacerlo desde cero.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Solo se puede recuperar si avisas a IT en menos de una hora.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q10: Grabación de reunión -->
+    <article class="question" data-q="10">
+      <div class="q-header">
+        <div class="q-number">10</div>
+        <div class="q-text">Acabas de grabar una reunión de Teams. ¿Dónde queda guardada y quién puede verla?</div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>En el equipo del organizador, solo él/ella la puede ver.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>Depende: si es una reunión <strong>1:1 o ad-hoc</strong>, queda en el OneDrive del organizador y se comparte con los asistentes. Si es una reunión <strong>de canal</strong>, queda en la carpeta del canal en SharePoint y la ven todos los miembros.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Se guarda en local en el equipo del organizador y hay que subirla manualmente.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+  </section>
+
+  <!-- ============ Resultado final ============ -->
+  <div class="final-card" id="final-card">
+    <div class="final-emoji" id="final-emoji">🎯</div>
+    <div class="final-title" id="final-title">¡Reto completado!</div>
+    <div class="final-score">Has acertado <strong id="final-score">0</strong> de 10 retos.</div>
+    <button class="restart-btn" onclick="restart()">↻ Volver a empezar</button>
+  </div>
+
+  <!-- ============ Leyenda de referencia ============ -->
+  <section class="legend">
+    <div class="legend-title">📌 Chuleta rápida · Iconos de OneDrive</div>
+    <div class="legend-grid">
+      <div class="legend-item">
+        <div class="od-icon od-cloud">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+        </div>
+        <div class="legend-text"><strong>Solo en línea</strong>Lo veo, no ocupa disco. Necesito conexión para abrirlo.</div>
+      </div>
+      <div class="legend-item">
+        <div class="od-icon od-locally-available"></div>
+        <div class="legend-text"><strong>Disponible en este dispositivo</strong>Se descargó al abrirlo. Windows puede liberarlo si necesita espacio.</div>
+      </div>
+      <div class="legend-item">
+        <div class="od-icon od-always-available"></div>
+        <div class="legend-text"><strong>Siempre en este dispositivo</strong>Lo he forzado yo. Ocupa disco y nunca se libera.</div>
+      </div>
+      <div class="legend-item">
+        <div class="od-icon od-syncing">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
+        </div>
+        <div class="legend-text"><strong>Sincronizando</strong>OneDrive está subiendo o bajando cambios ahora mismo.</div>
+      </div>
+      <div class="legend-item">
+        <div class="od-icon od-error"></div>
+        <div class="legend-text"><strong>Error de sincronización</strong>Algo va mal: clic en el icono de OneDrive de la barra de tareas para ver el detalle.</div>
+      </div>
+      <div class="legend-item">
+        <div class="od-icon od-shared">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="legend-text"><strong>Compartido</strong>El archivo o carpeta está accesible para otras personas. Revisa quién antes de modificar.</div>
+      </div>
+      <div class="legend-item">
+        <div class="od-icon od-paused"></div>
+        <div class="legend-text"><strong>Sincronización en pausa</strong>OneDrive ha dejado de sincronizar (manual, sin batería, datos móviles…).</div>
+      </div>
+      <div class="legend-item">
+        <div class="od-icon od-locked">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div class="legend-text"><strong>Bloqueado</strong>Hay una política aplicada por el administrador (retención, sensibilidad…).</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Formación Microsoft 365 · OneDrive para CEAMSA · Diseñado para <span>aprender haciendo</span>
+</footer>
+
+<script>
+  let score = 0;
+  let answered = 0;
+  const totalQuestions = 10;
+
+  // ===== Multiple choice =====
+  document.querySelectorAll('.question[data-q]').forEach(card => {
+    const qId = card.dataset.q;
+    if (qId === 'match') return; // skip match block here
+
+    const options = card.querySelectorAll('.option');
+    const feedback = card.querySelector('.feedback');
+
+    options.forEach(opt => {
+      opt.addEventListener('click', () => {
+        if (card.dataset.answered === 'true') return;
+        card.dataset.answered = 'true';
+
+        const isCorrect = opt.dataset.correct === 'true';
+        options.forEach(o => {
+          o.disabled = true;
+          if (o.dataset.correct === 'true') o.classList.add('correct');
+          else if (o === opt) o.classList.add('incorrect');
+          else o.classList.add('dimmed');
+        });
+
+        if (isCorrect) {
+          score++;
+          feedback.classList.add('correct');
+          feedback.innerHTML = '<strong>✓ Correcto</strong>' + getExplanation(qId, true);
+        } else {
+          feedback.classList.add('incorrect');
+          feedback.innerHTML = '<strong>✗ No es esa</strong>' + getExplanation(qId, false);
+        }
+        feedback.classList.add('show');
+
+        answered++;
+        updateProgress();
+      });
+    });
+  });
+
+  // ===== Match block =====
+  let leftSelected = null;
+  const matchedIds = new Set();
+  const matchTotal = 4;
+  let matchAnsweredCount = 0;
+
+  document.querySelectorAll('.match-item').forEach(item => {
+    item.addEventListener('click', () => {
+      if (item.disabled || item.classList.contains('matched-correct')) return;
+
+      const side = item.dataset.side;
+      const id = item.dataset.id;
+
+      if (side === 'left') {
+        document.querySelectorAll('.match-item[data-side="left"]').forEach(i => {
+          if (!i.classList.contains('matched-correct')) i.classList.remove('selected');
+        });
+        item.classList.add('selected');
+        leftSelected = item;
+      } else if (side === 'right' && leftSelected) {
+        if (leftSelected.dataset.id === id) {
+          // Match correcto
+          item.classList.add('matched-correct');
+          leftSelected.classList.remove('selected');
+          leftSelected.classList.add('matched-correct');
+          leftSelected.disabled = true;
+          item.disabled = true;
+          matchedIds.add(id);
+          matchAnsweredCount++;
+
+          if (matchedIds.size === matchTotal) {
+            score++; // bloque match cuenta como 1 acierto
+            const card = document.querySelector('.question[data-q="match"]');
+            const fb = card.querySelector('.feedback');
+            fb.classList.add('correct', 'show');
+            fb.innerHTML = '<strong>✓ ¡Bloque completado!</strong>Has emparejado los 4 iconos correctamente. La regla mental: <em>color = estado, forma = acción</em>. Verde = OK · Rojo = problema · Azul = nube/red · Gris = pausado.';
+            answered++;
+            updateProgress();
+          }
+        } else {
+          // Match incorrecto - shake
+          item.classList.add('matched-wrong');
+          setTimeout(() => item.classList.remove('matched-wrong'), 400);
+          leftSelected.classList.remove('selected');
+          leftSelected = null;
+        }
+      }
+    });
+  });
+
+  function updateProgress() {
+    document.getElementById('score').textContent = score;
+    document.getElementById('progress-text').textContent = `${answered} / ${totalQuestions}`;
+    document.getElementById('progress-fill').style.width = `${(answered / totalQuestions) * 100}%`;
+
+    if (answered === totalQuestions) {
+      setTimeout(showFinal, 600);
+    }
+  }
+
+  function showFinal() {
+    const finalCard = document.getElementById('final-card');
+    const finalScore = document.getElementById('final-score');
+    const finalEmoji = document.getElementById('final-emoji');
+    const finalTitle = document.getElementById('final-title');
+
+    finalScore.textContent = score;
+
+    if (score >= 9) {
+      finalEmoji.textContent = '🏆';
+      finalTitle.textContent = '¡Crack de OneDrive!';
+    } else if (score >= 7) {
+      finalEmoji.textContent = '👏';
+      finalTitle.textContent = '¡Muy bien!';
+    } else if (score >= 5) {
+      finalEmoji.textContent = '💪';
+      finalTitle.textContent = 'Vas por buen camino';
+    } else {
+      finalEmoji.textContent = '📘';
+      finalTitle.textContent = 'A repasar la chuleta';
+    }
+
+    finalCard.classList.add('show');
+    finalCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function restart() {
+    location.reload();
+  }
+
+  // ===== Explanations / refuerzo didáctico =====
+  function getExplanation(qId, ok) {
+    const ex = {
+      '1': 'La <strong>nube azul</strong> = "solo en línea". Es el estado por defecto si tienes activado <em>Archivos a petición</em>. Ocupa 0 bytes en tu disco hasta que lo abres.',
+      '2': 'El <strong>tick verde sobre fondo blanco</strong> = "disponible localmente". Lo bajaste al abrirlo y ahora puedes verlo offline. Pero ojo: Windows puede liberarlo automáticamente si te falta espacio.',
+      '3': 'El <strong>tick blanco sobre fondo verde</strong> = "siempre disponible en este dispositivo". Ideal antes de un viaje o un trayecto sin Wi-Fi. Lo activas tú con clic derecho → <em>Conservar siempre en este dispositivo</em>.',
+      '4': 'El <strong>aspa blanca sobre rojo</strong> indica error. Lo más frecuente: nombre con caracteres prohibidos (\\ / : * ? " &lt; &gt; |), ruta demasiado larga, o archivo &gt; 250 GB. Pulsa el icono de OneDrive en la barra para ver el detalle.',
+      '5': 'El <strong>icono de personas</strong> avisa de que ese archivo o carpeta está compartido. Antes de modificar conviene saber con quién, sobre todo en documentos comerciales o de calidad.',
+      '6': 'La opción <strong>"Liberar espacio"</strong> es justo lo que está pensado para esto: no borras nada, los archivos pasan a estado "solo en línea". Cuando los necesites, doble clic y se descargan otra vez.',
+      '7': 'En servidores compartidos (como el del SAP) la regla de oro es: <strong>descargar → trabajar → volver a subir → eliminar la copia local</strong>. Así nadie deja basura en el remoto y todos trabajan sobre la misma versión en OneDrive/Teams.',
+      '8': 'Regla mental: <strong>"Mi maletín" (OneDrive) = mío</strong>. <strong>"Biblioteca de la empresa" (Teams/SharePoint) = nuestro</strong>. Si más de una persona toca el archivo, va a Teams. Punto.',
+      '9': 'OneDrive y SharePoint guardan <strong>historial de versiones</strong> automáticamente. Botón derecho sobre el archivo → Historial. Funciona también con Word, Excel y PowerPoint mientras editas en línea.',
+      '10': 'Las grabaciones de Teams ya no se guardan en local: van a OneDrive (reuniones 1:1) o a SharePoint dentro de la carpeta del canal (reuniones de canal). Quien graba debe asegurarse de que los permisos son los correctos.'
+    };
+    return ex[qId] ? '<br>' + ex[qId] : '';
+  }
+</script>
+
+</body>
+</html>
