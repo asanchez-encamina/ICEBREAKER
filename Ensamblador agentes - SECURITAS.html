@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centro de Control SECURITAS · Ensamblaje de Agente de RRHH</title>
+    <style>
+        :root {
+            /* Paleta corporativa SECURITAS */
+            --securitas-red: #ED1C24;
+            --securitas-red-dark: #B8141B;
+            --securitas-blue: #002C5F;
+            --securitas-blue-light: #003A70;
+            --bg-dark: #0a1628;
+            --panel-bg: #15243d;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #1e3a5f;
+            --success: #22c55e;
+            --error: #ED1C24;
+            --warning: #f59e0b;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-dark);
+            background-image:
+                radial-gradient(ellipse at top, rgba(0, 44, 95, 0.4), transparent 60%),
+                radial-gradient(ellipse at bottom, rgba(237, 28, 36, 0.08), transparent 70%);
+            color: var(--text-light);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Barra superior estilo SECURITAS */
+        .top-bar {
+            width: 100%;
+            max-width: 1300px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 3px solid var(--securitas-red);
+            margin-bottom: 30px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            background: var(--securitas-red);
+            color: white;
+            font-weight: 900;
+            font-size: 1.4em;
+            letter-spacing: 2px;
+            padding: 6px 14px;
+            border-radius: 2px;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        .brand-tag {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .session-info {
+            font-family: monospace;
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+        .session-info .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            margin-right: 6px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            max-width: 850px;
+        }
+
+        .header h1 {
+            color: white;
+            margin-bottom: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.8em;
+        }
+        .header h1 span { color: var(--securitas-red); }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.05em;
+            line-height: 1.5;
+        }
+
+        .mission-box {
+            background-color: rgba(237, 28, 36, 0.08);
+            border-left: 4px solid var(--securitas-red);
+            padding: 15px 20px;
+            border-radius: 2px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 1em;
+            color: #fecaca;
+            text-align: left;
+        }
+        .mission-box strong { color: white; }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 460px 1fr;
+            gap: 30px;
+            width: 100%;
+            max-width: 1300px;
+        }
+
+        /* Plano del Agente (Panel de Control) */
+        .blueprint {
+            background-color: #050d1c;
+            border: 2px solid var(--securitas-blue);
+            border-radius: 6px;
+            padding: 25px;
+            background-image:
+                linear-gradient(rgba(0, 44, 95, 0.35) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 44, 95, 0.35) 1px, transparent 1px);
+            background-size: 22px 22px;
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.85), 0 0 0 1px rgba(237, 28, 36, 0.15);
+            position: relative;
+        }
+
+        .blueprint::after {
+            content: "SCT_BOARD · v3.1";
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+            color: var(--securitas-blue-light);
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 0.85em;
+        }
+
+        .blueprint h2 {
+            margin-top: 0;
+            color: var(--securitas-red);
+            border-bottom: 1px solid var(--securitas-blue);
+            padding-bottom: 10px;
+            font-family: monospace;
+            font-size: 1.05em;
+            letter-spacing: 1px;
+        }
+
+        .slot-container { margin-bottom: 28px; }
+
+        .slot-label {
+            display: block;
+            margin-bottom: 8px;
+            font-family: monospace;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 1px;
+        }
+
+        /* Sockets */
+        .drop-slot {
+            background-color: rgba(0, 0, 0, 0.55);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .drop-slot::before {
+            content: "VACÍO";
+            color: #1e3a5f;
+            font-family: monospace;
+            font-size: 1.15em;
+            letter-spacing: 3px;
+            position: absolute;
+            z-index: 0;
+        }
+        .drop-slot:has(.component)::before { display: none; }
+
+        /* Formas de los sockets */
+        #slot-role { border: 2px dashed var(--securitas-red); border-radius: 30px; }
+        #slot-data { border: 2px dashed #d97706; border-radius: 4px 20px 4px 20px; }
+        #slot-rule { border: 2px dashed var(--securitas-blue-light); border-left-width: 8px; border-right-width: 8px; }
+
+        .drop-slot.drag-over {
+            background-color: rgba(237, 28, 36, 0.08);
+            box-shadow: 0 0 20px rgba(237, 28, 36, 0.3);
+        }
+
+        /* Inventario */
+        .inventory {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .component-group h3 {
+            margin-top: 0;
+            font-size: 0.85em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-family: monospace;
+        }
+        .component-group h3 .badge {
+            background: var(--securitas-red);
+            color: white;
+            font-size: 0.7em;
+            padding: 2px 8px;
+            margin-left: 8px;
+            border-radius: 2px;
+            letter-spacing: 1px;
+        }
+
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            min-height: 50px;
+            padding-bottom: 10px;
+        }
+
+        /* Componentes (piezas) */
+        .component {
+            background-color: #1e293b;
+            padding: 12px 15px;
+            cursor: grab;
+            font-size: 0.85em;
+            user-select: none;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.45);
+            transition: transform 0.1s, box-shadow 0.1s;
+            display: flex;
+            align-items: center;
+            line-height: 1.4;
+            color: #e2e8f0;
+        }
+
+        .component:active { cursor: grabbing; transform: scale(0.95); box-shadow: none; }
+
+        /* CPU - Forma de chip / píldora ROJO SECURITAS */
+        .type-role {
+            border: 2px solid var(--securitas-red);
+            border-radius: 30px;
+            background: linear-gradient(145deg, #4a0e11, #1e293b);
+        }
+
+        /* DATA - Cartucho de memoria */
+        .type-data {
+            border: 2px solid #d97706;
+            border-radius: 4px 20px 4px 20px;
+            background: linear-gradient(145deg, #78350f, #1e293b);
+            border-bottom-width: 6px;
+        }
+
+        /* RULE - Módulo de seguridad / firewall AZUL SECURITAS */
+        .type-rule {
+            border: 2px solid var(--securitas-blue-light);
+            border-left: 8px solid var(--securitas-blue-light);
+            border-right: 8px solid var(--securitas-blue-light);
+            border-radius: 2px;
+            background: linear-gradient(145deg, #002C5F, #1e293b);
+        }
+
+        /* Controles */
+        .controls {
+            margin-top: 40px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .btn-start {
+            background-color: var(--securitas-red);
+            color: white;
+            border: none;
+            padding: 16px 50px;
+            font-size: 1.1em;
+            font-weight: 800;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 4px 0 var(--securitas-red-dark);
+        }
+
+        .btn-start:hover {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 var(--securitas-red-dark);
+            background-color: #ff2a32;
+        }
+        .btn-start:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 transparent;
+        }
+
+        /* Terminal de resultados */
+        .terminal {
+            margin-top: 25px;
+            background-color: #000;
+            border-left: 4px solid var(--securitas-red);
+            border-radius: 0 4px 4px 0;
+            padding: 20px;
+            font-family: monospace;
+            font-size: 1.05em;
+            min-height: 80px;
+            display: none;
+            text-align: left;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .text-success { color: var(--success); }
+        .text-error { color: var(--error); font-weight: bold; }
+        .text-warning { color: var(--warning); }
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            color: var(--text-muted);
+            font-size: 0.75em;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        .footer span { color: var(--securitas-red); font-weight: bold; }
+
+        /* Responsive */
+        @media (max-width: 1000px) {
+            .workspace { grid-template-columns: 1fr; }
+            .top-bar { flex-direction: column; gap: 10px; }
+        }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .header h1 { font-size: 1.4em; }
+            .blueprint, .inventory { padding: 18px; }
+            .btn-start { padding: 14px 30px; font-size: 1em; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="brand">
+            <div class="brand-logo">SECURITAS</div>
+            <div class="brand-tag">Internal AI Lab · People Ops</div>
+        </div>
+        <div class="session-info"><span class="dot"></span>SESSION_HR_AGENT_BUILDER · OK</div>
+    </div>
+
+    <div class="header">
+        <h1>Centro de Ensamblaje · <span>Agente Securitas</span></h1>
+        <p>Departamento de Recursos Humanos. Combina los componentes lógicos correctos para compilar un asistente conversacional útil, fiable y conforme al convenio colectivo de SECURITAS.</p>
+        <div class="mission-box">
+            > <strong>OBJETIVO_ACTUAL:</strong> Compilar el "Agente de Consultas de Vacaciones y Permisos" para resolver dudas de los empleados de SECURITAS sobre días disponibles, plazos de solicitud y permisos retribuidos según convenio.
+        </div>
+    </div>
+
+    <div class="workspace">
+
+        <!-- Plano del Agente -->
+        <div class="blueprint">
+            <h2>&gt; SYSTEM_SOCKETS</h2>
+
+            <div class="slot-container">
+                <span class="slot-label">CPU [Identidad y Tono]</span>
+                <div class="drop-slot" id="slot-role" data-type="role" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+            </div>
+
+            <div class="slot-container">
+                <span class="slot-label">MEMORY [Base de Conocimiento]</span>
+                <div class="drop-slot" id="slot-data" data-type="data" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+            </div>
+
+            <div class="slot-container">
+                <span class="slot-label">FIREWALL [Reglas y Restricciones]</span>
+                <div class="drop-slot" id="slot-rule" data-type="rule" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+            </div>
+        </div>
+
+        <!-- Inventario -->
+        <div class="inventory">
+            <div class="component-group">
+                <h3>&gt; CPU disponibles <span class="badge">ROL</span></h3>
+                <div class="components-grid drop-slot-inv" id="inv-role" data-type="role" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <div class="component type-role" draggable="true" ondragstart="drag(event)" id="role-wrong">📣 Comercial proactivo: aprovecha cada consulta para ofrecer formaciones de pago.</div>
+                    <div class="component type-role" draggable="true" ondragstart="drag(event)" id="role-generic">🤖 Asistente genérico: muy educado, responde con frases vagas y disclaimers legales.</div>
+                    <div class="component type-role" draggable="true" ondragstart="drag(event)" id="role-correct">👔 Especialista de RRHH: empático, claro, conoce el convenio colectivo de SECURITAS.</div>
+                </div>
+            </div>
+
+            <div class="component-group">
+                <h3>&gt; Bancos de Memoria <span class="badge">DATOS</span></h3>
+                <div class="components-grid drop-slot-inv" id="inv-data" data-type="data" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <div class="component type-data" draggable="true" ondragstart="drag(event)" id="data-wrong">💼 Cartera_Clientes_VIP_y_Contratos.xlsx</div>
+                    <div class="component type-data" draggable="true" ondragstart="drag(event)" id="data-privacy">🧾 Nominas_y_DNIs_Plantilla_Completa_2026.csv</div>
+                    <div class="component type-data" draggable="true" ondragstart="drag(event)" id="data-correct">📚 Convenio_Colectivo_Securitas + Manual_Vacaciones_Permisos.pdf</div>
+                </div>
+            </div>
+
+            <div class="component-group">
+                <h3>&gt; Módulos Firewall <span class="badge">REGLAS</span></h3>
+                <div class="components-grid drop-slot-inv" id="inv-rule" data-type="rule" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <div class="component type-rule" draggable="true" ondragstart="drag(event)" id="rule-wrong">⚠️ Si el convenio no es claro, estima fechas y plazos por tu cuenta para no bloquear al empleado.</div>
+                    <div class="component type-rule" draggable="true" ondragstart="drag(event)" id="rule-privacy">🔓 Si lo piden, comparte cuántos días lleva de vacaciones cualquier compañero del equipo.</div>
+                    <div class="component type-rule" draggable="true" ondragstart="drag(event)" id="rule-correct">🛡️ No inventes datos. No reveles información personal de otros empleados. Si la consulta excede el convenio, deriva al HRBP.</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="controls">
+        <button class="btn-start" onclick="arrancarAgente()">▶ Ejecutar Compilación</button>
+        <div class="terminal" id="terminal"></div>
+    </div>
+
+    <div class="footer">
+        SECURITAS · Internal AI Lab · <span>Confidencial</span> · Solo para uso interno de personal autorizado.
+    </div>
+
+    <script>
+        function allowDrop(ev) { ev.preventDefault(); }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+            ev.dataTransfer.setData("type",
+                ev.target.classList.contains('type-role') ? 'role' :
+                ev.target.classList.contains('type-data') ? 'data' : 'rule');
+        }
+
+        function dragEnter(ev) {
+            ev.preventDefault();
+            let slot = ev.target.closest('.drop-slot');
+            if(slot) slot.classList.add('drag-over');
+        }
+
+        function dragLeave(ev) {
+            let slot = ev.target.closest('.drop-slot');
+            if(slot) slot.classList.remove('drag-over');
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            let draggedId = ev.dataTransfer.getData("text");
+            let draggedType = ev.dataTransfer.getData("type");
+
+            let dropZone = ev.target.closest('.drop-slot') || ev.target.closest('.drop-slot-inv');
+
+            if (dropZone) {
+                if(dropZone.classList.contains('drop-slot')) dropZone.classList.remove('drag-over');
+
+                let zoneType = dropZone.getAttribute('data-type');
+                if (zoneType === draggedType) {
+                    if (dropZone.id.startsWith('slot-') && dropZone.children.length > 0) {
+                        let existingChild = dropZone.children[0];
+                        document.getElementById('inv-' + zoneType).appendChild(existingChild);
+                    }
+                    dropZone.appendChild(document.getElementById(draggedId));
+                }
+            }
+            document.getElementById('terminal').style.display = 'none';
+        }
+
+        function arrancarAgente() {
+            let slotRole = document.getElementById('slot-role').children[0];
+            let slotData = document.getElementById('slot-data').children[0];
+            let slotRule = document.getElementById('slot-rule').children[0];
+            let terminal = document.getElementById('terminal');
+
+            terminal.style.display = 'block';
+            terminal.innerHTML = "&gt; Inicializando compilador SECURITAS... <span class='blink'>_</span><br>";
+
+            if (!slotRole || !slotData || !slotRule) {
+                terminal.innerHTML += "<br><span class='text-error'>[ERROR] Configuración incompleta. Inserta un componente en cada socket de la placa antes de compilar.</span>";
+                return;
+            }
+
+            let idRole = slotRole.id;
+            let idData = slotData.id;
+            let idRule = slotRule.id;
+
+            setTimeout(() => {
+                terminal.innerHTML = "&gt; Validando configuración del agente...<br>&gt; Verificando cumplimiento RGPD y convenio colectivo...<br><br>";
+
+                // Prioridad: errores más graves primero (datos > reglas > rol)
+                if (idData === 'data-wrong') {
+                    terminal.innerHTML += "<span class='text-error'>[ERROR FATAL · BRECHA COMERCIAL] El Agente ha filtrado la cartera de clientes VIP y los importes de contratos a un vigilante que solo preguntaba por sus días de asuntos propios. Notificando a Compliance...</span>";
+                } else if (idData === 'data-privacy') {
+                    terminal.innerHTML += "<span class='text-error'>[ERROR FATAL · INCIDENCIA RGPD] El Agente ha enviado nóminas y DNIs de toda la plantilla al primer empleado que ha preguntado &quot;cuántos días me quedan&quot;. Sanción de la AEPD inminente.</span>";
+                } else if (idRule === 'rule-wrong') {
+                    terminal.innerHTML += "<span class='text-error'>[CRÍTICO · ALUCINACIÓN] El Agente ha inventado que el plazo para solicitar vacaciones de verano vence mañana. 800 vigilantes han bloqueado el portal del empleado en pánico.</span>";
+                } else if (idRule === 'rule-privacy') {
+                    terminal.innerHTML += "<span class='text-error'>[CRÍTICO · FUGA DE DATOS] El Agente está revelando los días de vacaciones que tiene cogidos cada compañero. El comité de empresa ya ha presentado una queja formal.</span>";
+                } else if (idRole === 'role-wrong') {
+                    terminal.innerHTML += "<span class='text-warning'>[ADVERTENCIA · TONO INADECUADO] El Agente intenta vender un curso premium de gestión del estrés a un empleado que solo quería pedir un permiso por mudanza. Quejas en buzón interno.</span>";
+                } else if (idRole === 'role-generic') {
+                    terminal.innerHTML += "<span class='text-warning'>[ADVERTENCIA · BAJO RENDIMIENTO] El Agente responde a todo con &quot;consulte con su responsable&quot;. Tasa de resolución: 4%. RRHH desbordado por consultas que el agente debería atender.</span>";
+                } else if (idRole === 'role-correct' && idData === 'data-correct' && idRule === 'rule-correct') {
+                    terminal.innerHTML += "<span class='text-success'>[✔ COMPILACIÓN CORRECTA] Agente de RRHH SECURITAS desplegado en producción.<br>&nbsp;&nbsp;· Identidad: Especialista empático y conocedor del convenio.<br>&nbsp;&nbsp;· Conocimiento: Convenio colectivo + Manual de vacaciones.<br>&nbsp;&nbsp;· Reglas: Sin alucinaciones, RGPD-compliant, escalado al HRBP.<br>&gt; Sistema listo para atender consultas de la plantilla.</span>";
+                } else {
+                    terminal.innerHTML += "<span class='text-error'>[ERROR] Conflicto de configuración no clasificado. Revisa los componentes seleccionados.</span>";
+                }
+            }, 700);
+        }
+    </script>
+</body>
+</html>
