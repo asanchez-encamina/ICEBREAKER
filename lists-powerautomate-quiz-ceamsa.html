@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Microsoft Lists & Power Automate · ¿Lo tienes claro? | CEAMSA</title>
+<style>
+  /* ===== CEAMSA-inspired palette =====
+     Azul corporativo + verde natural. Iconos M365 en sus colores oficiales. */
+  :root {
+    --ceamsa-blue: #003F5C;
+    --ceamsa-blue-light: #0077B6;
+    --ceamsa-green: #7CB342;
+    --ceamsa-aqua: #00B4D8;
+    --bg: #F4F8FB;
+    --card: #FFFFFF;
+    --text: #1F2A37;
+    --muted: #5B6B7A;
+    --border: #E1E8EF;
+    --success: #16a34a;
+    --error: #dc2626;
+    --warning: #f59e0b;
+    --shadow: 0 6px 24px rgba(0, 63, 92, 0.08);
+    --shadow-hover: 0 12px 32px rgba(0, 63, 92, 0.16);
+
+    /* M365 */
+    --lists-color: #03787C;
+    --automate-color: #0066FF;
+    --excel-color: #107C41;
+    --teams-color: #4B53BC;
+    --outlook-color: #0078D4;
+    --sharepoint-color: #036C70;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh;
+  }
+
+  /* ===== Header ===== */
+  .header {
+    background: linear-gradient(135deg, var(--ceamsa-blue) 0%, var(--ceamsa-blue-light) 100%);
+    color: #fff; padding: 48px 24px 80px; position: relative; overflow: hidden;
+  }
+  .header::after {
+    content: ""; position: absolute; bottom: -1px; left: 0; right: 0; height: 40px;
+    background: var(--bg); clip-path: polygon(0 100%, 100% 100%, 100% 40%, 0 80%);
+  }
+  .header-inner { max-width: 980px; margin: 0 auto; position: relative; z-index: 1; }
+  .brand-row {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 14px; opacity: 0.9; margin-bottom: 24px;
+    letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600;
+  }
+  .brand-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--ceamsa-green); box-shadow: 0 0 0 4px rgba(124, 179, 66, 0.25);
+  }
+  h1 {
+    font-size: clamp(28px, 4vw, 42px); font-weight: 700;
+    letter-spacing: -0.02em; margin-bottom: 12px; line-height: 1.15;
+  }
+  .subtitle { font-size: clamp(15px, 1.6vw, 18px); opacity: 0.92; max-width: 720px; }
+
+  /* ===== Progress ===== */
+  .progress-strip { max-width: 980px; margin: -36px auto 0; padding: 0 24px; position: relative; z-index: 2; }
+  .progress-card {
+    background: var(--card); border-radius: 14px; box-shadow: var(--shadow);
+    padding: 18px 24px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  }
+  .progress-bar-wrapper { flex: 1; min-width: 200px; }
+  .progress-label { font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+  .progress-track { height: 8px; background: #E8EFF4; border-radius: 4px; overflow: hidden; }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--ceamsa-green) 0%, var(--ceamsa-aqua) 100%);
+    width: 0%; transition: width 0.5s ease; border-radius: 4px;
+  }
+  .score-pill {
+    background: var(--bg); color: var(--ceamsa-blue);
+    padding: 8px 16px; border-radius: 999px; font-weight: 700;
+    font-size: 14px; border: 2px solid var(--border);
+  }
+
+  main { max-width: 980px; margin: 32px auto 64px; padding: 0 24px; }
+
+  /* ===== Disclaimer especial: SuccessFactors ===== */
+  .disclaimer {
+    background: linear-gradient(135deg, #FFF7E6 0%, #FFFBEB 100%);
+    border: 2px solid var(--warning);
+    border-left: 6px solid var(--warning);
+    border-radius: 12px; padding: 20px 24px; margin-top: 32px;
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .disclaimer-icon {
+    flex-shrink: 0; width: 40px; height: 40px;
+    background: var(--warning); color: #fff; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700;
+  }
+  .disclaimer-content { flex: 1; }
+  .disclaimer-title {
+    font-weight: 700; color: #92400E; margin-bottom: 4px; font-size: 15px;
+  }
+  .disclaimer-text { color: #78350F; font-size: 14px; line-height: 1.5; }
+
+  .section { margin-top: 48px; }
+  .section-tag {
+    display: inline-block; background: var(--ceamsa-green); color: #fff;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 4px 12px; border-radius: 999px;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: clamp(22px, 2.6vw, 28px); color: var(--ceamsa-blue);
+    font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em;
+  }
+  .section-desc { color: var(--muted); margin-bottom: 24px; font-size: 15px; }
+
+  /* ===== Question ===== */
+  .question {
+    background: var(--card); border-radius: 16px; box-shadow: var(--shadow);
+    padding: 28px; margin-bottom: 20px; border: 1px solid var(--border);
+    transition: box-shadow 0.3s ease;
+  }
+  .question:hover { box-shadow: var(--shadow-hover); }
+  .q-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
+  .q-number {
+    flex-shrink: 0; width: 36px; height: 36px;
+    background: var(--ceamsa-blue); color: #fff;
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 15px;
+  }
+  .q-text { font-size: 17px; font-weight: 600; color: var(--text); flex: 1; }
+
+  /* ===== Showcase ===== */
+  .showcase {
+    background: linear-gradient(135deg, #F0F7FB 0%, #E8F2F8 100%);
+    border-radius: 12px; padding: 28px 24px; margin-bottom: 20px;
+    border: 1px dashed #C7DAE6;
+  }
+
+  /* ===== Tool chips ===== */
+  .tool-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #fff; padding: 8px 14px; border-radius: 8px;
+    font-size: 14px; font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .tool-icon {
+    width: 22px; height: 22px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 11px; flex-shrink: 0;
+  }
+  .tool-icon.lists { background: var(--lists-color); }
+  .tool-icon.automate { background: var(--automate-color); }
+  .tool-icon.excel { background: var(--excel-color); }
+  .tool-icon.teams { background: var(--teams-color); }
+  .tool-icon.outlook { background: var(--outlook-color); }
+  .tool-icon.sharepoint { background: var(--sharepoint-color); }
+
+  /* ===== Lists mock (cuadrícula) ===== */
+  .lists-mock {
+    background: #fff; border-radius: 8px; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-top: 3px solid var(--lists-color);
+  }
+  .lists-toolbar {
+    background: #FAFAFA; padding: 8px 14px; font-size: 12px; color: var(--muted);
+    border-bottom: 1px solid #EEE; display: flex; gap: 12px; align-items: center;
+  }
+  .lists-pill {
+    padding: 3px 8px; border-radius: 4px; background: #E0F2F1;
+    color: var(--lists-color); font-weight: 700; font-size: 11px;
+  }
+  .lists-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .lists-table th, .lists-table td {
+    text-align: left; padding: 8px 12px; border-bottom: 1px solid #F0F0F0;
+  }
+  .lists-table th {
+    background: #F8FAFB; color: var(--muted); font-size: 11px;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .pill {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    font-size: 11px; font-weight: 600;
+  }
+  .pill.green { background: #D1FAE5; color: #065F46; }
+  .pill.amber { background: #FEF3C7; color: #92400E; }
+  .pill.red { background: #FEE2E2; color: #991B1B; }
+  .pill.blue { background: #DBEAFE; color: #1E40AF; }
+
+  /* ===== Calendar mock ===== */
+  .cal-mock {
+    background: #fff; border-radius: 8px; padding: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-top: 3px solid var(--lists-color);
+  }
+  .cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+    font-size: 11px;
+  }
+  .cal-head {
+    background: #F8FAFB; padding: 4px; text-align: center;
+    color: var(--muted); font-weight: 700; text-transform: uppercase;
+    font-size: 10px;
+  }
+  .cal-cell {
+    background: #FAFAFA; min-height: 50px; padding: 4px; border-radius: 4px;
+    color: var(--text); position: relative;
+  }
+  .cal-day { font-weight: 700; font-size: 11px; color: var(--muted); }
+  .cal-event {
+    background: var(--lists-color); color: #fff;
+    padding: 2px 5px; border-radius: 3px; font-size: 9px;
+    margin-top: 3px; line-height: 1.2; font-weight: 600;
+  }
+  .cal-event.alt { background: var(--ceamsa-green); }
+  .cal-event.alt2 { background: #B45309; }
+
+  /* ===== Power Automate flow visual ===== */
+  .flow-mock {
+    background: #fff; border-radius: 8px; padding: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-top: 3px solid var(--automate-color);
+  }
+  .flow-step {
+    display: flex; align-items: center; gap: 12px;
+    background: #F8FAFE; border-left: 4px solid;
+    padding: 10px 14px; border-radius: 6px; margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .flow-step.trigger { border-color: var(--lists-color); }
+  .flow-step.action { border-color: var(--automate-color); }
+  .flow-step.notify { border-color: var(--teams-color); }
+  .flow-step.email { border-color: var(--outlook-color); }
+  .flow-arrow {
+    text-align: center; color: var(--muted); font-size: 18px;
+    margin: -2px 0 -2px 18px;
+  }
+  .flow-label {
+    font-size: 10px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    background: #fff; padding: 2px 6px; border-radius: 3px;
+  }
+
+  /* ===== Options ===== */
+  .options { display: grid; gap: 10px; }
+  .option {
+    background: #fff; border: 2px solid var(--border);
+    border-radius: 10px; padding: 14px 18px;
+    cursor: pointer; text-align: left; font-size: 15px;
+    color: var(--text); transition: all 0.2s ease;
+    display: flex; align-items: center; gap: 12px;
+    font-family: inherit; width: 100%;
+  }
+  .option:hover:not(:disabled) {
+    border-color: var(--ceamsa-blue-light); background: #F0F7FB;
+    transform: translateX(2px);
+  }
+  .option:disabled { cursor: not-allowed; }
+  .opt-letter {
+    width: 26px; height: 26px; background: var(--bg);
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; color: var(--muted); flex-shrink: 0;
+  }
+  .option.correct { border-color: var(--success); background: #ECFDF5; }
+  .option.correct .opt-letter { background: var(--success); color: #fff; }
+  .option.incorrect { border-color: var(--error); background: #FEF2F2; }
+  .option.incorrect .opt-letter { background: var(--error); color: #fff; }
+  .option.dimmed { opacity: 0.5; }
+
+  /* ===== Feedback ===== */
+  .feedback {
+    margin-top: 16px; padding: 16px 18px; border-radius: 10px;
+    display: none; font-size: 14px; line-height: 1.55;
+    border-left: 4px solid;
+  }
+  .feedback.show { display: block; animation: fadeIn 0.3s ease; }
+  .feedback.correct { background: #ECFDF5; color: #065f46; border-color: var(--success); }
+  .feedback.incorrect { background: #FEF2F2; color: #991b1b; border-color: var(--error); }
+  .feedback strong { display: block; margin-bottom: 4px; font-size: 15px; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== Match block ===== */
+  .match-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+  }
+  @media (max-width: 720px) { .match-grid { grid-template-columns: 1fr; } }
+  .match-col-title {
+    font-size: 13px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;
+  }
+  .match-item {
+    background: #fff; border: 2px solid var(--border);
+    border-radius: 10px; padding: 14px; margin-bottom: 8px;
+    cursor: pointer; display: flex; align-items: center; gap: 12px;
+    transition: all 0.2s ease; font-size: 14px; font-family: inherit;
+    width: 100%; text-align: left;
+  }
+  .match-item:hover:not(:disabled) {
+    border-color: var(--ceamsa-blue-light); transform: translateX(2px);
+  }
+  .match-item.selected {
+    border-color: var(--ceamsa-aqua); background: #E0F4F9;
+    box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.15);
+  }
+  .match-item.matched-correct {
+    border-color: var(--success); background: #ECFDF5; cursor: default;
+  }
+  .match-item.matched-wrong {
+    border-color: var(--error); background: #FEF2F2; animation: shake 0.4s;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+  .match-item:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* ===== Final ===== */
+  .final-card {
+    background: linear-gradient(135deg, var(--ceamsa-blue) 0%, var(--ceamsa-blue-light) 100%);
+    color: #fff; border-radius: 16px; padding: 40px 32px;
+    text-align: center; margin-top: 48px; display: none;
+  }
+  .final-card.show { display: block; animation: fadeIn 0.5s ease; }
+  .final-emoji { font-size: 56px; margin-bottom: 12px; }
+  .final-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .final-score { font-size: 18px; opacity: 0.95; margin-bottom: 24px; }
+  .final-score strong { font-size: 24px; color: var(--ceamsa-green); }
+  .restart-btn {
+    background: #fff; color: var(--ceamsa-blue); border: none;
+    padding: 14px 28px; border-radius: 10px;
+    font-weight: 700; font-size: 15px; cursor: pointer;
+    transition: transform 0.2s ease; font-family: inherit;
+  }
+  .restart-btn:hover { transform: scale(1.04); }
+
+  /* ===== Cheat sheet ===== */
+  .legend {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px; margin-top: 32px;
+    box-shadow: var(--shadow);
+  }
+  .legend-title {
+    font-size: 18px; font-weight: 700; color: var(--ceamsa-blue);
+    margin-bottom: 6px;
+  }
+  .legend-sub { font-size: 14px; color: var(--muted); margin-bottom: 18px; }
+  .legend-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .legend-card {
+    padding: 16px; background: var(--bg); border-radius: 10px;
+    border-top: 4px solid;
+  }
+  .legend-card.lists { border-color: var(--lists-color); }
+  .legend-card.automate { border-color: var(--automate-color); }
+  .legend-card.excel { border-color: var(--excel-color); }
+  .legend-card.teams { border-color: var(--teams-color); }
+  .legend-card-title {
+    font-weight: 700; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 8px; font-size: 14px;
+  }
+  .legend-card-text { font-size: 13px; line-height: 1.45; color: var(--text); }
+  .legend-card-text em { color: var(--muted); font-style: normal; display: block; margin-top: 4px; font-size: 12px; }
+
+  footer {
+    text-align: center; color: var(--muted); font-size: 13px;
+    padding: 24px; margin-top: 32px;
+  }
+  footer span { color: var(--ceamsa-green); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="brand-row">
+      <span class="brand-dot"></span>
+      <span>CEAMSA · Formación Microsoft 365</span>
+    </div>
+    <h1>Microsoft Lists & Power Automate · ¿Lo controlas?</h1>
+    <p class="subtitle">Mini-reto para comprobar lo que hemos visto en sesión. Reconoce dónde encaja Lists, decide cuándo automatizar y resuelve casos reales del día a día. <strong>10 retos · 5–7 minutos.</strong></p>
+  </div>
+</header>
+
+<div class="progress-strip">
+  <div class="progress-card">
+    <div class="progress-bar-wrapper">
+      <div class="progress-label">Progreso · <span id="progress-text">0 / 10</span></div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+    <div class="score-pill">Aciertos: <span id="score">0</span></div>
+  </div>
+</div>
+
+<main>
+
+  <!-- ============ Disclaimer SuccessFactors ============ -->
+  <div class="disclaimer">
+    <div class="disclaimer-icon">!</div>
+    <div class="disclaimer-content">
+      <div class="disclaimer-title">Antes de empezar — sobre el caso «Calendario de vacaciones»</div>
+      <div class="disclaimer-text">
+        El calendario de vacaciones que vamos a ver con Microsoft Lists <strong>no sustituye a SuccessFactors</strong>. SuccessFactors sigue siendo el sistema oficial de RR. HH. para solicitar y aprobar vacaciones. Lo que monta Lists es una <strong>vista visual de equipo</strong> — para que cada departamento vea de un vistazo «¿quién está fuera esta semana?» sin tener que entrar en SuccessFactors. Los datos pueden cargarse desde lo aprobado en SF, pero la solicitud y la aprobación viven allí.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SECCIÓN A: Reconocer ============ -->
+  <section class="section">
+    <span class="section-tag">Bloque 1 · Reconocer</span>
+    <h2 class="section-title">¿Qué herramienta es y para qué sirve?</h2>
+    <p class="section-desc">Mira la captura simulada y elige la respuesta correcta.</p>
+
+    <!-- Q1: Lists vista cuadrícula -->
+    <article class="question" data-q="1">
+      <div class="q-header">
+        <div class="q-number">1</div>
+        <div class="q-text">Estás viendo este panel en Teams. ¿Qué herramienta es y en qué se diferencia de un Excel compartido?</div>
+      </div>
+      <div class="showcase">
+        <div class="lists-mock">
+          <div class="lists-toolbar">
+            <span class="lists-pill">Lista</span>
+            <span>Inventario de periféricos · IT</span>
+          </div>
+          <table class="lists-table">
+            <thead>
+              <tr><th>Nº de serie</th><th>Tipo</th><th>Asignado a</th><th>Estado</th><th>Última revisión</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>NB-0421</td><td>Portátil</td><td>Ana S.</td><td><span class="pill green">En uso</span></td><td>02 may 2026</td></tr>
+              <tr><td>MN-0188</td><td>Monitor 27"</td><td>—</td><td><span class="pill blue">Disponible</span></td><td>05 may 2026</td></tr>
+              <tr><td>HD-0072</td><td>Headset</td><td>Pedro M.</td><td><span class="pill amber">Reparación</span></td><td>28 abr 2026</td></tr>
+              <tr><td>NB-0510</td><td>Portátil</td><td>Juan L.</td><td><span class="pill red">Baja</span></td><td>30 abr 2026</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="options">
+        <button class="option" data-correct="true">
+          <span class="opt-letter">A</span>
+          <span>Es <strong>Microsoft Lists</strong>. A diferencia de un Excel: cada columna tiene un <strong>tipo de dato controlado</strong> (persona, fecha, opción), no se puede meter cualquier cosa, varias personas editan a la vez sin pisarse y se pueden montar vistas (cuadrícula, calendario, tarjetas) sobre los mismos datos.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">B</span>
+          <span>Es un Excel embebido en Teams. Por dentro es lo mismo, solo cambia la apariencia.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Es una tabla de SAP exportada a Teams.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q2: Lists vista calendario -->
+    <article class="question" data-q="2">
+      <div class="q-header">
+        <div class="q-number">2</div>
+        <div class="q-text">Esta es la <strong>misma lista</strong> que la del calendario de vacaciones, pero presentada de otra forma. ¿Qué estás viendo?</div>
+      </div>
+      <div class="showcase">
+        <div class="cal-mock">
+          <div class="cal-grid">
+            <div class="cal-head">L</div><div class="cal-head">M</div><div class="cal-head">X</div><div class="cal-head">J</div><div class="cal-head">V</div><div class="cal-head">S</div><div class="cal-head">D</div>
+            <div class="cal-cell"><span class="cal-day">4</span><div class="cal-event">Ana — Vac.</div></div>
+            <div class="cal-cell"><span class="cal-day">5</span><div class="cal-event">Ana — Vac.</div></div>
+            <div class="cal-cell"><span class="cal-day">6</span><div class="cal-event">Ana — Vac.</div><div class="cal-event alt">Juan — Form.</div></div>
+            <div class="cal-cell"><span class="cal-day">7</span><div class="cal-event alt">Juan — Form.</div></div>
+            <div class="cal-cell"><span class="cal-day">8</span><div class="cal-event alt2">Pedro — Visita cliente</div></div>
+            <div class="cal-cell"><span class="cal-day">9</span></div>
+            <div class="cal-cell"><span class="cal-day">10</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Es Outlook calendar.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>Es la <strong>vista «Calendario» de Microsoft Lists</strong>. Los datos son los mismos de la cuadrícula, solo cambia cómo se ven. Cada columna de fecha (inicio / fin) se convierte en un evento en el mes. Útil para «¿quién está fuera esta semana?».</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Es Planner mostrando tareas con fecha.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q3: Power Automate flow -->
+    <article class="question" data-q="3">
+      <div class="q-header">
+        <div class="q-number">3</div>
+        <div class="q-text">Estás en Power Automate viendo este flujo. ¿Qué hace exactamente y qué hay que entender de su estructura?</div>
+      </div>
+      <div class="showcase">
+        <div class="flow-mock">
+          <div class="flow-step trigger">
+            <span class="tool-icon lists">L</span>
+            <div>
+              <div class="flow-label">Desencadenador</div>
+              <div>Cuando se crea un elemento nuevo en la lista «Inventario de periféricos»</div>
+            </div>
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step notify">
+            <span class="tool-icon teams">T</span>
+            <div>
+              <div class="flow-label">Acción 1</div>
+              <div>Publicar mensaje en el canal «IT» de Teams: «Nuevo equipo registrado: <em>{{Tipo}} — {{NºSerie}}</em>»</div>
+            </div>
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step email">
+            <span class="tool-icon outlook">O</span>
+            <div>
+              <div class="flow-label">Acción 2</div>
+              <div>Enviar correo al responsable de IT con el detalle del nuevo registro</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Es una macro de Excel embebida en Lists.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>Es un <strong>flujo de Power Automate</strong>. Estructura típica: <strong>1 desencadenador</strong> (algo pasa → «se crea un elemento») + <strong>una o varias acciones</strong> (qué hacer → publicar en Teams + mandar correo). Cada vez que alguien añade una fila a la lista, el flujo se dispara solo.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Es una vista alternativa de la lista, no hace nada por sí sola.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q4: Botón Automate dentro de Lists -->
+    <article class="question" data-q="4">
+      <div class="q-header">
+        <div class="q-number">4</div>
+        <div class="q-text">En la barra superior de cualquier lista te aparece un botón <strong>«⚡ Automatizar»</strong>. ¿Qué hace?</div>
+      </div>
+      <div class="showcase" style="display:flex;justify-content:center;gap:18px;flex-wrap:wrap;align-items:center;">
+        <div class="tool-chip"><span class="tool-icon lists">L</span>Microsoft Lists</div>
+        <div style="font-size:24px;color:var(--muted);">→</div>
+        <div class="tool-chip"><span class="tool-icon automate">⚡</span>Automatizar</div>
+        <div style="font-size:24px;color:var(--muted);">→</div>
+        <div class="tool-chip"><span class="tool-icon teams">T</span>+ Teams · <span class="tool-icon outlook">O</span> + Outlook</div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Ordena las filas automáticamente por fecha.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>Abre <strong>Power Automate</strong> con plantillas pensadas para esa lista: notificar cambios al equipo, recordar fechas que vencen, mandar un correo cuando una fila cambia de estado, etc. Es el atajo para crear un flujo sin salir de la herramienta.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Activa la auto-corrección de errores en los datos.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q5: Lists vs Excel -->
+    <article class="question" data-q="5">
+      <div class="q-header">
+        <div class="q-number">5</div>
+        <div class="q-text">Llevas años manejando un <strong>Excel compartido por OneDrive</strong> con el seguimiento de no conformidades de calidad. ¿Por qué Lists puede ser mejor para esto?</div>
+      </div>
+      <div class="showcase" style="display:flex;justify-content:center;gap:18px;flex-wrap:wrap;align-items:center;">
+        <div class="tool-chip"><span class="tool-icon excel">X</span>Excel compartido</div>
+        <div style="font-size:24px;color:var(--muted);">→</div>
+        <div class="tool-chip"><span class="tool-icon lists">L</span>Microsoft Lists</div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Porque Lists tiene fórmulas más potentes que Excel.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">B</span>
+          <span>Porque ocupa menos disco.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">C</span>
+          <span>Porque <strong>cada columna obliga a un tipo de dato</strong> (no se cuelan textos en columnas de fecha), <strong>varios pueden editar a la vez</strong> sin bloquear el archivo, hay <strong>vistas filtradas por persona o por estado</strong>, queda <strong>quién hizo qué cambio</strong> y, sobre todo, se puede <strong>conectar a Power Automate</strong> para avisar al responsable cuando se abre una no conformidad nueva.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+  </section>
+
+  <!-- ============ SECCIÓN B: Empareja ============ -->
+  <section class="section">
+    <span class="section-tag">Bloque 2 · Emparejar</span>
+    <h2 class="section-title">Empareja concepto ↔ situación</h2>
+    <p class="section-desc">Pulsa primero un concepto de la izquierda y luego la situación que mejor encaja con él.</p>
+
+    <article class="question" data-q="match">
+      <div class="match-grid">
+        <div>
+          <div class="match-col-title">Concepto</div>
+          <button class="match-item" data-side="left" data-id="trigger">
+            <span class="tool-icon automate">⚡</span>
+            <span><strong>Desencadenador</strong> (trigger)</span>
+          </button>
+          <button class="match-item" data-side="left" data-id="action">
+            <span class="tool-icon automate">⚡</span>
+            <span><strong>Acción</strong> de un flujo</span>
+          </button>
+          <button class="match-item" data-side="left" data-id="view">
+            <span class="tool-icon lists">L</span>
+            <span><strong>Vista</strong> de Lists</span>
+          </button>
+          <button class="match-item" data-side="left" data-id="column">
+            <span class="tool-icon lists">L</span>
+            <span><strong>Columna con tipo</strong> de Lists</span>
+          </button>
+        </div>
+        <div>
+          <div class="match-col-title">Situación</div>
+          <button class="match-item" data-side="right" data-id="column">
+            <span>📐 La columna «Estado» solo acepta los valores «Disponible», «En uso», «Reparación» o «Baja». Nadie puede escribir «en repa» a mano.</span>
+          </button>
+          <button class="match-item" data-side="right" data-id="trigger">
+            <span>⚡ «Cuando se cree un elemento nuevo en la lista de no conformidades…». Es el suceso que arranca el flujo.</span>
+          </button>
+          <button class="match-item" data-side="right" data-id="view">
+            <span>📅 La misma lista de vacaciones, pero presentada como cuadrícula, como calendario o como tarjetas. Los datos no cambian, cambia el cristal.</span>
+          </button>
+          <button class="match-item" data-side="right" data-id="action">
+            <span>📨 «…publicar un mensaje en el canal de IT y mandar un correo al responsable». Es lo que el flujo hace después del desencadenador.</span>
+          </button>
+        </div>
+      </div>
+      <div class="feedback"></div>
+    </article>
+  </section>
+
+  <!-- ============ SECCIÓN C: Casos reales ============ -->
+  <section class="section">
+    <span class="section-tag">Bloque 3 · Aplicar</span>
+    <h2 class="section-title">Casos reales en CEAMSA</h2>
+    <p class="section-desc">Aquí no hay icono que reconocer: hay que <strong>decidir qué herramienta usar</strong>. Son situaciones del día a día.</p>
+
+    <!-- Q6: Calendario de vacaciones (clave: NO sustituye SF) -->
+    <article class="question" data-q="6">
+      <div class="q-header">
+        <div class="q-number">6</div>
+        <div class="q-text">Tu equipo quiere ver de un vistazo <strong>«quién está fuera esta semana»</strong> sin tener que abrir SuccessFactors uno a uno. ¿Cuál es el planteamiento correcto?</div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Sustituir SuccessFactors por una lista de Lists. Cada uno solicita las vacaciones directamente en Lists y la aprobación se hace ahí.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>Mantener <strong>SuccessFactors como sistema oficial</strong> de solicitud y aprobación de vacaciones. Crear una lista en Lists con la <strong>vista calendario</strong> SOLO como tablero visual del equipo, alimentada con lo ya aprobado en SF. Es vista, no fuente de verdad.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Mandar un correo cada lunes preguntando quién está fuera esa semana.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q7: Inventario de periféricos -->
+    <article class="question" data-q="7">
+      <div class="q-header">
+        <div class="q-number">7</div>
+        <div class="q-text">El equipo de IT lleva en un Excel el inventario de portátiles, monitores y headsets. Quieren que <strong>cuando se asigne un equipo nuevo, salte un aviso al canal de IT en Teams</strong>. ¿Cómo lo montas?</div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Sigues con el Excel y añades una macro de VBA que lo haga.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>Pasas el Excel a una <strong>lista de Lists</strong> en el canal de IT (con columnas: Nº serie, Tipo, Asignado a, Estado, Fecha). Después montas un <strong>flujo de Power Automate</strong> con el desencadenador «Cuando se crea un elemento» y la acción «Publicar mensaje en el canal de Teams de IT». Cero código.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Pides desarrollo a medida al departamento de sistemas.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q8: Color por estado -->
+    <article class="question" data-q="8">
+      <div class="q-header">
+        <div class="q-number">8</div>
+        <div class="q-text">Quieres que en la lista de seguimiento de muestras de I+D, cuando una muestra cambie a estado <strong>«Caducada»</strong>, la fila se vea automáticamente en <strong>rojo</strong> y le llegue un correo al responsable. ¿Qué necesitas combinar?</div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Solo Microsoft Lists, con un cambio en la columna «Estado».</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>Dos cosas: en <strong>Lists</strong>, configurar el <strong>formato condicional de la columna Estado</strong> (Caducada = rojo). En <strong>Power Automate</strong>, un flujo con el desencadenador «Cuando se modifica un elemento» + condición «Estado = Caducada» + acción «Enviar correo al responsable».</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Solo Power Automate; el color lo aplica el flujo.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q9: Adjuntos correo a repositorio -->
+    <article class="question" data-q="9">
+      <div class="q-header">
+        <div class="q-number">9</div>
+        <div class="q-text">Cada día llegan a un buzón de calidad del cliente <strong>fichas técnicas en PDF</strong> como adjuntos del correo. Hay que guardarlas en una carpeta de SharePoint del equipo y, además, registrar la entrada en una lista. ¿Cómo lo automatizas?</div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Hay que descargar los adjuntos a mano cada mañana.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>Un flujo de <strong>Power Automate</strong> con desencadenador <strong>«Cuando llega un correo nuevo» (Outlook)</strong> al buzón de calidad → acción 1: <strong>guardar cada adjunto en la carpeta de SharePoint</strong>. → acción 2: <strong>crear un elemento en la lista «Recepción de fichas»</strong> (proveedor, asunto, fecha, enlace al PDF). Se procesa solo, sin tocar nada.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Reenviar los correos al responsable y que él los guarde.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q10: Cuándo NO usar Lists -->
+    <article class="question" data-q="10">
+      <div class="q-header">
+        <div class="q-number">10</div>
+        <div class="q-text">Llega un compañero entusiasmado: «¡Vamos a pasarlo TODO a Microsoft Lists!». ¿Cuál de estos casos NO encaja con Lists y deberías frenarle?</div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Inventario de equipos informáticos.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">B</span>
+          <span>Registro de visitas a planta.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">C</span>
+          <span>Un <strong>modelo financiero con fórmulas complejas, tablas dinámicas y simulaciones</strong>: eso es Excel. Lists está pensado para <strong>colecciones de elementos</strong> (filas) con flujo de trabajo, no para cálculo intensivo. Tampoco sustituye sistemas oficiales como SAP o SuccessFactors.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+  </section>
+
+  <!-- ============ Resultado final ============ -->
+  <div class="final-card" id="final-card">
+    <div class="final-emoji" id="final-emoji">🎯</div>
+    <div class="final-title" id="final-title">¡Reto completado!</div>
+    <div class="final-score">Has acertado <strong id="final-score">0</strong> de 10 retos.</div>
+    <button class="restart-btn" onclick="restart()">↻ Volver a empezar</button>
+  </div>
+
+  <!-- ============ Cheat sheet ============ -->
+  <section class="legend">
+    <div class="legend-title">📌 Chuleta · Lists & Power Automate</div>
+    <div class="legend-sub">Tres ideas que tienes que tener pegadas en la frente al salir de esta sesión.</div>
+    <div class="legend-grid">
+      <div class="legend-card lists">
+        <div class="legend-card-title"><span class="tool-icon lists">L</span>Microsoft Lists</div>
+        <div class="legend-card-text">El <strong>Excel evolucionado</strong> para colecciones de datos del equipo: inventarios, seguimientos, registros, calendarios. Columnas con tipo, vistas múltiples, edición simultánea. <em>«Mismo dato, varios cristales para mirarlo».</em></div>
+      </div>
+      <div class="legend-card automate">
+        <div class="legend-card-title"><span class="tool-icon automate">⚡</span>Power Automate</div>
+        <div class="legend-card-text">Conecta apps sin programar. Estructura: <strong>1 desencadenador + N acciones</strong>. <em>«Cuando pasa X, haz Y».</em> Ideal con Lists, Outlook, Teams, SharePoint y muchos más.</div>
+      </div>
+      <div class="legend-card excel">
+        <div class="legend-card-title"><span class="tool-icon excel">X</span>Sigue siendo Excel cuando…</div>
+        <div class="legend-card-text">Hay <strong>cálculo, fórmulas, tablas dinámicas o modelos financieros</strong>. Lists no sustituye a Excel para análisis, ni a SAP/SuccessFactors para procesos oficiales.</div>
+      </div>
+      <div class="legend-card teams">
+        <div class="legend-card-title"><span class="tool-icon teams">T</span>Teams como hogar</div>
+        <div class="legend-card-text">Las listas viven mejor <strong>como pestaña en el canal del equipo</strong>: el inventario en el canal de IT, las no conformidades en el de Calidad. Cada cosa con su gente.</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Formación Microsoft 365 · Lists & Power Automate para CEAMSA · Diseñado para <span>aprender haciendo</span>
+</footer>
+
+<script>
+  let score = 0;
+  let answered = 0;
+  const totalQuestions = 10;
+
+  document.querySelectorAll('.question[data-q]').forEach(card => {
+    const qId = card.dataset.q;
+    if (qId === 'match') return;
+    const options = card.querySelectorAll('.option');
+    const feedback = card.querySelector('.feedback');
+    options.forEach(opt => {
+      opt.addEventListener('click', () => {
+        if (card.dataset.answered === 'true') return;
+        card.dataset.answered = 'true';
+        const isCorrect = opt.dataset.correct === 'true';
+        options.forEach(o => {
+          o.disabled = true;
+          if (o.dataset.correct === 'true') o.classList.add('correct');
+          else if (o === opt) o.classList.add('incorrect');
+          else o.classList.add('dimmed');
+        });
+        if (isCorrect) {
+          score++;
+          feedback.classList.add('correct');
+          feedback.innerHTML = '<strong>✓ Correcto</strong>' + getExplanation(qId);
+        } else {
+          feedback.classList.add('incorrect');
+          feedback.innerHTML = '<strong>✗ No es esa</strong>' + getExplanation(qId);
+        }
+        feedback.classList.add('show');
+        answered++;
+        updateProgress();
+      });
+    });
+  });
+
+  // Match
+  let leftSelected = null;
+  const matchedIds = new Set();
+  const matchTotal = 4;
+
+  document.querySelectorAll('.match-item').forEach(item => {
+    item.addEventListener('click', () => {
+      if (item.disabled || item.classList.contains('matched-correct')) return;
+      const side = item.dataset.side;
+      const id = item.dataset.id;
+      if (side === 'left') {
+        document.querySelectorAll('.match-item[data-side="left"]').forEach(i => {
+          if (!i.classList.contains('matched-correct')) i.classList.remove('selected');
+        });
+        item.classList.add('selected');
+        leftSelected = item;
+      } else if (side === 'right' && leftSelected) {
+        if (leftSelected.dataset.id === id) {
+          item.classList.add('matched-correct');
+          leftSelected.classList.remove('selected');
+          leftSelected.classList.add('matched-correct');
+          leftSelected.disabled = true;
+          item.disabled = true;
+          matchedIds.add(id);
+          if (matchedIds.size === matchTotal) {
+            score++;
+            const card = document.querySelector('.question[data-q="match"]');
+            const fb = card.querySelector('.feedback');
+            fb.classList.add('correct', 'show');
+            fb.innerHTML = '<strong>✓ ¡Bloque completado!</strong>La regla mental: <em>Lists</em> guarda los datos con tipo y permite varias vistas · <em>Power Automate</em> hace que algo pase cuando los datos cambian · juntas, evitan correos repetitivos y Excels pisados.';
+            answered++;
+            updateProgress();
+          }
+        } else {
+          item.classList.add('matched-wrong');
+          setTimeout(() => item.classList.remove('matched-wrong'), 400);
+          leftSelected.classList.remove('selected');
+          leftSelected = null;
+        }
+      }
+    });
+  });
+
+  function updateProgress() {
+    document.getElementById('score').textContent = score;
+    document.getElementById('progress-text').textContent = `${answered} / ${totalQuestions}`;
+    document.getElementById('progress-fill').style.width = `${(answered / totalQuestions) * 100}%`;
+    if (answered === totalQuestions) setTimeout(showFinal, 600);
+  }
+
+  function showFinal() {
+    const finalCard = document.getElementById('final-card');
+    const finalScore = document.getElementById('final-score');
+    const finalEmoji = document.getElementById('final-emoji');
+    const finalTitle = document.getElementById('final-title');
+    finalScore.textContent = score;
+    if (score >= 9)      { finalEmoji.textContent = '🏆'; finalTitle.textContent = '¡Crack de la automatización!'; }
+    else if (score >= 7) { finalEmoji.textContent = '👏'; finalTitle.textContent = '¡Muy bien!'; }
+    else if (score >= 5) { finalEmoji.textContent = '💪'; finalTitle.textContent = 'Vas por buen camino'; }
+    else                 { finalEmoji.textContent = '📘'; finalTitle.textContent = 'A repasar la chuleta'; }
+    finalCard.classList.add('show');
+    finalCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function restart() { location.reload(); }
+
+  function getExplanation(qId) {
+    const ex = {
+      '1': '<strong>Microsoft Lists</strong> no es «un Excel bonito»: es una base de datos ligera con columnas tipadas (persona, fecha, opción, número), vistas configurables y permisos por elemento. Pensada para que un equipo entero edite a la vez sin pisarse y para conectarse a Power Automate.',
+      '2': 'La <strong>vista «Calendario»</strong> de Lists usa una columna de fecha (o un par inicio-fin) para pintar los elementos en un mes. Los datos siguen siendo los mismos de la vista cuadrícula — solo cambia el cristal. Útil para vacaciones, formaciones, visitas a planta, lanzamientos…',
+      '3': 'Un flujo de <strong>Power Automate</strong> siempre tiene la misma anatomía: <strong>un desencadenador</strong> que dice CUÁNDO arranca, y <strong>una o varias acciones</strong> que dicen QUÉ hace. Aquí: arranca cuando se crea un elemento nuevo en una lista, y publica en Teams + manda un correo. Sin código.',
+      '4': 'El botón <strong>Automatizar</strong> dentro de Lists abre Power Automate con plantillas listas para esa lista en concreto: notificarme cuando alguien añada, recordatorios cuando se acerca una fecha, alertas si cambia un estado… El atajo más rápido para empezar.',
+      '5': 'Excel es excelente para <strong>cálculo</strong>; Lists es excelente para <strong>colecciones de datos en equipo</strong>. La diferencia clave: Lists garantiza que los datos están bien tipados (no entran textos en una columna de fecha) y se conecta a Power Automate. Para no conformidades, registros, inventarios y seguimientos, Lists ahorra muchos disgustos.',
+      '6': 'La regla del cliente es clara: <strong>SuccessFactors es el sistema oficial</strong> de RR. HH. para vacaciones. Lists no lo sustituye. Lo que sí hace es darle al equipo una <strong>vista calendario visual</strong> para ver de un golpe quién está fuera, alimentada con lo que ya está aprobado en SF.',
+      '7': 'Caso típico de <strong>Lists + Power Automate</strong>: la lista guarda los datos del inventario, el flujo dispara la notificación al canal de IT cada vez que se crea un elemento. Una hora de configuración, cero código, beneficio diario para todo el equipo.',
+      '8': 'Hay que combinar las dos cosas: el <strong>color</strong> es <strong>formato condicional dentro de Lists</strong> (la lista pinta sola las filas según el valor); el <strong>correo</strong> es un <strong>flujo de Power Automate</strong> que se dispara cuando el estado cambia. Es la combinación que más se ve en producción.',
+      '9': 'Un clásico: el desencadenador es <strong>Outlook («cuando llega un correo nuevo»)</strong> y las acciones tocan SharePoint y Lists. Power Automate brilla cuando conecta varias herramientas distintas — aquí, correo, archivos y datos en una sola tirada.',
+      '10': 'Lists está pensado para <strong>colecciones de elementos</strong>: una fila por equipo, por incidencia, por persona. No sustituye a Excel para <strong>cálculo financiero, modelos o tablas dinámicas</strong>. Tampoco sustituye a sistemas oficiales como SAP o SuccessFactors. Cada herramienta para su sitio.'
+    };
+    return ex[qId] ? '<br>' + ex[qId] : '';
+  }
+</script>
+
+</body>
+</html>
