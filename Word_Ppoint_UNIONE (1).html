@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Icebreaker · Copilot en Word y PowerPoint · Unione Movilidad</title>
+<style>
+  :root{
+    /* Unione Movilidad — paleta premium automoción / movilidad sostenible */
+    --uni-blue:#0072CE;
+    --uni-blue-dark:#004B8D;
+    --uni-graphite:#0E1219;
+    --uni-graphite-2:#161D2B;
+    --uni-teal:#00C6A7;
+    --uni-silver-dark:#53606E;
+    --uni-silver-mid:#9AA5B1;
+    --uni-silver-light:#D9DEE5;
+
+    --bg:var(--uni-graphite);
+    --bg-2:#070A10;
+    --panel:#ffffff;
+    --ink:#1f2937;
+    --muted:#6b7280;
+
+    /* Microsoft product colors — identidad de producto, se mantienen */
+    --word:#2B579A;
+    --word-2:#1e3f73;
+    --pptx:#D24726;
+    --pptx-2:#9f3418;
+    --copilot-a:#0078D4;
+    --copilot-b:#9B4DFF;
+
+    /* Acentos de la dinámica: marca Unione */
+    --brand-a:var(--uni-blue);
+    --brand-b:var(--uni-teal);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    font-family:"Segoe UI",Inter,system-ui,-apple-system,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 10% -10%,rgba(0,114,206,.20),transparent 60%),
+      radial-gradient(900px 500px at 110% 110%,rgba(0,198,167,.16),transparent 60%),
+      linear-gradient(180deg,var(--bg),var(--bg-2));
+    color:#e5e7eb;overflow:hidden;
+  }
+
+  .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:32px}
+  .scene{
+    position:absolute;inset:32px;display:flex;align-items:center;justify-content:center;
+    opacity:0;transform:translateY(18px) scale(.98);
+    transition:opacity .6s ease,transform .6s ease;pointer-events:none;
+  }
+  .scene.active{opacity:1;transform:none;pointer-events:auto}
+
+  .hud{
+    position:fixed;left:0;right:0;bottom:0;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:14px 22px;font-size:12.5px;color:#cbd5e1;
+    background:linear-gradient(0deg,rgba(0,0,0,.55),transparent);z-index:50;letter-spacing:.2px;
+  }
+  .hud .phase-dots{display:flex;gap:8px}
+  .dot{width:8px;height:8px;border-radius:50%;background:#1c2638;transition:all .3s}
+  .dot.active{background:var(--uni-blue);box-shadow:0 0 0 4px rgba(0,114,206,.20)}
+  .dot.done{background:var(--uni-teal)}
+  .keys kbd{
+    background:#0c1626;border:1px solid #1f2d44;color:#e5e7eb;
+    padding:2px 7px;border-radius:6px;font-family:inherit;font-size:11px;
+    box-shadow:inset 0 -2px 0 #060c17;
+  }
+
+  /* Logo Unione: anillo bicolor (azul + aguamarina) + wordmark */
+  .brand{
+    position:fixed;top:16px;left:22px;z-index:50;
+    display:flex;align-items:center;gap:12px;
+  }
+  .brand .logo{
+    background:#fff;color:var(--uni-graphite);padding:6px 12px;border-radius:4px;
+    display:inline-flex;align-items:center;gap:10px;
+    font-weight:800;font-size:14px;letter-spacing:1.2px;
+    box-shadow:0 4px 12px rgba(0,0,0,.25);
+  }
+  .brand .logo .ring{
+    width:18px;height:18px;border-radius:50%;
+    background:
+      conic-gradient(from 220deg,var(--uni-blue) 0deg,var(--uni-blue) 180deg,var(--uni-teal) 180deg,var(--uni-teal) 360deg);
+    position:relative;
+  }
+  .brand .logo .ring::after{
+    content:"";position:absolute;inset:4px;background:#fff;border-radius:50%;
+  }
+  .brand .pill{
+    background:linear-gradient(135deg,var(--uni-blue),var(--uni-blue-dark));
+    padding:3px 10px;border-radius:999px;font-size:11px;color:#fff;font-weight:600;
+  }
+  .brand .tag-small{font-size:12.5px;color:#cbd5e1}
+
+  /* ========== PORTADA ========== */
+  .cover{text-align:center;max-width:980px;padding:20px}
+  .cover h1{
+    font-size:clamp(34px,5vw,62px);margin:0 0 14px;line-height:1.05;
+    background:linear-gradient(135deg,#fff 0%,#cfe7ff 40%,#9ff0dd);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    font-weight:700;letter-spacing:-.5px;
+  }
+  .cover p.lead{font-size:clamp(16px,1.6vw,20px);color:#cbd5e1;margin:0 0 28px}
+  .cover .tags{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:30px}
+  .tag{
+    border:1px solid #1f2d44;padding:8px 14px;border-radius:999px;
+    background:rgba(14,18,25,.7);font-size:13px;color:#e2e8f0;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .tag .sw{width:10px;height:10px;border-radius:2px}
+  .sw.word{background:var(--word)}
+  .sw.pptx{background:var(--pptx)}
+  .sw.copilot{background:linear-gradient(135deg,var(--copilot-a),var(--copilot-b))}
+  .sw.uni{background:linear-gradient(135deg,var(--uni-blue),var(--uni-teal))}
+  .cover .cta{margin-top:18px;color:#9fb3c8;font-size:13px;animation:pulse 2.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+
+  /* Banda decorativa inferior portada */
+  .uni-stripe{
+    position:absolute;left:50%;bottom:80px;transform:translateX(-50%);
+    display:flex;gap:10px;align-items:center;color:#9fb3c8;font-size:12px;letter-spacing:.4px;text-transform:uppercase;
+  }
+  .uni-stripe .bar{width:60px;height:3px;background:linear-gradient(90deg,var(--uni-blue),var(--uni-teal));border-radius:2px}
+
+  /* ========== WINDOWS ========== */
+  .windows{display:grid;grid-template-columns:1fr 1fr;gap:22px;width:min(1400px,100%);height:min(78vh,820px)}
+  .window{
+    background:var(--panel);color:var(--ink);border-radius:12px;overflow:hidden;
+    display:flex;flex-direction:column;position:relative;
+    box-shadow:0 30px 80px rgba(0,0,0,.55),0 2px 0 rgba(255,255,255,.04) inset;
+    border:1px solid rgba(255,255,255,.06);
+  }
+  .titlebar{
+    display:flex;align-items:center;gap:10px;padding:10px 14px;
+    background:#f3f3f3;border-bottom:1px solid #e5e7eb;font-size:12.5px;color:#374151;
+  }
+  .titlebar .dots{display:flex;gap:6px}
+  .titlebar .dots span{width:10px;height:10px;border-radius:50%;background:#e5e7eb}
+  .titlebar .dots span:nth-child(1){background:#ff5f57}
+  .titlebar .dots span:nth-child(2){background:#febc2e}
+  .titlebar .dots span:nth-child(3){background:#28c840}
+  .titlebar .title{font-weight:600;color:#111827;display:flex;align-items:center;gap:8px}
+  .titlebar .title .ico{width:18px;height:18px;border-radius:3px;display:inline-block}
+  .ico.word{background:var(--word);color:#fff;font-size:11px;text-align:center;line-height:18px;font-weight:700}
+  .ico.pptx{background:var(--pptx);color:#fff;font-size:11px;text-align:center;line-height:18px;font-weight:700}
+
+  .ribbon{
+    display:flex;gap:14px;padding:8px 14px;background:#fafafa;
+    border-bottom:1px solid #eee;font-size:11.5px;color:#4b5563;
+  }
+  .ribbon .grp{display:flex;gap:6px;align-items:center}
+  .ribbon .chip{background:#fff;border:1px solid #e5e7eb;padding:3px 8px;border-radius:5px}
+  .ribbon .copilot-chip{
+    background:linear-gradient(135deg,var(--copilot-a),var(--copilot-b));
+    color:#fff;border:none;font-weight:600;display:inline-flex;align-items:center;gap:6px;
+  }
+  .ribbon .copilot-chip::before{
+    content:"";width:10px;height:10px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%,#fff,transparent 60%),
+      conic-gradient(from 180deg,#fff6,transparent 40%,#fff9 70%,transparent);
+  }
+
+  .doc{
+    flex:1;background:#fff;padding:28px 42px;overflow:hidden;position:relative;
+    font-family:"Segoe UI",Calibri,Arial,sans-serif;line-height:1.55;color:#1f2937;
+  }
+  .doc .page-edge{
+    position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(90deg,rgba(0,0,0,.03),transparent 4%,transparent 96%,rgba(0,0,0,.03));
+  }
+  .doc h2.doctitle{
+    font-size:22px;color:#111;margin:0 0 14px;font-weight:700;
+    border-bottom:2px solid var(--uni-blue);padding-bottom:6px;
+  }
+  .doc p,.doc li{font-size:14.5px;margin:8px 0}
+  .doc ul,.doc ol{margin:6px 0 6px 22px;padding:0}
+  .caret{
+    display:inline-block;width:1.5px;height:1.05em;background:#111;
+    margin-left:1px;vertical-align:-2px;animation:blink 1s steps(1) infinite;
+  }
+  @keyframes blink{50%{opacity:0}}
+
+  .panel-label{
+    position:absolute;top:-14px;left:16px;z-index:3;
+    background:var(--uni-graphite);color:#e5e7eb;border:1px solid #1f2d44;
+    padding:4px 10px;border-radius:999px;font-size:11.5px;letter-spacing:.3px;
+    display:inline-flex;align-items:center;gap:8px;font-weight:600;
+  }
+  .window-wrap{position:relative}
+  .panel-label .mini-ico{width:14px;height:14px;border-radius:3px;display:inline-block}
+  .mini-ico.human{background:var(--uni-silver-mid)}
+  .mini-ico.copilot{background:linear-gradient(135deg,var(--copilot-a),var(--copilot-b))}
+
+  /* Overlay click */
+  .clickpad{
+    position:absolute;inset:0;z-index:2;
+    background:linear-gradient(135deg,rgba(14,18,25,.78),rgba(22,29,43,.68));
+    backdrop-filter:blur(2px);
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    color:#fff;cursor:pointer;transition:opacity .35s ease;border-radius:12px;
+  }
+  .clickpad.hide{opacity:0;pointer-events:none}
+  .clickpad .playbtn{
+    width:72px;height:72px;border-radius:50%;
+    background:linear-gradient(135deg,var(--uni-blue),var(--uni-blue-dark));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 10px 30px rgba(0,114,206,.40),0 0 0 6px rgba(255,255,255,.08);
+    transition:transform .25s ease;
+  }
+  .clickpad:hover .playbtn{transform:scale(1.08)}
+  .clickpad .playbtn::before{
+    content:"";border-style:solid;border-width:14px 0 14px 22px;
+    border-color:transparent transparent transparent #fff;margin-left:6px;
+  }
+  .clickpad .playlbl{margin-top:14px;font-size:14px;font-weight:600;letter-spacing:.3px}
+  .clickpad .playsub{margin-top:4px;font-size:12px;color:#cbd5e1}
+
+  .copilot-prompt{
+    background:linear-gradient(135deg,#eef4ff,#f4efff);
+    border:1px solid #dbe5ff;border-radius:10px;padding:10px 12px;
+    font-size:13px;color:#1f2937;margin-bottom:14px;
+    display:flex;align-items:flex-start;gap:10px;
+  }
+  .copilot-prompt .dot-ai{
+    width:14px;height:14px;border-radius:50%;
+    background:conic-gradient(from 0deg,var(--copilot-a),var(--copilot-b),var(--copilot-a));
+    flex:0 0 auto;margin-top:2px;
+  }
+  .copilot-prompt code{background:#fff;border:1px solid #e5e7eb;padding:1px 6px;border-radius:5px;font-size:12.5px}
+
+  /* Textarea interactivo */
+  .ta-wrap{position:relative;flex:1;display:flex;flex-direction:column;padding:18px 24px 20px}
+  .ta-label{font-size:12.5px;color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .ta-label .timer{
+    font-family:"SFMono-Regular",Menlo,Consolas,monospace;font-size:12px;
+    background:#f3f4f6;border:1px solid #e5e7eb;padding:2px 8px;border-radius:6px;color:#111;
+  }
+  .ta-label .timer.run{background:#e6f1fb;border-color:#b8dafc;color:var(--uni-blue-dark)}
+  textarea.try{
+    flex:1;width:100%;border:2px dashed var(--uni-silver-light);border-radius:10px;
+    padding:14px 16px;font:14.5px/1.55 "Segoe UI",Calibri,Arial,sans-serif;
+    resize:none;outline:none;color:#111;background:#fcfcfd;
+    transition:border-color .2s ease,box-shadow .2s ease;
+  }
+  textarea.try:focus{border-color:var(--uni-blue);box-shadow:0 0 0 4px rgba(0,114,206,.14)}
+  .ta-foot{margin-top:10px;display:flex;gap:10px;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted)}
+  .btn{
+    background:linear-gradient(135deg,var(--copilot-a),var(--copilot-b));color:#fff;
+    border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;
+    cursor:pointer;box-shadow:0 6px 14px rgba(0,120,212,.25);
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .btn.ghost{background:#f3f4f6;color:#111;box-shadow:none;border:1px solid #e5e7eb}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .btn .spark{width:12px;height:12px;border-radius:50%;background:conic-gradient(from 0deg,#fff,#ffffffaa,#fff)}
+
+  /* ========== DECK ========== */
+  .deck-stage{width:min(1400px,100%);height:min(78vh,820px);display:grid;grid-template-columns:1.15fr 1fr;gap:22px}
+  .slidewell{background:var(--uni-graphite-2);border-radius:14px;position:relative;overflow:hidden;border:1px solid #1f2d44}
+  .slide{
+    position:absolute;inset:24px;background:#fff;border-radius:10px;
+    box-shadow:0 18px 40px rgba(0,0,0,.45);
+    opacity:0;transform:translateY(20px) scale(.98);
+    transition:opacity .55s ease,transform .55s ease;
+    padding:36px 42px;color:#1f2937;overflow:hidden;
+  }
+  .slide.show{opacity:1;transform:none}
+  .slide.prev{opacity:0;transform:translateY(-10px) scale(.98)}
+  .slide .chip{
+    display:inline-block;padding:3px 10px;border-radius:999px;
+    background:linear-gradient(135deg,var(--uni-blue),var(--uni-blue-dark));color:#fff;
+    font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+  }
+  .slide h3{font-size:30px;margin:12px 0 10px;color:#111;font-weight:700;letter-spacing:-.3px}
+  .slide p{font-size:15px;color:#374151;margin:0 0 12px}
+  .slide ul{margin:8px 0 0 20px;padding:0}
+  .slide li{font-size:14.5px;margin:6px 0;color:#1f2937}
+  .slide .cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:10px}
+  .slide .kpi{background:#eaf4fd;border:1px solid #c5e0f6;border-radius:10px;padding:12px}
+  .slide .kpi .v{font-size:28px;font-weight:800;color:var(--uni-blue-dark)}
+  .slide .kpi .k{font-size:12px;color:#0e3a63;text-transform:uppercase;letter-spacing:.4px}
+  .slide .footer{position:absolute;left:42px;right:42px;bottom:18px;display:flex;justify-content:space-between;font-size:11px;color:#9ca3af}
+  .slide .footer .uni-ft{display:inline-flex;align-items:center;gap:6px}
+  .slide .footer .uni-ft .mini-ring{
+    width:10px;height:10px;border-radius:50%;
+    background:conic-gradient(from 220deg,var(--uni-blue) 0deg,var(--uni-blue) 180deg,var(--uni-teal) 180deg,var(--uni-teal) 360deg);
+    position:relative;
+  }
+  .slide .footer .uni-ft .mini-ring::after{content:"";position:absolute;inset:3px;background:#fff;border-radius:50%}
+  .slide .accent{position:absolute;left:0;top:0;bottom:0;width:6px;background:linear-gradient(180deg,var(--uni-blue),var(--uni-teal))}
+
+  .deckpanel{background:var(--uni-graphite);border:1px solid #1f2d44;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px;color:#e5e7eb}
+  .deckpanel h4{margin:0;font-size:13px;color:#cbd5e1;letter-spacing:.4px;text-transform:uppercase}
+  .thumbs{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .thumb{
+    aspect-ratio:16/9;background:var(--uni-graphite-2);border-radius:8px;
+    display:flex;align-items:center;justify-content:center;color:#64778c;font-size:11px;
+    border:1px solid #1f2d44;position:relative;overflow:hidden;transition:all .4s ease;
+  }
+  .thumb.done{background:linear-gradient(135deg,#fff,#fff);color:#0f172a;border-color:var(--uni-blue)}
+  .thumb.active{outline:2px solid var(--uni-blue);outline-offset:2px}
+  .thumb .num{position:absolute;top:6px;left:8px;font-size:10px;color:#64778c;font-weight:700}
+  .thumb.done .num{color:var(--uni-blue-dark)}
+  .thumb .mini-title{font-size:10.5px;padding:0 10px;text-align:center;font-weight:600}
+  .deck-progress{height:6px;background:#0c1626;border-radius:4px;overflow:hidden}
+  .deck-progress > div{height:100%;width:0;background:linear-gradient(90deg,var(--uni-blue),var(--uni-teal));transition:width .6s ease}
+
+  /* ========== CIERRE ========== */
+  .finale{text-align:center;max-width:1100px}
+  .finale h2{
+    font-size:clamp(28px,4vw,48px);margin:0 0 10px;font-weight:700;
+    background:linear-gradient(135deg,#fff,#cfe7ff 50%,#9ff0dd);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .finale p.sub{color:#cbd5e1;font-size:16px;margin:0 0 28px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:900px;margin:0 auto}
+  .stat{background:rgba(14,18,25,.7);border:1px solid #1f2d44;border-radius:14px;padding:22px;color:#e5e7eb}
+  .stat .big{
+    font-size:48px;font-weight:800;line-height:1;
+    background:linear-gradient(135deg,var(--uni-blue),var(--uni-teal));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .stat .k{font-size:12.5px;color:#9fb3c8;text-transform:uppercase;letter-spacing:.5px;margin-top:8px}
+  .finale .quote{margin-top:28px;font-size:15px;color:#cbd5e1;font-style:italic;max-width:700px;margin-left:auto;margin-right:auto}
+
+  .fade-in{animation:fadein .6s ease both}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  @media (max-width:900px){
+    .windows,.deck-stage{grid-template-columns:1fr;height:auto}
+    .window,.slidewell{height:52vh}
+  }
+</style>
+</head>
+<body>
+
+<div class="brand">
+  <span class="logo"><span class="ring"></span> UNIONE</span>
+  <span class="pill">Icebreaker</span>
+  <span class="tag-small">Copilot en Word &amp; PowerPoint</span>
+</div>
+
+<div class="stage" id="stage">
+
+  <!-- ========== FASE 0 · PORTADA ========== -->
+  <section class="scene" data-phase="0">
+    <div class="cover fade-in">
+      <h1>Del folio en blanco<br/>al entregable en segundos</h1>
+      <p class="lead">Una pequeña demostración de lo que pasa cuando Word y PowerPoint dejan de estar solos.</p>
+      <div class="tags">
+        <span class="tag"><span class="sw word"></span> Word</span>
+        <span class="tag"><span class="sw pptx"></span> PowerPoint</span>
+        <span class="tag"><span class="sw copilot"></span> Copilot</span>
+        <span class="tag"><span class="sw uni"></span> Unione Movilidad</span>
+      </div>
+      <div class="cta">Pulsa <kbd style="background:#0c1626;border:1px solid #1f2d44;color:#e5e7eb;padding:2px 8px;border-radius:6px;font-size:12px">Espacio</kbd> para empezar</div>
+    </div>
+    <div class="uni-stripe"><span class="bar"></span><span>La fuerza de la unión</span><span class="bar"></span></div>
+  </section>
+
+  <!-- ========== FASE 1 · CAFETERA (clic) ========== -->
+  <section class="scene" data-phase="1">
+    <div class="windows">
+      <div class="window-wrap">
+        <div class="panel-label"><span class="mini-ico human"></span> Así lo haría una persona</div>
+        <div class="window">
+          <div class="titlebar">
+            <div class="dots"><span></span><span></span><span></span></div>
+            <div class="title"><span class="ico word">W</span> Politica_cafetera_v1.docx</div>
+          </div>
+          <div class="ribbon">
+            <span class="grp"><span class="chip">Inicio</span><span class="chip">Insertar</span><span class="chip">Diseño</span><span class="chip">Revisar</span></span>
+          </div>
+          <div class="doc" id="humanDoc1">
+            <div class="page-edge"></div>
+            <h2 class="doctitle">Política para el uso de la nueva cafetera</h2>
+            <p id="humanText1"></p>
+          </div>
+          <div class="clickpad" data-trigger="human1">
+            <div class="playbtn"></div>
+            <div class="playlbl">Clic para empezar</div>
+            <div class="playsub">Así lo haría una persona</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="window-wrap">
+        <div class="panel-label"><span class="mini-ico copilot"></span> Así lo hace Copilot</div>
+        <div class="window">
+          <div class="titlebar">
+            <div class="dots"><span></span><span></span><span></span></div>
+            <div class="title"><span class="ico word">W</span> Política_cafetera_oficial.docx</div>
+          </div>
+          <div class="ribbon">
+            <span class="grp"><span class="chip">Inicio</span><span class="chip">Insertar</span><span class="chip">Diseño</span></span>
+            <span class="grp" style="margin-left:auto"><span class="chip copilot-chip">Copilot</span></span>
+          </div>
+          <div class="doc" id="copilotDoc1">
+            <div class="page-edge"></div>
+            <div class="copilot-prompt">
+              <span class="dot-ai"></span>
+              <div>
+                <strong>Tú a Copilot:</strong> Redacta una <code>política interna</code> para el uso de la nueva cafetera del concesionario tras el incidente del lunes. Tono cercano pero formal. Incluye normas de limpieza, turnos y consecuencias.
+              </div>
+            </div>
+            <h2 class="doctitle">Política de uso responsable de la cafetera del concesionario</h2>
+            <div id="copilotText1"></div>
+          </div>
+          <div class="clickpad" data-trigger="copilot1">
+            <div class="playbtn"></div>
+            <div class="playlbl">Clic para lanzar Copilot</div>
+            <div class="playsub">Pídelo tú, lo redacta él</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FASE 2 · INTERACTIVA: textarea ========== -->
+  <section class="scene" data-phase="2">
+    <div class="windows">
+      <div class="window-wrap">
+        <div class="panel-label"><span class="mini-ico human"></span> Inténtalo tú</div>
+        <div class="window">
+          <div class="titlebar">
+            <div class="dots"><span></span><span></span><span></span></div>
+            <div class="title"><span class="ico word">W</span> Comunicado_cliente_entrega.docx</div>
+          </div>
+          <div class="ribbon">
+            <span class="grp"><span class="chip">Inicio</span><span class="chip">Insertar</span><span class="chip">Revisar</span></span>
+          </div>
+          <div class="ta-wrap">
+            <div class="ta-label">
+              <span>Consigna: redacta un <strong style="color:#111">comunicado al cliente</strong> tras un retraso en la entrega de su vehículo. Tono profesional, cercano y resolutivo. Incluye hechos, medidas adoptadas y próximos pasos.</span>
+              <span class="timer" id="taTimer">00:00</span>
+            </div>
+            <textarea class="try" id="tryArea" placeholder="Empieza a escribir aquí... (o deja el cursor parpadeando, que también vale)" spellcheck="false"></textarea>
+            <div class="ta-foot">
+              <span><span id="taWords">0</span> palabras · <span id="taChars">0</span> caracteres</span>
+              <button class="btn ghost" id="clearTa">Limpiar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="window-wrap">
+        <div class="panel-label"><span class="mini-ico copilot"></span> Así lo hace Copilot</div>
+        <div class="window">
+          <div class="titlebar">
+            <div class="dots"><span></span><span></span><span></span></div>
+            <div class="title"><span class="ico word">W</span> Comunicado_cliente_Copilot.docx</div>
+          </div>
+          <div class="ribbon">
+            <span class="grp"><span class="chip">Inicio</span><span class="chip">Insertar</span><span class="chip">Revisar</span></span>
+            <span class="grp" style="margin-left:auto"><span class="chip copilot-chip">Copilot</span></span>
+          </div>
+          <div class="doc" id="copilotDoc2b" style="padding-top:22px">
+            <div class="page-edge"></div>
+            <div class="copilot-prompt">
+              <span class="dot-ai"></span>
+              <div>
+                <strong>Tú a Copilot:</strong> Redacta un <code>comunicado al cliente</code> tras un retraso en la entrega de su Mercedes-Benz Clase C. Tono profesional y cercano. Incluye hechos, medidas adoptadas y próximos pasos.
+              </div>
+            </div>
+            <div id="copilotTextTA" style="min-height:200px"></div>
+            <div style="margin-top:14px;display:flex;justify-content:flex-end">
+              <button class="btn" id="runCopilotTA"><span class="spark"></span> Generar con Copilot</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FASE 3 · INFORME PROFESIONAL ========== -->
+  <section class="scene" data-phase="3">
+    <div class="windows">
+      <div class="window-wrap">
+        <div class="panel-label"><span class="mini-ico human"></span> Borrador manual</div>
+        <div class="window">
+          <div class="titlebar">
+            <div class="dots"><span></span><span></span><span></span></div>
+            <div class="title"><span class="ico word">W</span> Informe_trimestral_concesionario_borrador.docx</div>
+          </div>
+          <div class="ribbon">
+            <span class="grp"><span class="chip">Inicio</span><span class="chip">Insertar</span><span class="chip">Revisar</span></span>
+          </div>
+          <div class="doc" id="humanDoc3">
+            <div class="page-edge"></div>
+            <h2 class="doctitle">Informe trimestral · Ventas y Postventa</h2>
+            <p id="humanText3"></p>
+          </div>
+          <div class="clickpad" data-trigger="human3">
+            <div class="playbtn"></div>
+            <div class="playlbl">Clic para empezar</div>
+            <div class="playsub">Borrador manual</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="window-wrap">
+        <div class="panel-label"><span class="mini-ico copilot"></span> Redactado con Copilot</div>
+        <div class="window">
+          <div class="titlebar">
+            <div class="dots"><span></span><span></span><span></span></div>
+            <div class="title"><span class="ico word">W</span> Informe_trimestral_concesionario.docx</div>
+          </div>
+          <div class="ribbon">
+            <span class="grp"><span class="chip">Inicio</span><span class="chip">Insertar</span><span class="chip">Revisar</span></span>
+            <span class="grp" style="margin-left:auto"><span class="chip copilot-chip">Copilot</span></span>
+          </div>
+          <div class="doc" id="copilotDoc3">
+            <div class="page-edge"></div>
+            <div class="copilot-prompt">
+              <span class="dot-ai"></span>
+              <div>
+                <strong>Tú a Copilot:</strong> Genera el <code>informe trimestral</code> de Ventas y Postventa del concesionario a partir de los datos del DMS, las citas de taller y los correos del comité de dirección. Tono ejecutivo. Incluye KPIs, incidencias, riesgos y próximos pasos.
+              </div>
+            </div>
+            <h2 class="doctitle">Informe trimestral · Ventas y Postventa · Unione Movilidad Toledo</h2>
+            <div id="copilotText3"></div>
+          </div>
+          <div class="clickpad" data-trigger="copilot3">
+            <div class="playbtn"></div>
+            <div class="playlbl">Clic para lanzar Copilot</div>
+            <div class="playsub">El mismo informe, en segundos</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FASE 4 · POWERPOINT ========== -->
+  <section class="scene" data-phase="4">
+    <div class="deck-stage">
+      <div class="slidewell" id="slidewell">
+        <div class="slide" data-slide="1">
+          <div class="accent"></div>
+          <span class="chip">Resumen ejecutivo</span>
+          <h3>Ventas y Postventa · Cierre del trimestre</h3>
+          <p>Desempeño comercial, actividad de taller y foco para el próximo trimestre.</p>
+          <div class="cols">
+            <div class="kpi"><div class="v">+12,4%</div><div class="k">Entregas vs. trimestre anterior</div></div>
+            <div class="kpi"><div class="v">96,8%</div><div class="k">NPS del servicio postventa</div></div>
+          </div>
+          <div class="footer"><span class="uni-ft"><span class="mini-ring"></span> Unione Movilidad · Confidencial</span><span>Slide 1 / 4</span></div>
+        </div>
+
+        <div class="slide" data-slide="2">
+          <div class="accent"></div>
+          <span class="chip">Actividad del trimestre</span>
+          <h3>Qué ha pasado en el grupo</h3>
+          <ul>
+            <li><strong>1.184</strong> vehículos entregados · <strong>312</strong> de ellos electrificados (BYD y EQ).</li>
+            <li><strong>8.927</strong> citas de taller atendidas · <strong>0</strong> incidencias críticas para el cliente.</li>
+            <li>Apertura comercial de <strong>BYD en Toledo</strong> y avance del plan de Illescas y Talavera.</li>
+            <li>Formación continua del equipo en venta digital y alta tensión (vehículo eléctrico).</li>
+          </ul>
+          <div class="footer"><span class="uni-ft"><span class="mini-ring"></span> Unione Movilidad · Confidencial</span><span>Slide 2 / 4</span></div>
+        </div>
+
+        <div class="slide" data-slide="3">
+          <div class="accent"></div>
+          <span class="chip">Incidencias y riesgos</span>
+          <h3>Lo que hemos detectado</h3>
+          <div class="cols">
+            <div class="kpi" style="background:#fff7ed;border-color:#fed7aa"><div class="v" style="color:#9a3412">Medio</div><div class="k" style="color:#7c2d12">Plazos de entrega Clase C</div></div>
+            <div class="kpi" style="background:#fffbeb;border-color:#fde68a"><div class="v" style="color:#92400e">Bajo</div><div class="k" style="color:#78350f">Saturación de taller en Alcázar</div></div>
+          </div>
+          <ul>
+            <li>Refuerzo del seguimiento proactivo al cliente durante el periodo de espera de fábrica.</li>
+            <li>Plan de ampliación de horarios de taller y refuerzo de equipo durante 60 días.</li>
+          </ul>
+          <div class="footer"><span class="uni-ft"><span class="mini-ring"></span> Unione Movilidad · Confidencial</span><span>Slide 3 / 4</span></div>
+        </div>
+
+        <div class="slide" data-slide="4">
+          <div class="accent"></div>
+          <span class="chip">Próximos pasos</span>
+          <h3>Qué haremos en el próximo trimestre</h3>
+          <ul>
+            <li>Lanzamiento comercial de BYD en Illescas y Talavera de la Reina.</li>
+            <li>Despliegue del nuevo Mercedes me digital en toda la red de concesionarios.</li>
+            <li>Plan de fidelización conjunto con Moovers Cars y Moovers Mobility Lovers.</li>
+          </ul>
+          <p style="margin-top:10px;color:#6b7280">Comité de dirección del grupo previsto para el <strong>15 de julio</strong>.</p>
+          <div class="footer"><span class="uni-ft"><span class="mini-ring"></span> Unione Movilidad · Confidencial</span><span>Slide 4 / 4</span></div>
+        </div>
+      </div>
+
+      <div class="deckpanel">
+        <h4>De Word a PowerPoint · con Copilot</h4>
+        <p style="font-size:13px;color:#9fb3c8;margin:0">El mismo informe trimestral se convierte en un deck ejecutivo listo para el comité de dirección del grupo en segundos.</p>
+        <div class="thumbs" id="thumbs">
+          <div class="thumb" data-t="1"><span class="num">01</span><span class="mini-title">Resumen<br/>ejecutivo</span></div>
+          <div class="thumb" data-t="2"><span class="num">02</span><span class="mini-title">Actividad<br/>del trimestre</span></div>
+          <div class="thumb" data-t="3"><span class="num">03</span><span class="mini-title">Incidencias<br/>&amp; riesgos</span></div>
+          <div class="thumb" data-t="4"><span class="num">04</span><span class="mini-title">Próximos<br/>pasos</span></div>
+        </div>
+        <div class="deck-progress"><div id="deckBar"></div></div>
+        <div class="copilot-prompt" style="color:#0f172a">
+          <span class="dot-ai"></span>
+          <div style="font-size:12.5px"><strong>Tú a Copilot en PowerPoint:</strong> crea una presentación a partir de <code>Informe_trimestral_concesionario.docx</code>, tono ejecutivo, 4 slides.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FASE 5 · CIERRE ========== -->
+  <section class="scene" data-phase="5">
+    <div class="finale fade-in">
+      <h2>Lo que acabas de ver</h2>
+      <p class="sub">Mismo trabajo. Distinto esfuerzo. Más tiempo para lo importante: el cliente y la movilidad.</p>
+      <div class="stats">
+        <div class="stat"><div class="big"><span id="cMins">0</span> min</div><div class="k">Tiempo estimado ahorrado</div></div>
+        <div class="stat"><div class="big"><span id="cDocs">0</span></div><div class="k">Entregables generados</div></div>
+        <div class="stat"><div class="big"><span id="cPct">0</span>%</div><div class="k">Menos folio en blanco</div></div>
+      </div>
+      <p class="quote">“Copilot no sustituye a la persona que piensa. Sustituye al folio en blanco que la bloquea.”</p>
+      <div class="cta" style="margin-top:22px;color:#9fb3c8;font-size:13px">Pulsa <kbd style="background:#0c1626;border:1px solid #1f2d44;color:#e5e7eb;padding:2px 8px;border-radius:6px;font-size:12px">R</kbd> para reiniciar · <kbd style="background:#0c1626;border:1px solid #1f2d44;color:#e5e7eb;padding:2px 8px;border-radius:6px;font-size:12px">←</kbd> para volver</div>
+    </div>
+  </section>
+
+</div>
+
+<div class="hud">
+  <div class="phase-dots" id="dots">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+  <div class="keys">
+    <kbd>Espacio</kbd> / <kbd>→</kbd> avanzar &nbsp;·&nbsp; <kbd>←</kbd> atrás &nbsp;·&nbsp; <kbd>R</kbd> reiniciar
+  </div>
+</div>
+
+<script>
+const scenes = document.querySelectorAll('.scene');
+const dots   = document.querySelectorAll('#dots .dot');
+let phase = 0;
+const total = scenes.length;
+
+function render(){
+  scenes.forEach((s,i)=>s.classList.toggle('active', i===phase));
+  dots.forEach((d,i)=>{
+    d.classList.remove('active','done');
+    if(i<phase) d.classList.add('done');
+    if(i===phase) d.classList.add('active');
+  });
+  runPhase(phase);
+}
+function go(delta){
+  const next = Math.max(0, Math.min(total-1, phase+delta));
+  if(next!==phase){ phase=next; render(); }
+}
+function reset(){ phase=0; stopAllTimers(); clearTexts(); resetClickpads(); resetTA(); render(); }
+document.addEventListener('keydown', e=>{
+  if(document.activeElement && document.activeElement.tagName==='TEXTAREA'){
+    if(e.key==='r' || e.key==='R') return;
+    if(e.code!=='Escape') return;
+  }
+  if(e.code==='Space' || e.code==='ArrowRight' || e.code==='Enter'){ e.preventDefault(); go(1); }
+  else if(e.code==='ArrowLeft' || e.code==='Backspace'){ e.preventDefault(); go(-1); }
+  else if(e.key==='r' || e.key==='R'){ e.preventDefault(); reset(); }
+});
+
+const timers = [];
+function T(fn,ms){ const id=setTimeout(fn,ms); timers.push(id); return id; }
+function I(fn,ms){ const id=setInterval(fn,ms); timers.push(id); return id; }
+function stopAllTimers(){ while(timers.length){ const id=timers.pop(); clearTimeout(id); clearInterval(id);} }
+
+function typeInto(el, html, speed=22, caret=true, done){
+  el.innerHTML='';let i=0;const src=html;
+  function step(){
+    if(src[i]==='<'){
+      const end=src.indexOf('>',i);
+      el.innerHTML=src.slice(0,end+1)+(caret?'<span class="caret"></span>':'');
+      i=end+1;
+    } else { i++; el.innerHTML=src.slice(0,i)+(caret?'<span class="caret"></span>':''); }
+    if(i<src.length){ T(step, speed+Math.random()*speed*.5); }
+    else { el.innerHTML=src; done&&done(); }
+  }
+  step();
+}
+function typeHuman(el, segments, done){
+  el.innerHTML=''; let idx=0;
+  function nextSeg(){
+    if(idx>=segments.length){ done&&done(); return; }
+    const seg=segments[idx++];
+    if(seg.pause){ T(nextSeg, seg.pause); return; }
+    const text=seg.text; let i=0;
+    function step(){
+      el.innerHTML = (el.dataset.prev||'') + text.slice(0,i) + '<span class="caret"></span>';
+      i++;
+      if(i<=text.length){ T(step, 55+Math.random()*80); }
+      else { el.dataset.prev=(el.dataset.prev||'')+text; el.innerHTML=el.dataset.prev+'<span class="caret"></span>'; T(nextSeg,250); }
+    }
+    step();
+  }
+  el.dataset.prev=''; nextSeg();
+}
+function clearTexts(){
+  ['humanText1','humanText3'].forEach(id=>{
+    const el=document.getElementById(id); if(el){ el.innerHTML=''; el.dataset.prev=''; }
+  });
+  ['copilotText1','copilotText3','copilotTextTA'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.innerHTML='';
+  });
+  document.querySelectorAll('.slide').forEach(s=>s.classList.remove('show','prev'));
+  document.querySelectorAll('.thumb').forEach(t=>t.classList.remove('done','active'));
+  const bar=document.getElementById('deckBar'); if(bar) bar.style.width='0';
+  ['cMins','cDocs','cPct'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='0'; });
+}
+function resetClickpads(){ document.querySelectorAll('.clickpad').forEach(p=>p.classList.remove('hide')); }
+function resetTA(){
+  const ta=document.getElementById('tryArea'); if(ta){ ta.value=''; }
+  const w=document.getElementById('taWords'); if(w) w.textContent='0';
+  const c=document.getElementById('taChars'); if(c) c.textContent='0';
+  const tm=document.getElementById('taTimer'); if(tm){ tm.textContent='00:00'; tm.classList.remove('run'); }
+  const rb=document.getElementById('runCopilotTA'); if(rb){ rb.disabled=false; }
+  taStarted=false; taStart=0;
+}
+
+function runPhase(p){
+  stopAllTimers();
+  if(p===2){ setupTA(); }
+  else if(p===4) runPhase4();
+  else if(p===5) runPhase5();
+}
+
+document.querySelectorAll('.clickpad').forEach(pad=>{
+  pad.addEventListener('click', ()=>{
+    const trig = pad.dataset.trigger;
+    pad.classList.add('hide');
+    if(trig==='human1') runHuman1();
+    else if(trig==='copilot1') runCopilot1();
+    else if(trig==='human3') runHuman3();
+    else if(trig==='copilot3') runCopilot3();
+  });
+});
+
+function runHuman1(){
+  const h=document.getElementById('humanText1'); h.innerHTML=''; h.dataset.prev='';
+  typeHuman(h, [
+    {text:'Articulo 1: '},{pause:500},
+    {text:'No dejar el café en la cafetera toda la tarde '},{pause:700},
+    {text:'porque luego huele fatal. '},{pause:900},
+    {text:'Articulo 2: '},{pause:600},
+    {text:'Si rompes la cafetera '},{pause:400},
+    {text:'avisa, no huyas. '},{pause:800},
+    {text:'Articulo 3: '},{pause:500},{text:'...'}
+  ]);
+}
+function runCopilot1(){
+  const c=document.getElementById('copilotText1'); c.innerHTML='';
+  typeInto(c, `
+    <p><strong>Artículo 1 · Propósito.</strong> Regular el uso responsable de la cafetera común del concesionario tras el incidente del pasado lunes, garantizando higiene, disponibilidad y buena convivencia entre los equipos de ventas, taller y administración.</p>
+    <p><strong>Artículo 2 · Normas básicas.</strong></p>
+    <ul>
+      <li>Vaciar los posos y enjuagar la jarra después de cada uso.</li>
+      <li>No dejar café caliente más de 45 minutos en la placa.</li>
+      <li>Reponer filtros y cápsulas cuando queden menos de tres.</li>
+    </ul>
+    <p><strong>Artículo 3 · Turnos de limpieza.</strong> Rotación semanal publicada en la intranet del grupo. Cada equipo asume la limpieza profunda los viernes antes del cierre.</p>
+    <p><strong>Artículo 4 · Incidencias.</strong> Cualquier avería se reportará a <em>servicios generales</em> en menos de 24 horas. <u>Ocultar una avería</u> se considerará incumplimiento leve.</p>
+    <p><strong>Artículo 5 · Entrada en vigor.</strong> La presente política es de aplicación inmediata en toda la red de Unione Movilidad y será revisada trimestralmente.</p>
+  `, 10);
+}
+function runHuman3(){
+  const h=document.getElementById('humanText3'); h.innerHTML=''; h.dataset.prev='';
+  typeHuman(h, [
+    {text:'Resumen: '},{pause:600},
+    {text:'El trimestre ha ido bien, '},{pause:800},
+    {text:'aunque ha habido algun retraso de entrega '},{pause:700},
+    {text:'que habria que comentar '},{pause:800},
+    {text:'en el comite '},{pause:1200},{text:'...'}
+  ]);
+}
+function runCopilot3(){
+  const c=document.getElementById('copilotText3'); c.innerHTML='';
+  typeInto(c, `
+    <p><strong>Resumen ejecutivo.</strong> El trimestre cierra con un crecimiento del <strong>+12,4%</strong> en entregas frente al periodo anterior y un NPS de postventa del <strong>96,8%</strong>, con 8.927 citas de taller atendidas y cero incidencias críticas para el cliente.</p>
+    <p><strong>Actividad del trimestre.</strong></p>
+    <ul>
+      <li>1.184 vehículos entregados, de los cuales 312 son electrificados (BYD y gama EQ de Mercedes-Benz).</li>
+      <li>Apertura comercial de BYD en Toledo y avance del plan de despliegue en Illescas y Talavera de la Reina.</li>
+      <li>Formación continua del equipo en venta digital y trabajos de alta tensión para vehículo eléctrico.</li>
+    </ul>
+    <p><strong>Incidencias y riesgos.</strong> Riesgo medio por plazos de entrega de Clase C (mitigado con seguimiento proactivo al cliente) y riesgo bajo por saturación puntual del taller de Alcázar de San Juan (plan de refuerzo de equipo durante 60 días).</p>
+    <p><strong>Próximos pasos.</strong> Lanzamiento de BYD en Illescas y Talavera, despliegue del nuevo Mercedes me en toda la red y plan de fidelización conjunto con Moovers Cars y Moovers Mobility Lovers.</p>
+  `, 9);
+}
+
+let taStarted=false, taStart=0;
+function setupTA(){
+  const ta=document.getElementById('tryArea');
+  const w=document.getElementById('taWords');
+  const c=document.getElementById('taChars');
+  const tm=document.getElementById('taTimer');
+  const clearBtn=document.getElementById('clearTa');
+  const runBtn=document.getElementById('runCopilotTA');
+  const out=document.getElementById('copilotTextTA');
+
+  if(!ta._bound){
+    ta.addEventListener('input', ()=>{
+      const v=ta.value;
+      c.textContent=v.length;
+      w.textContent=v.trim()? v.trim().split(/\s+/).length : 0;
+      if(!taStarted && v.length>0){ taStarted=true; taStart=Date.now(); tm.classList.add('run'); }
+    });
+    clearBtn.addEventListener('click', ()=>{
+      ta.value=''; c.textContent='0'; w.textContent='0';
+      taStarted=false; taStart=0; tm.textContent='00:00'; tm.classList.remove('run');
+      ta.focus();
+    });
+    runBtn.addEventListener('click', ()=>{
+      runBtn.disabled=true;
+      out.innerHTML='';
+      typeInto(out, `
+        <p><strong>Asunto:</strong> Actualización sobre la entrega de su Mercedes-Benz Clase C</p>
+        <p>Estimado/a [Nombre del cliente]:</p>
+        <p>Queremos informarle, con total transparencia, de una ligera variación en el plazo previsto de entrega de su nuevo Mercedes-Benz Clase C en nuestro concesionario de Unione Movilidad Toledo.</p>
+        <p><strong>Hechos:</strong> el centro de producción nos ha confirmado un retraso logístico de aproximadamente 10 días naturales en el transporte de la unidad, ya fabricada y verificada según los estándares de calidad de Mercedes-Benz.</p>
+        <p><strong>Medidas adoptadas:</strong></p>
+        <ul>
+          <li>Asignación de un asesor personal de Unione Movilidad para acompañarle hasta la entrega.</li>
+          <li>Vehículo de cortesía sin coste durante el periodo de espera, si así lo desea.</li>
+          <li>Coordinación directa con fábrica para confirmar la nueva fecha de entrega esta misma semana.</li>
+        </ul>
+        <p><strong>Próximos pasos:</strong> le confirmaremos la fecha definitiva en un máximo de 72 horas y le propondremos una entrega personalizada en nuestras instalaciones, con explicación completa del Mercedes me y la app del vehículo.</p>
+        <p>Gracias por su confianza. En Unione Movilidad creemos que moverse es evolucionar, y queremos hacerlo a su lado.</p>
+        <p>Un saludo cordial,<br/>Equipo comercial · Unione Movilidad</p>
+      `, 9);
+    });
+    ta._bound=true;
+  }
+  I(()=>{
+    if(!taStarted) return;
+    const s=Math.floor((Date.now()-taStart)/1000);
+    const m=String(Math.floor(s/60)).padStart(2,'0');
+    const ss=String(s%60).padStart(2,'0');
+    tm.textContent=`${m}:${ss}`;
+  }, 500);
+}
+
+function runPhase4(){
+  const slides=document.querySelectorAll('.slide');
+  const thumbs=document.querySelectorAll('.thumb');
+  const bar=document.getElementById('deckBar');
+  slides.forEach(s=>s.classList.remove('show','prev'));
+  thumbs.forEach(t=>t.classList.remove('done','active'));
+  bar.style.width='0';
+  let i=0;
+  function showNext(){
+    if(i>0){
+      slides[i-1].classList.remove('show');slides[i-1].classList.add('prev');
+      thumbs[i-1].classList.remove('active');thumbs[i-1].classList.add('done');
+    }
+    if(i>=slides.length){ bar.style.width='100%'; return; }
+    slides[i].classList.add('show'); thumbs[i].classList.add('active');
+    bar.style.width = ((i+1)/slides.length*100)+'%';
+    i++; T(showNext,2600);
+  }
+  T(showNext,400);
+}
+
+function runPhase5(){
+  const targets={cMins:47,cDocs:3,cPct:92};
+  Object.keys(targets).forEach(id=>{
+    const el=document.getElementById(id); const to=targets[id];
+    let v=0; const steps=40; const step=to/steps; let n=0;
+    const t=I(()=>{ n++; v=Math.min(to,Math.round(v+step)); el.textContent=v; if(n>=steps){ clearInterval(t); el.textContent=to; } },28);
+  });
+}
+
+render();
+</script>
+
+</body>
+</html>
