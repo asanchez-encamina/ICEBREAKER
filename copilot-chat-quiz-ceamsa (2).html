@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Copilot Chat & IA · ¿Lo tienes claro? | CEAMSA</title>
+<style>
+  /* ===== CEAMSA palette + acento "escudo" =====
+     Azul corporativo + verde natural. Iconos IA en sus colores. */
+  :root {
+    --ceamsa-blue: #003F5C;
+    --ceamsa-blue-light: #0077B6;
+    --ceamsa-green: #7CB342;
+    --ceamsa-aqua: #00B4D8;
+    --shield-gold: #C58F2A;
+    --bg: #F4F8FB;
+    --card: #FFFFFF;
+    --text: #1F2A37;
+    --muted: #5B6B7A;
+    --border: #E1E8EF;
+    --success: #16a34a;
+    --error: #dc2626;
+    --warning: #f59e0b;
+    --shadow: 0 6px 24px rgba(0, 63, 92, 0.08);
+    --shadow-hover: 0 12px 32px rgba(0, 63, 92, 0.16);
+
+    /* IA brands */
+    --copilot-color: #0A6CFF;
+    --chatgpt-color: #10A37F;
+    --claude-color: #C96442;
+    --m365-color: #5B5FC7;
+    --edge-color: #0078D4;
+    --teams-color: #4B53BC;
+    --outlook-color: #0078D4;
+    --word-color: #185ABD;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh;
+  }
+
+  /* ===== Header ===== */
+  .header {
+    background: linear-gradient(135deg, var(--ceamsa-blue) 0%, var(--ceamsa-blue-light) 100%);
+    color: #fff; padding: 48px 24px 80px; position: relative; overflow: hidden;
+  }
+  .header::after {
+    content: ""; position: absolute; bottom: -1px; left: 0; right: 0; height: 40px;
+    background: var(--bg); clip-path: polygon(0 100%, 100% 100%, 100% 40%, 0 80%);
+  }
+  .header-inner { max-width: 980px; margin: 0 auto; position: relative; z-index: 1; }
+  .brand-row {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 14px; opacity: 0.9; margin-bottom: 24px;
+    letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600;
+  }
+  .brand-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--ceamsa-green); box-shadow: 0 0 0 4px rgba(124, 179, 66, 0.25);
+  }
+  h1 {
+    font-size: clamp(28px, 4vw, 42px); font-weight: 700;
+    letter-spacing: -0.02em; margin-bottom: 12px; line-height: 1.15;
+  }
+  .subtitle { font-size: clamp(15px, 1.6vw, 18px); opacity: 0.92; max-width: 720px; }
+
+  /* ===== Progress ===== */
+  .progress-strip { max-width: 980px; margin: -36px auto 0; padding: 0 24px; position: relative; z-index: 2; }
+  .progress-card {
+    background: var(--card); border-radius: 14px; box-shadow: var(--shadow);
+    padding: 18px 24px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  }
+  .progress-bar-wrapper { flex: 1; min-width: 200px; }
+  .progress-label { font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+  .progress-track { height: 8px; background: #E8EFF4; border-radius: 4px; overflow: hidden; }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--ceamsa-green) 0%, var(--ceamsa-aqua) 100%);
+    width: 0%; transition: width 0.5s ease; border-radius: 4px;
+  }
+  .score-pill {
+    background: var(--bg); color: var(--ceamsa-blue);
+    padding: 8px 16px; border-radius: 999px; font-weight: 700;
+    font-size: 14px; border: 2px solid var(--border);
+  }
+
+  main { max-width: 980px; margin: 32px auto 64px; padding: 0 24px; }
+
+  /* ===== Disclaimer "Escudo" — bandera de la sesión ===== */
+  .disclaimer {
+    background: linear-gradient(135deg, #FFF8E1 0%, #FFFBEB 100%);
+    border: 2px solid var(--shield-gold);
+    border-left: 6px solid var(--shield-gold);
+    border-radius: 12px; padding: 20px 24px; margin-top: 32px;
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .disclaimer-icon {
+    flex-shrink: 0; width: 44px; height: 44px;
+    background: var(--shield-gold); color: #fff; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700;
+  }
+  .disclaimer-content { flex: 1; }
+  .disclaimer-title {
+    font-weight: 700; color: #6B4226; margin-bottom: 4px; font-size: 15px;
+  }
+  .disclaimer-text { color: #5B3617; font-size: 14px; line-height: 1.55; }
+
+  .section { margin-top: 48px; }
+  .section-tag {
+    display: inline-block; background: var(--ceamsa-green); color: #fff;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 4px 12px; border-radius: 999px;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: clamp(22px, 2.6vw, 28px); color: var(--ceamsa-blue);
+    font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em;
+  }
+  .section-desc { color: var(--muted); margin-bottom: 24px; font-size: 15px; }
+
+  /* ===== Question ===== */
+  .question {
+    background: var(--card); border-radius: 16px; box-shadow: var(--shadow);
+    padding: 28px; margin-bottom: 20px; border: 1px solid var(--border);
+    transition: box-shadow 0.3s ease;
+  }
+  .question:hover { box-shadow: var(--shadow-hover); }
+  .q-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
+  .q-number {
+    flex-shrink: 0; width: 36px; height: 36px;
+    background: var(--ceamsa-blue); color: #fff;
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 15px;
+  }
+  .q-text { font-size: 17px; font-weight: 600; color: var(--text); flex: 1; }
+
+  /* ===== Showcase ===== */
+  .showcase {
+    background: linear-gradient(135deg, #F0F7FB 0%, #E8F2F8 100%);
+    border-radius: 12px; padding: 28px 24px; margin-bottom: 20px;
+    border: 1px dashed #C7DAE6;
+  }
+
+  /* ===== Tool chips ===== */
+  .tool-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #fff; padding: 8px 14px; border-radius: 8px;
+    font-size: 14px; font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .tool-icon {
+    width: 22px; height: 22px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 11px; flex-shrink: 0;
+  }
+  .tool-icon.copilot { background: var(--copilot-color); }
+  .tool-icon.chatgpt { background: var(--chatgpt-color); }
+  .tool-icon.claude { background: var(--claude-color); }
+  .tool-icon.m365 { background: var(--m365-color); }
+  .tool-icon.edge { background: var(--edge-color); }
+  .tool-icon.teams { background: var(--teams-color); }
+  .tool-icon.outlook { background: var(--outlook-color); }
+  .tool-icon.word { background: var(--word-color); }
+  .tool-icon.shield { background: var(--shield-gold); }
+
+  /* ===== Chat mock — interfaz de Copilot ===== */
+  .chat-mock {
+    background: #fff; border-radius: 10px; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-top: 3px solid var(--copilot-color);
+  }
+  .chat-toolbar {
+    background: linear-gradient(90deg, #F4F8FE 0%, #FFFFFF 100%);
+    padding: 10px 16px; font-size: 12px; color: var(--muted);
+    border-bottom: 1px solid #EEE; display: flex; gap: 10px; align-items: center;
+    justify-content: space-between;
+  }
+  .chat-toolbar-left { display: flex; gap: 10px; align-items: center; }
+  .chat-pill {
+    padding: 3px 10px; border-radius: 4px; background: #E5EFFE;
+    color: var(--copilot-color); font-weight: 700; font-size: 11px;
+  }
+  .chat-shield {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #FFF8E1; color: #6B4226; padding: 3px 10px;
+    border-radius: 999px; font-weight: 700; font-size: 11px;
+    border: 1px solid #F2DCA4;
+  }
+  .chat-shield::before {
+    content: "🛡"; font-size: 12px;
+  }
+  .chat-no-shield {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #FEF2F2; color: #991B1B; padding: 3px 10px;
+    border-radius: 999px; font-weight: 700; font-size: 11px;
+    border: 1px solid #FBC8C8;
+  }
+  .chat-no-shield::before { content: "⚠"; font-size: 12px; }
+
+  .chat-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; background: #FAFBFD; }
+  .chat-msg {
+    max-width: 85%; padding: 12px 14px; border-radius: 14px;
+    font-size: 13.5px; line-height: 1.5;
+  }
+  .chat-msg.user {
+    background: var(--copilot-color); color: #fff;
+    align-self: flex-end; border-bottom-right-radius: 4px;
+  }
+  .chat-msg.ai {
+    background: #fff; color: var(--text);
+    align-self: flex-start; border: 1px solid #E5EAF1;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .chat-msg.ai .ai-label {
+    font-size: 10px; font-weight: 700; color: var(--copilot-color);
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;
+    display: block;
+  }
+  .chat-msg .small { font-size: 12px; color: var(--muted); margin-top: 4px; display:block;}
+
+  .chat-input-fake {
+    background: #fff; border-top: 1px solid #E5EAF1;
+    padding: 10px 14px; font-size: 13px; color: #B0B7BF;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .chat-input-fake::before {
+    content: ""; width: 8px; height: 16px; background: var(--copilot-color);
+    animation: blink 1s infinite; opacity: 0.4;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ===== Comparativa ChatGPT / Claude / Copilot ===== */
+  .compare-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  }
+  @media (max-width: 720px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-card {
+    background: #fff; border-radius: 10px; padding: 14px;
+    border-top: 4px solid; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .compare-card.chatgpt { border-color: var(--chatgpt-color); }
+  .compare-card.claude { border-color: var(--claude-color); }
+  .compare-card.copilot { border-color: var(--copilot-color); }
+  .compare-head {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 700; font-size: 13px; margin-bottom: 8px;
+  }
+  .compare-row {
+    display: flex; gap: 8px; font-size: 12px;
+    color: var(--text); margin-bottom: 4px; align-items: flex-start;
+  }
+  .compare-row b { color: var(--muted); font-weight: 600; min-width: 90px; }
+
+  /* ===== Edge sidebar mock ===== */
+  .edge-mock {
+    background: #fff; border-radius: 10px; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid #E5EAF1;
+    display: grid; grid-template-columns: 1fr 220px; min-height: 200px;
+  }
+  .edge-page {
+    background: #FAFBFD; padding: 16px; font-size: 12px; color: var(--muted);
+  }
+  .edge-page-title {
+    font-weight: 700; color: var(--text); font-size: 14px; margin-bottom: 6px;
+  }
+  .edge-page-line {
+    height: 6px; background: #E5EAF1; border-radius: 3px; margin-bottom: 5px;
+  }
+  .edge-page-line.short { width: 70%; }
+  .edge-page-line.shorter { width: 50%; }
+  .edge-sidebar {
+    background: #fff; border-left: 3px solid var(--copilot-color);
+    padding: 12px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .edge-sidebar-head {
+    font-size: 11px; font-weight: 700; color: var(--copilot-color);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .edge-prompt {
+    background: #F4F8FE; border-radius: 8px; padding: 8px 10px;
+    font-size: 12px; color: var(--text); line-height: 1.4;
+  }
+  .edge-bullet {
+    background: #fff; border: 1px solid #E5EAF1; border-radius: 6px;
+    padding: 6px 8px; font-size: 11px; color: var(--text);
+  }
+
+  /* ===== Prompt comparison ===== */
+  .prompt-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  }
+  @media (max-width: 720px) { .prompt-row { grid-template-columns: 1fr; } }
+  .prompt-card {
+    background: #fff; border-radius: 10px; padding: 14px;
+    border-top: 4px solid; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    font-size: 13px; line-height: 1.5;
+  }
+  .prompt-card.bad { border-color: var(--error); }
+  .prompt-card.good { border-color: var(--success); }
+  .prompt-tag {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    font-size: 10px; font-weight: 700; margin-bottom: 8px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .prompt-tag.bad { background: #FEE2E2; color: #991B1B; }
+  .prompt-tag.good { background: #D1FAE5; color: #065F46; }
+  .prompt-text { font-family: 'Cascadia Code', 'Menlo', Consolas, monospace; font-size: 12px; color: var(--text); }
+  .prompt-text em {
+    background: #FEF3C7; padding: 1px 4px; border-radius: 3px;
+    color: #92400E; font-style: normal; font-weight: 600;
+  }
+
+  /* ===== Options ===== */
+  .options { display: grid; gap: 10px; }
+  .option {
+    background: #fff; border: 2px solid var(--border);
+    border-radius: 10px; padding: 14px 18px;
+    cursor: pointer; text-align: left; font-size: 15px;
+    color: var(--text); transition: all 0.2s ease;
+    display: flex; align-items: center; gap: 12px;
+    font-family: inherit; width: 100%;
+  }
+  .option:hover:not(:disabled) {
+    border-color: var(--ceamsa-blue-light); background: #F0F7FB;
+    transform: translateX(2px);
+  }
+  .option:disabled { cursor: not-allowed; }
+  .opt-letter {
+    width: 26px; height: 26px; background: var(--bg);
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; color: var(--muted); flex-shrink: 0;
+  }
+  .option.correct { border-color: var(--success); background: #ECFDF5; }
+  .option.correct .opt-letter { background: var(--success); color: #fff; }
+  .option.incorrect { border-color: var(--error); background: #FEF2F2; }
+  .option.incorrect .opt-letter { background: var(--error); color: #fff; }
+  .option.dimmed { opacity: 0.5; }
+
+  /* ===== Feedback ===== */
+  .feedback {
+    margin-top: 16px; padding: 16px 18px; border-radius: 10px;
+    display: none; font-size: 14px; line-height: 1.55;
+    border-left: 4px solid;
+  }
+  .feedback.show { display: block; animation: fadeIn 0.3s ease; }
+  .feedback.correct { background: #ECFDF5; color: #065f46; border-color: var(--success); }
+  .feedback.incorrect { background: #FEF2F2; color: #991b1b; border-color: var(--error); }
+  .feedback strong { display: block; margin-bottom: 4px; font-size: 15px; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== Match block (ROCEF) ===== */
+  .match-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+  }
+  @media (max-width: 720px) { .match-grid { grid-template-columns: 1fr; } }
+  .match-col-title {
+    font-size: 13px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;
+  }
+  .match-item {
+    background: #fff; border: 2px solid var(--border);
+    border-radius: 10px; padding: 14px; margin-bottom: 8px;
+    cursor: pointer; display: flex; align-items: center; gap: 12px;
+    transition: all 0.2s ease; font-size: 14px; font-family: inherit;
+    width: 100%; text-align: left;
+  }
+  .match-item:hover:not(:disabled) {
+    border-color: var(--ceamsa-blue-light); transform: translateX(2px);
+  }
+  .match-item.selected {
+    border-color: var(--ceamsa-aqua); background: #E0F4F9;
+    box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.15);
+  }
+  .match-item.matched-correct {
+    border-color: var(--success); background: #ECFDF5; cursor: default;
+  }
+  .match-item.matched-wrong {
+    border-color: var(--error); background: #FEF2F2; animation: shake 0.4s;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+  .match-item:disabled { opacity: 0.6; cursor: not-allowed; }
+  .rocef-letter {
+    width: 36px; height: 36px; background: var(--ceamsa-blue); color: #fff;
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 16px; flex-shrink: 0;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  /* ===== Final ===== */
+  .final-card {
+    background: linear-gradient(135deg, var(--ceamsa-blue) 0%, var(--ceamsa-blue-light) 100%);
+    color: #fff; border-radius: 16px; padding: 40px 32px;
+    text-align: center; margin-top: 48px; display: none;
+  }
+  .final-card.show { display: block; animation: fadeIn 0.5s ease; }
+  .final-emoji { font-size: 56px; margin-bottom: 12px; }
+  .final-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .final-score { font-size: 18px; opacity: 0.95; margin-bottom: 24px; }
+  .final-score strong { font-size: 24px; color: var(--ceamsa-green); }
+  .restart-btn {
+    background: #fff; color: var(--ceamsa-blue); border: none;
+    padding: 14px 28px; border-radius: 10px;
+    font-weight: 700; font-size: 15px; cursor: pointer;
+    transition: transform 0.2s ease; font-family: inherit;
+  }
+  .restart-btn:hover { transform: scale(1.04); }
+
+  /* ===== Cheat sheet ===== */
+  .legend {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px; margin-top: 32px;
+    box-shadow: var(--shadow);
+  }
+  .legend-title {
+    font-size: 18px; font-weight: 700; color: var(--ceamsa-blue);
+    margin-bottom: 6px;
+  }
+  .legend-sub { font-size: 14px; color: var(--muted); margin-bottom: 18px; }
+  .legend-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .legend-card {
+    padding: 16px; background: var(--bg); border-radius: 10px;
+    border-top: 4px solid;
+  }
+  .legend-card.copilot { border-color: var(--copilot-color); }
+  .legend-card.shield { border-color: var(--shield-gold); }
+  .legend-card.rocef { border-color: var(--ceamsa-green); }
+  .legend-card.verify { border-color: var(--ceamsa-blue); }
+  .legend-card-title {
+    font-weight: 700; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 8px; font-size: 14px;
+  }
+  .legend-card-text { font-size: 13px; line-height: 1.45; color: var(--text); }
+  .legend-card-text em { color: var(--muted); font-style: normal; display: block; margin-top: 4px; font-size: 12px; }
+
+  footer {
+    text-align: center; color: var(--muted); font-size: 13px;
+    padding: 24px; margin-top: 32px;
+  }
+  footer span { color: var(--ceamsa-green); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="brand-row">
+      <span class="brand-dot"></span>
+      <span>CEAMSA · Formación Microsoft 365</span>
+    </div>
+    <h1>Copilot Chat & IA · ¿Sabes pedírselo bien?</h1>
+    <p class="subtitle">Pequeño reto para fijar lo que vemos en sesión: cuándo es seguro usar la IA con datos del trabajo, cómo escribir un buen prompt con el método ROCEF y por qué el último paso siempre lo das tú. <strong>9 retos · 6–8 minutos.</strong></p>
+  </div>
+</header>
+
+<div class="progress-strip">
+  <div class="progress-card">
+    <div class="progress-bar-wrapper">
+      <div class="progress-label">Progreso · <span id="progress-text">0 / 9</span></div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+    <div class="score-pill">Aciertos: <span id="score">0</span></div>
+  </div>
+</div>
+
+<main>
+
+  <!-- ============ Disclaimer Escudo (clave de la sesión) ============ -->
+  <div class="disclaimer">
+    <div class="disclaimer-icon">🛡</div>
+    <div class="disclaimer-content">
+      <div class="disclaimer-title">Antes de empezar — la idea que vertebra toda la sesión</div>
+      <div class="disclaimer-text">
+        En CEAMSA conviven <strong>varias herramientas de IA</strong>: ChatGPT (gratis y de pago), Claude, Copilot Chat (gratuito) y M365 Copilot (con licencia). Todas son útiles, pero <strong>NO todas protegen los datos de la empresa de la misma manera</strong>. La regla mental para hoy: en cuanto haya información interna —fórmulas, recetas de hidrocoloides, datos de cliente, precios, documentos confidenciales—, el único entorno con «escudo» que la trata como dato corporativo es el <strong>Copilot de la cuenta de empresa</strong>. Todo lo que veremos hoy gira alrededor de esa idea.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SECCIÓN A: Reconocer ============ -->
+  <section class="section">
+    <span class="section-tag">Bloque 1 · Reconocer</span>
+    <h2 class="section-title">¿Qué estás viendo y qué hace cada uno?</h2>
+    <p class="section-desc">Mira la imagen simulada y elige la respuesta correcta.</p>
+
+    <!-- Q1: Identificar IA generativa -->
+    <article class="question" data-q="1">
+      <div class="q-header">
+        <div class="q-number">1</div>
+        <div class="q-text">Le escribes esto a una herramienta y te contesta de forma natural, redactando un texto desde cero. ¿Qué es?</div>
+      </div>
+      <div class="showcase">
+        <div class="chat-mock">
+          <div class="chat-toolbar">
+            <div class="chat-toolbar-left">
+              <span class="chat-pill">Chat</span>
+              <span>Conversación nueva</span>
+            </div>
+          </div>
+          <div class="chat-body">
+            <div class="chat-msg user">Escríbeme un correo amable para confirmar la visita del lunes a la planta de O Porriño.</div>
+            <div class="chat-msg ai">
+              <span class="ai-label">Asistente</span>
+              «Estimado [Nombre], confirmamos la visita prevista para el lunes a nuestra planta de O Porriño. Te esperamos a las 10:00 en recepción y al llegar te entregaremos el equipo de protección…»
+            </div>
+          </div>
+          <div class="chat-input-fake">Escribe tu mensaje…</div>
+        </div>
+      </div>
+      <div class="options">
+        <button class="option" data-correct="true">
+          <span class="opt-letter">A</span>
+          <span>Es una <strong>IA generativa</strong>: un programa entrenado con millones de textos que es capaz de redactar, resumir, traducir o explicar a partir de lo que tú le pides en lenguaje natural. ChatGPT, Claude y Copilot son distintos «asistentes» que funcionan así por dentro.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">B</span>
+          <span>Es un buscador web de toda la vida que devuelve enlaces.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Es una macro de Word que rellena plantillas predefinidas.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q2: ChatGPT vs Claude vs Copilot -->
+    <article class="question" data-q="2">
+      <div class="q-header">
+        <div class="q-number">2</div>
+        <div class="q-text">Tu compañero te dice: «Yo uso ChatGPT, otro de I+D usa Claude y nos dijeron que tenemos Copilot M365». ¿Cuál es la diferencia clave que importa para CEAMSA?</div>
+      </div>
+      <div class="showcase">
+        <div class="compare-grid">
+          <div class="compare-card chatgpt">
+            <div class="compare-head"><span class="tool-icon chatgpt">G</span>ChatGPT</div>
+            <div class="compare-row"><b>Quién:</b> OpenAI</div>
+            <div class="compare-row"><b>Cuenta:</b> personal</div>
+            <div class="compare-row"><b>Datos:</b> fuera de CEAMSA</div>
+          </div>
+          <div class="compare-card claude">
+            <div class="compare-head"><span class="tool-icon claude">C</span>Claude</div>
+            <div class="compare-row"><b>Quién:</b> Anthropic</div>
+            <div class="compare-row"><b>Cuenta:</b> personal</div>
+            <div class="compare-row"><b>Datos:</b> fuera de CEAMSA</div>
+          </div>
+          <div class="compare-card copilot">
+            <div class="compare-head"><span class="tool-icon copilot">M</span>Copilot M365</div>
+            <div class="compare-row"><b>Quién:</b> Microsoft</div>
+            <div class="compare-row"><b>Cuenta:</b> CEAMSA</div>
+            <div class="compare-row"><b>Datos:</b> 🛡 protegidos</div>
+          </div>
+        </div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Son lo mismo, solo cambia el logo y quién las hace.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>Por capacidad pura las tres se parecen mucho. La diferencia que importa es <strong>dónde van tus datos</strong>: ChatGPT y Claude con cuenta personal son entornos <strong>fuera</strong> de CEAMSA — todo lo que escribes vive en sus servidores. <strong>M365 Copilot con tu cuenta de empresa</strong> trata tus datos como datos corporativos: no se usan para entrenar modelos públicos y se quedan dentro del perímetro de Microsoft 365 de CEAMSA.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>La única diferencia es el precio.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q3: El "escudo" -->
+    <article class="question" data-q="3">
+      <div class="q-header">
+        <div class="q-number">3</div>
+        <div class="q-text">Estás dentro de Copilot con tu cuenta de CEAMSA y ves este indicador de «protección de datos». ¿Qué quiere decir exactamente?</div>
+      </div>
+      <div class="showcase">
+        <div class="chat-mock">
+          <div class="chat-toolbar">
+            <div class="chat-toolbar-left">
+              <span class="chat-pill">Copilot</span>
+              <span>asanchez@ceamsa.com</span>
+            </div>
+            <span class="chat-shield">Protegido para CEAMSA</span>
+          </div>
+          <div class="chat-body">
+            <div class="chat-msg user">Resúmeme las hojas de seguridad de los productos que envía el departamento de calidad.</div>
+            <div class="chat-msg ai">
+              <span class="ai-label">Copilot</span>
+              «Claro. ¿Quieres el resumen general o el de un producto en concreto? Puedo trabajar con los documentos compartidos contigo en SharePoint».
+            </div>
+          </div>
+          <div class="chat-input-fake">Escribe tu mensaje…</div>
+        </div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Que Copilot encripta tus mensajes con una contraseña tuya personal.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>Significa que estás en un <strong>entorno corporativo</strong>: lo que escribes <strong>no se utiliza para entrenar modelos públicos</strong>, se queda dentro del tenant de Microsoft 365 de CEAMSA y respeta los permisos que ya tienes (solo te muestra lo que ya podías ver). Es el motivo por el que aquí SÍ puedes hablar de información interna.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Que has activado el modo «sin internet».</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q4: Copilot en Edge sidebar -->
+    <article class="question" data-q="4">
+      <div class="q-header">
+        <div class="q-number">4</div>
+        <div class="q-text">Estás navegando por una <strong>noticia de mercado de hidrocoloides</strong> y abres este panel lateral en el navegador. ¿Qué es y para qué te sirve?</div>
+      </div>
+      <div class="showcase">
+        <div class="edge-mock">
+          <div class="edge-page">
+            <div class="edge-page-title">Mercado mundial de carragenanos · informe sectorial 2026</div>
+            <div class="edge-page-line"></div>
+            <div class="edge-page-line"></div>
+            <div class="edge-page-line short"></div>
+            <div class="edge-page-line"></div>
+            <div class="edge-page-line shorter"></div>
+            <div class="edge-page-line"></div>
+          </div>
+          <div class="edge-sidebar">
+            <div class="edge-sidebar-head"><span class="tool-icon copilot">M</span>Copilot</div>
+            <div class="edge-prompt">Resúmeme esta página en 5 puntos.</div>
+            <div class="edge-bullet">• Crecimiento estimado del sector…</div>
+            <div class="edge-bullet">• Principales productores…</div>
+            <div class="edge-bullet">• Tendencias clave…</div>
+          </div>
+        </div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Es un traductor automático de Edge.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>Es <strong>Copilot dentro del navegador Edge</strong> (panel lateral). Te resume la página que estás leyendo, te la traduce, te explica un párrafo concreto o responde preguntas sobre ella sin tener que copiar y pegar nada. Súper útil para informes sectoriales, noticias largas o documentación técnica en inglés.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Son los marcadores favoritos del navegador.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q5: Buen prompt vs mal prompt -->
+    <article class="question" data-q="5">
+      <div class="q-header">
+        <div class="q-number">5</div>
+        <div class="q-text">Estos dos prompts piden lo mismo. ¿Cuál va a dar mejor resultado y por qué?</div>
+      </div>
+      <div class="showcase">
+        <div class="prompt-row">
+          <div class="prompt-card bad">
+            <span class="prompt-tag bad">Prompt A</span>
+            <div class="prompt-text">«Hazme un correo de visita.»</div>
+          </div>
+          <div class="prompt-card good">
+            <span class="prompt-tag good">Prompt B</span>
+            <div class="prompt-text">«<em>Actúa como responsable comercial</em>. <em>Redacta un correo</em> a un cliente para confirmar una visita comercial el lunes a las 10:00 a nuestra planta. <em>Tono cordial y profesional</em>, en castellano, <em>máx. 8 líneas</em>, terminando con dos preguntas para que confirme asistencia.»</div>
+          </div>
+        </div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>El A, porque es más corto.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>El <strong>B</strong>. Trae <strong>rol</strong> («actúa como responsable comercial»), <strong>objetivo claro</strong> («redacta un correo para confirmar visita»), <strong>contexto</strong> (lunes 10:00, planta), <strong>ejemplo de tono</strong> (cordial, profesional, castellano) y <strong>formato</strong> (máx. 8 líneas, dos preguntas al final). Cuanto más concreto eres, menos «relleno» te toca corregir tú después.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Da igual, la IA acaba sacando lo mismo en los dos casos.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+  </section>
+
+  <!-- ============ SECCIÓN B: Empareja MÉTODO ROCEF ============ -->
+  <section class="section">
+    <span class="section-tag">Bloque 2 · Emparejar</span>
+    <h2 class="section-title">El MÉTODO ROCEF · empareja letra ↔ definición</h2>
+    <p class="section-desc">Las cinco piezas que convierten un prompt mediocre en un prompt útil. Pulsa primero una letra y después la pieza que le corresponde.</p>
+
+    <article class="question" data-q="match">
+      <div class="match-grid">
+        <div>
+          <div class="match-col-title">Letra</div>
+          <button class="match-item" data-side="left" data-id="rol">
+            <span class="rocef-letter">R</span>
+            <span><strong>Rol</strong></span>
+          </button>
+          <button class="match-item" data-side="left" data-id="obj">
+            <span class="rocef-letter">O</span>
+            <span><strong>Objetivo</strong></span>
+          </button>
+          <button class="match-item" data-side="left" data-id="ctx">
+            <span class="rocef-letter">C</span>
+            <span><strong>Contexto</strong></span>
+          </button>
+          <button class="match-item" data-side="left" data-id="ej">
+            <span class="rocef-letter">E</span>
+            <span><strong>Ejemplo</strong></span>
+          </button>
+          <button class="match-item" data-side="left" data-id="fmt">
+            <span class="rocef-letter">F</span>
+            <span><strong>Formato</strong></span>
+          </button>
+        </div>
+        <div>
+          <div class="match-col-title">Qué significa</div>
+          <button class="match-item" data-side="right" data-id="ctx">
+            <span>📚 «Es para un cliente del sector lácteo, llevamos dos años trabajando con él, ya conoce la carragenina kappa…». Toda la información de fondo que la IA no puede adivinar.</span>
+          </button>
+          <button class="match-item" data-side="right" data-id="rol">
+            <span>🎭 «Actúa como responsable comercial / experto en seguridad alimentaria / técnico de I+D». Le dices desde qué punto de vista quieres que escriba.</span>
+          </button>
+          <button class="match-item" data-side="right" data-id="fmt">
+            <span>📐 «Resúmemelo en una tabla de 3 columnas / en 5 viñetas / en máximo 8 líneas / como correo formal». Cómo quieres que te entregue la respuesta.</span>
+          </button>
+          <button class="match-item" data-side="right" data-id="obj">
+            <span>🎯 «Redacta un correo para confirmar la visita» / «Compárame estos dos textos». La acción concreta que quieres que haga.</span>
+          </button>
+          <button class="match-item" data-side="right" data-id="ej">
+            <span>💡 «Aquí tienes un correo similar que mandé el mes pasado, con este mismo tono». Le enseñas un patrón para que lo imite.</span>
+          </button>
+        </div>
+      </div>
+      <div class="feedback"></div>
+    </article>
+  </section>
+
+  <!-- ============ SECCIÓN C: Casos reales ============ -->
+  <section class="section">
+    <span class="section-tag">Bloque 3 · Aplicar</span>
+    <h2 class="section-title">Casos reales del día a día</h2>
+    <p class="section-desc">Aquí no hay icono que reconocer: hay que <strong>decidir</strong> qué hacer. Son situaciones que te vas a encontrar mañana.</p>
+
+    <!-- Q6: Datos confidenciales hidrocoloides -->
+    <article class="question" data-q="6">
+      <div class="q-header">
+        <div class="q-number">6</div>
+        <div class="q-text">Tienes un documento interno con la <strong>fórmula de un nuevo gelificante para un cliente</strong>. Quieres pedirle a la IA que te redacte una ficha técnica resumida. ¿Dónde lo haces?</div>
+      </div>
+      <div class="showcase" style="display:flex;justify-content:center;gap:18px;flex-wrap:wrap;align-items:center;">
+        <div class="tool-chip"><span class="tool-icon chatgpt">G</span>ChatGPT gratis <span class="chat-no-shield" style="margin-left:4px;">Sin escudo</span></div>
+        <div class="tool-chip"><span class="tool-icon claude">C</span>Claude gratis <span class="chat-no-shield" style="margin-left:4px;">Sin escudo</span></div>
+        <div class="tool-chip"><span class="tool-icon copilot">M</span>Copilot CEAMSA <span class="chat-shield" style="margin-left:4px;">Con escudo</span></div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Lo pego en ChatGPT con mi cuenta personal, que va más rápido.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span><strong>Solo en Copilot con tu cuenta de CEAMSA</strong>. La fórmula de un producto es información confidencial: pegarla en ChatGPT o Claude personales saca esos datos del perímetro de la empresa. Dentro de Copilot corporativo se quedan protegidos por el «escudo» y, además, la IA puede usar permisos y documentos del propio SharePoint.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Lo paso a Word, le quito el nombre del cliente y lo pego en cualquier herramienta.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q7: Suavizar correo de queja con ROCEF -->
+    <article class="question" data-q="7">
+      <div class="q-header">
+        <div class="q-number">7</div>
+        <div class="q-text">Has escrito un correo a un proveedor protestando por un retraso. Te ha salido <strong>seco y un poco cortante</strong>. Quieres que Copilot te lo suavice. ¿Cuál es el mejor prompt?</div>
+      </div>
+      <div class="showcase">
+        <div class="prompt-row">
+          <div class="prompt-card bad">
+            <span class="prompt-tag bad">Prompt A</span>
+            <div class="prompt-text">«Mejóralo.»</div>
+          </div>
+          <div class="prompt-card good">
+            <span class="prompt-tag good">Prompt B</span>
+            <div class="prompt-text">«<em>Actúa como responsable de compras experimentado</em>. <em>Reescribe el siguiente correo</em> dirigido a un proveedor habitual con el que llevamos 5 años. <em>Mantén la queja por el retraso pero suaviza el tono</em>: que se note que estamos molestos pero quiero conservar la relación. <em>Profesional, cordial, máximo 10 líneas</em>. Termina pidiendo una nueva fecha de entrega. <br><br>Texto: [pego mi correo]»</div>
+          </div>
+        </div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>El A, total para que lo suavice no hace falta más.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>El <strong>B</strong>, porque aplica ROCEF: <strong>R</strong>ol (responsable de compras), <strong>O</strong>bjetivo (reescribir suavizando), <strong>C</strong>ontexto (proveedor de 5 años, no quiero romper la relación), <strong>E</strong>jemplo de tono (profesional, cordial), <strong>F</strong>ormato (máx. 10 líneas, terminando con petición). El A te dará un texto genérico que después tendrás que reescribir tú igualmente.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Mejor reenviar el original sin tocar.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q8: Alucinación -->
+    <article class="question" data-q="8">
+      <div class="q-header">
+        <div class="q-number">8</div>
+        <div class="q-text">Le pides a Copilot referencias normativas concretas sobre un aditivo y te suelta esta respuesta. ¿Qué haces?</div>
+      </div>
+      <div class="showcase">
+        <div class="chat-mock">
+          <div class="chat-toolbar">
+            <div class="chat-toolbar-left">
+              <span class="chat-pill">Copilot</span>
+              <span>Conversación</span>
+            </div>
+          </div>
+          <div class="chat-body">
+            <div class="chat-msg user">¿Qué dice el Reglamento UE 1129/2011 sobre el uso de carragenanos en lácteos infantiles?</div>
+            <div class="chat-msg ai">
+              <span class="ai-label">Copilot</span>
+              «El artículo 14.3 del Reglamento UE 1129/2011 establece un límite máximo de 250 mg/kg de carragenanos en preparados lácteos infantiles, modificado por el Reglamento delegado 2018/745…»
+              <span class="small">⚠ Datos no verificados manualmente.</span>
+            </div>
+          </div>
+          <div class="chat-input-fake">Escribe tu mensaje…</div>
+        </div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Lo copio tal cual a un correo y lo mando al cliente: si lo dice Copilot es que es correcto.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span><strong>Lo verifico antes de usarlo</strong>. Cuando la IA cita números exactos, artículos concretos o referencias normativas, puede estar <strong>«alucinando»</strong>: inventando datos plausibles pero falsos. La regla de oro: para cualquier dato que vayas a comunicar a un cliente o a tomar una decisión, comprueba la fuente original (el BOE, el reglamento europeo, la ficha de seguridad…). El humano valida siempre el resultado final.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Le pregunto a Copilot si está seguro y, si me dice que sí, ya está.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+    <!-- Q9: Comparar dos textos -->
+    <article class="question" data-q="9">
+      <div class="q-header">
+        <div class="q-number">9</div>
+        <div class="q-text">Tienes la <strong>ficha técnica de un producto en su versión antigua y en su versión nueva</strong>. Quieres saber qué ha cambiado entre las dos. ¿Cuál es el mejor uso de Copilot Chat aquí?</div>
+      </div>
+      <div class="options">
+        <button class="option">
+          <span class="opt-letter">A</span>
+          <span>Comparar a ojo párrafo por párrafo, total no son tantas páginas.</span>
+        </button>
+        <button class="option" data-correct="true">
+          <span class="opt-letter">B</span>
+          <span>Pegar los dos textos y pedirle: «<em>Actúa como técnico de control de calidad. Compárame estas dos versiones de la ficha técnica del producto X. Devuélveme una <strong>tabla de tres columnas</strong>: (1) sección, (2) qué dice la versión antigua, (3) qué dice la nueva. Marca claramente las diferencias y deja en blanco las secciones que son idénticas.</em>» Luego repaso la tabla y valido los puntos críticos.</span>
+        </button>
+        <button class="option">
+          <span class="opt-letter">C</span>
+          <span>Pasar el documento entero al cliente y que él me diga si hay cambios.</span>
+        </button>
+      </div>
+      <div class="feedback"></div>
+    </article>
+
+  </section>
+
+  <!-- ============ Resultado final ============ -->
+  <div class="final-card" id="final-card">
+    <div class="final-emoji" id="final-emoji">🎯</div>
+    <div class="final-title" id="final-title">¡Reto completado!</div>
+    <div class="final-score">Has acertado <strong id="final-score">0</strong> de 9 retos.</div>
+    <button class="restart-btn" onclick="restart()">↻ Volver a empezar</button>
+  </div>
+
+  <!-- ============ Cheat sheet ============ -->
+  <section class="legend">
+    <div class="legend-title">📌 Chuleta · 4 ideas para llevarte a casa</div>
+    <div class="legend-sub">Las cuatro reglas mentales que tienes que recordar al cerrar la sesión.</div>
+    <div class="legend-grid">
+      <div class="legend-card shield">
+        <div class="legend-card-title"><span class="tool-icon shield">🛡</span>El escudo</div>
+        <div class="legend-card-text">Información de CEAMSA → <strong>solo en Copilot con tu cuenta corporativa</strong>. Fuera de ahí (ChatGPT, Claude, Copilot sin login), trátalo como hablar en una cafetería: nada confidencial. <em>«Si no lo dirías en voz alta en el AVE, no lo pegues fuera del escudo».</em></div>
+      </div>
+      <div class="legend-card rocef">
+        <div class="legend-card-title"><span class="tool-icon copilot">📝</span>Método ROCEF</div>
+        <div class="legend-card-text"><strong>R</strong>ol · <strong>O</strong>bjetivo · <strong>C</strong>ontexto · <strong>E</strong>jemplo · <strong>F</strong>ormato. Con esas cinco piezas, un prompt mediocre se convierte en uno útil. <em>«Cuanto más concreto pides, menos tienes que reescribir».</em></div>
+      </div>
+      <div class="legend-card copilot">
+        <div class="legend-card-title"><span class="tool-icon copilot">M</span>Copilot Chat (gratis)</div>
+        <div class="legend-card-text">Para empezar te llega de sobra: <strong>resumir noticias, redactar correos, traducir, comparar textos, explicar conceptos</strong>. En el navegador Edge tienes el panel lateral siempre a mano. <em>«Tu copiloto para el día a día».</em></div>
+      </div>
+      <div class="legend-card verify">
+        <div class="legend-card-title"><span class="tool-icon copilot">✓</span>Tú validas</div>
+        <div class="legend-card-text">La IA <strong>puede equivocarse</strong> con datos, normativas, citas y números. A esto se le llama «alucinar». La última palabra siempre es del humano: <strong>verifica las fuentes antes de mandar nada al cliente</strong>. <em>«Copiloto, no piloto».</em></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Formación Microsoft 365 · Copilot Chat & IA para CEAMSA · Diseñado para <span>aprender pidiendo bien</span>
+</footer>
+
+<script>
+  let score = 0;
+  let answered = 0;
+  const totalQuestions = 9;
+
+  document.querySelectorAll('.question[data-q]').forEach(card => {
+    const qId = card.dataset.q;
+    if (qId === 'match') return;
+    const options = card.querySelectorAll('.option');
+    const feedback = card.querySelector('.feedback');
+    options.forEach(opt => {
+      opt.addEventListener('click', () => {
+        if (card.dataset.answered === 'true') return;
+        card.dataset.answered = 'true';
+        const isCorrect = opt.dataset.correct === 'true';
+        options.forEach(o => {
+          o.disabled = true;
+          if (o.dataset.correct === 'true') o.classList.add('correct');
+          else if (o === opt) o.classList.add('incorrect');
+          else o.classList.add('dimmed');
+        });
+        if (isCorrect) {
+          score++;
+          feedback.classList.add('correct');
+          feedback.innerHTML = '<strong>✓ Correcto</strong>' + getExplanation(qId);
+        } else {
+          feedback.classList.add('incorrect');
+          feedback.innerHTML = '<strong>✗ No es esa</strong>' + getExplanation(qId);
+        }
+        feedback.classList.add('show');
+        answered++;
+        updateProgress();
+      });
+    });
+  });
+
+  // Match
+  let leftSelected = null;
+  const matchedIds = new Set();
+  const matchTotal = 5;
+
+  document.querySelectorAll('.match-item').forEach(item => {
+    item.addEventListener('click', () => {
+      if (item.disabled || item.classList.contains('matched-correct')) return;
+      const side = item.dataset.side;
+      const id = item.dataset.id;
+      if (side === 'left') {
+        document.querySelectorAll('.match-item[data-side="left"]').forEach(i => {
+          if (!i.classList.contains('matched-correct')) i.classList.remove('selected');
+        });
+        item.classList.add('selected');
+        leftSelected = item;
+      } else if (side === 'right' && leftSelected) {
+        if (leftSelected.dataset.id === id) {
+          item.classList.add('matched-correct');
+          leftSelected.classList.remove('selected');
+          leftSelected.classList.add('matched-correct');
+          leftSelected.disabled = true;
+          item.disabled = true;
+          matchedIds.add(id);
+          if (matchedIds.size === matchTotal) {
+            score++;
+            const card = document.querySelector('.question[data-q="match"]');
+            const fb = card.querySelector('.feedback');
+            fb.classList.add('correct', 'show');
+            fb.innerHTML = '<strong>✓ ¡ROCEF dominado!</strong>La regla mental: cuando un prompt no salga bien, repasa qué le falta de las cinco piezas. Casi siempre falla el <em>contexto</em> («no le he contado quién es el cliente») o el <em>formato</em> («no le he dicho cómo quiero el resultado»).';
+            answered++;
+            updateProgress();
+          }
+        } else {
+          item.classList.add('matched-wrong');
+          setTimeout(() => item.classList.remove('matched-wrong'), 400);
+          leftSelected.classList.remove('selected');
+          leftSelected = null;
+        }
+      }
+    });
+  });
+
+  function updateProgress() {
+    document.getElementById('score').textContent = score;
+    document.getElementById('progress-text').textContent = `${answered} / ${totalQuestions}`;
+    document.getElementById('progress-fill').style.width = `${(answered / totalQuestions) * 100}%`;
+    if (answered === totalQuestions) setTimeout(showFinal, 600);
+  }
+
+  function showFinal() {
+    const finalCard = document.getElementById('final-card');
+    const finalScore = document.getElementById('final-score');
+    const finalEmoji = document.getElementById('final-emoji');
+    const finalTitle = document.getElementById('final-title');
+    finalScore.textContent = score;
+    if (score >= 8)      { finalEmoji.textContent = '🏆'; finalTitle.textContent = '¡Crack del prompting!'; }
+    else if (score >= 6) { finalEmoji.textContent = '👏'; finalTitle.textContent = '¡Muy bien!'; }
+    else if (score >= 4) { finalEmoji.textContent = '💪'; finalTitle.textContent = 'Vas por buen camino'; }
+    else                 { finalEmoji.textContent = '📘'; finalTitle.textContent = 'A repasar la chuleta'; }
+    finalCard.classList.add('show');
+    finalCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function restart() { location.reload(); }
+
+  function getExplanation(qId) {
+    const ex = {
+      '1': 'Una <strong>IA generativa</strong> no busca, <em>genera</em>: redacta, resume, traduce, propone. ChatGPT, Claude y Copilot son distintos «sabores» de la misma idea — modelos enormes entrenados con texto que responden en lenguaje natural.',
+      '2': 'La diferencia fundamental para CEAMSA <strong>no es de capacidad, es de privacidad</strong>: ChatGPT y Claude con cuenta personal son entornos públicos; M365 Copilot con cuenta corporativa trata tus datos como datos de empresa. Por eso la regla de hoy es tan rotunda: información interna → solo Copilot corporativo.',
+      '3': 'El indicador «Protegido para CEAMSA» es la <strong>seña de que estás dentro del perímetro de Microsoft 365 de la empresa</strong>: tus mensajes no entrenan modelos públicos, se quedan en el tenant y se aplican los permisos que ya tienes. Es la única razón por la que aquí SÍ es seguro hablar de información interna.',
+      '4': 'El panel lateral de Edge es <strong>Copilot integrado en el navegador</strong>: lee la página que tienes abierta y te la resume, te la traduce o te explica un párrafo. Caso típico: informes sectoriales largos en inglés, noticias de mercado, normativas técnicas.',
+      '5': 'La diferencia no es «escribir más», es <strong>dar las cinco piezas que la IA no puede adivinar</strong>: rol, objetivo, contexto, ejemplo y formato (ROCEF). El A te obliga a corregir tú a mano lo que sale; el B te ahorra reescritura porque sale ya casi listo.',
+      '6': 'La regla del «escudo» es <strong>no negociable</strong>: información confidencial de CEAMSA solo dentro de Copilot corporativo. Quitar el nombre del cliente <strong>no</strong> es suficiente — la fórmula sigue siendo confidencial. Y además, dentro de Copilot corporativo puedes apuntar al SharePoint y trabajar con los documentos directamente.',
+      '7': 'El método <strong>ROCEF</strong> en estado puro: rol, objetivo, contexto, ejemplo de tono y formato. Cuando un prompt salga mal, repasa cuál de las cinco piezas le falta — casi siempre falla el <em>contexto</em> («no le has contado a quién va dirigido») o el <em>formato</em> («no le has dicho cómo quieres la respuesta»).',
+      '8': 'A esto se le llama <strong>alucinación</strong>: la IA es tan buena imitando lenguaje técnico que puede inventarse artículos, números o reglamentos que <em>parecen</em> reales. Para datos críticos —normativas, cifras, citas, fechas— <strong>verifica siempre la fuente original</strong> antes de comunicarlo a un cliente. El humano valida.',
+      '9': 'Pedir una <strong>tabla comparativa</strong> es uno de los usos más rentables de Copilot Chat. Aplicas ROCEF (rol = técnico de calidad, objetivo = comparar, formato = tabla de 3 columnas) y conviertes media mañana de lectura en cinco minutos de revisión.'
+    };
+    return ex[qId] ? '<br>' + ex[qId] : '';
+  }
+</script>
+
+</body>
+</html>
