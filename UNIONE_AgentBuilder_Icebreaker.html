@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banco de Pruebas · Ensamblaje de Agente IA · UNIONE Movilidad</title>
+    <style>
+        :root {
+            /* UNIONE Brand Colors — oficiales, no sustituir */
+            --unione-teal:    #36A79A;
+            --unione-mint:    #CCECE8;
+            --unione-black:   #000000;
+            --unione-gray:    #EFEFEF;
+            --unione-white:   #FFFFFF;
+
+            /* Variantes oscuras para fondo de taller */
+            --bg-dark:        #051614;
+            --bg-darker:      #020d0b;
+            --panel-bg:       #0d2420;
+            --panel-raised:   #122e29;
+
+            /* Texto */
+            --text-light:     #f0faf9;
+            --text-dim:       #6aaba5;
+
+            /* Funcionales */
+            --accent-teal:    #36A79A;
+            --accent-mint:    #CCECE8;
+            --accent-amber:   #f59e0b;
+            --safe-green:     #10b981;
+            --danger:         #ef4444;
+            --metal:          #1e4a44;
+            --metal-bright:   #2d6b64;
+            --pipe:           #153b36;
+            --pipe-glow:      #1e5550;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            background-image:
+                radial-gradient(circle at 18% 12%, rgba(54,167,154,0.10) 0%, transparent 45%),
+                radial-gradient(circle at 82% 88%, rgba(204,236,232,0.05) 0%, transparent 40%),
+                linear-gradient(rgba(54,167,154,0.055) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(54,167,154,0.055) 1px, transparent 1px);
+            background-size: auto, auto, 42px 42px, 42px 42px;
+            color: var(--text-light);
+            margin: 0;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* ======= HEADER ======= */
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+            max-width: 1020px;
+            width: 100%;
+        }
+
+        /* UNIONE brand strip */
+        .brand-strip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 11px 24px;
+            background: linear-gradient(92deg, var(--unione-teal) 0%, #28897d 100%);
+            border-radius: 8px 8px 0 0;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-weight: 700;
+            letter-spacing: 1.8px;
+            font-size: 0.8em;
+            color: white;
+            box-shadow: 0 0 24px rgba(54,167,154,0.35);
+        }
+
+        .brand-left { display: flex; gap: 14px; align-items: center; }
+        .brand-right { display: flex; gap: 11px; align-items: center; font-size: 0.95em; }
+
+        /* Símbolo UNIONE: cuatro cuadrados 2×2 */
+        .unione-mark {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5px;
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        .unione-mark span {
+            background: white;
+            border-radius: 1.5px;
+        }
+        .unione-mark span:nth-child(2)  { opacity: 0.72; }
+        .unione-mark span:nth-child(3)  { opacity: 0.86; }
+        .unione-mark span:nth-child(4)  { opacity: 0.55; }
+
+        .led {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: var(--safe-green);
+            box-shadow: 0 0 8px var(--safe-green);
+            animation: blink-led 2.4s infinite;
+        }
+        .led.amber { background: var(--accent-amber); box-shadow: 0 0 8px var(--accent-amber); }
+        .led.red   { background: var(--danger);       box-shadow: 0 0 8px var(--danger);       }
+
+        @keyframes blink-led {
+            0%, 88%, 100% { opacity: 1; }
+            94% { opacity: 0.25; }
+        }
+
+        .header-main {
+            background: var(--panel-bg);
+            border: 1px solid var(--metal);
+            border-top: none;
+            padding: 28px 34px 24px;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .header h1 {
+            color: var(--text-light);
+            margin: 0 0 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-size: 1.75em;
+            line-height: 1.2;
+        }
+        .header h1 .accent { color: var(--accent-teal); }
+        .header .subtitle {
+            color: var(--text-dim);
+            font-size: 0.98em;
+            line-height: 1.65;
+            margin: 0;
+        }
+
+        .mission-box {
+            background: var(--bg-darker);
+            border: 1px solid var(--accent-teal);
+            border-left: 4px solid var(--accent-teal);
+            padding: 13px 18px;
+            border-radius: 4px;
+            margin-top: 18px;
+            font-size: 0.97em;
+            color: var(--accent-mint);
+            text-align: left;
+            box-shadow: inset 0 0 22px rgba(54,167,154,0.07);
+            line-height: 1.6;
+        }
+        .mission-box strong { color: var(--accent-teal); }
+
+        /* Leyenda de tipos de pieza */
+        .legend-strip {
+            display: flex;
+            gap: 22px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.76em;
+            color: var(--text-dim);
+            letter-spacing: 0.5px;
+        }
+        .legend-swatch {
+            width: 28px; height: 13px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+        .legend-swatch.role { background: #3b0764; border: 2px solid #a855f7; border-radius: 3px 10px 3px 10px; }
+        .legend-swatch.data { background: #78350f; border: 2px solid var(--accent-amber); border-radius: 20px; }
+        .legend-swatch.rule { background: #064e3b; border: 2px solid var(--safe-green); border-left: 6px solid var(--safe-green); border-right: 6px solid var(--safe-green); border-radius: 2px; }
+
+        /* ======= WORKSPACE ======= */
+        .workspace {
+            display: grid;
+            grid-template-columns: 490px 1fr;
+            gap: 30px;
+            width: 100%;
+            max-width: 1370px;
+        }
+
+        /* ======= BANCO DE PRUEBAS ======= */
+        .control-panel {
+            background: linear-gradient(155deg, #122e29 0%, #0a1f1c 100%);
+            border: 2px solid var(--metal-bright);
+            border-radius: 12px;
+            padding: 26px;
+            position: relative;
+            box-shadow:
+                inset 0 2px 0 rgba(54,167,154,0.07),
+                inset 0 -2px 0 rgba(0,0,0,0.45),
+                0 12px 32px rgba(0,0,0,0.55),
+                0 0 45px rgba(54,167,154,0.04);
+        }
+
+        /* Tuercas decorativas en las esquinas */
+        .control-panel::before,
+        .control-panel::after {
+            content: "✕";
+            position: absolute;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #4a9490, #1a4540);
+            box-shadow: inset 0 0 3px rgba(0,0,0,0.8), 0 0 5px rgba(54,167,154,0.2);
+            font-size: 0px;   /* solo decorativo */
+        }
+        .control-panel::before { top: 10px; left: 10px; }
+        .control-panel::after  { top: 10px; right: 10px; }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--pipe);
+            padding-bottom: 14px;
+            margin-bottom: 22px;
+        }
+        .panel-header h2 {
+            margin: 0;
+            color: var(--accent-teal);
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 1.02em;
+            letter-spacing: 1.8px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .rpm-readout {
+            font-family: 'Courier New', monospace;
+            font-size: 0.78em;
+            color: var(--accent-amber);
+            background: black;
+            padding: 3px 11px;
+            border-radius: 4px;
+            border: 1px solid var(--accent-amber);
+            letter-spacing: 1px;
+            transition: color 0.5s, border-color 0.5s;
+        }
+
+        .slot-container {
+            margin-bottom: 26px;
+            position: relative;
+        }
+
+        .slot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .slot-label {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            font-size: 0.75em;
+            letter-spacing: 1.6px;
+            font-weight: 600;
+        }
+        .slot-label .icon { margin-right: 6px; font-size: 1.1em; }
+        .slot-label .module-id { color: var(--accent-amber); font-weight: 800; }
+
+        .slot-status {
+            font-family: 'Courier New', monospace;
+            font-size: 0.68em;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Anclajes de motor */
+        .drop-slot {
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(0,0,0,0.38), rgba(0,0,0,0.38) 6px,
+                rgba(0,0,0,0.18) 6px, rgba(0,0,0,0.18) 12px
+            );
+            min-height: 85px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            position: relative;
+            padding: 8px;
+        }
+        .drop-slot::before {
+            content: "— INSERTAR PIEZA —";
+            color: #1a4440;
+            font-family: 'Courier New', monospace;
+            font-size: 0.82em;
+            letter-spacing: 2.5px;
+            position: absolute;
+            z-index: 0;
+        }
+        .drop-slot:has(.component)::before { display: none; }
+        .drop-slot.drag-over {
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(54,167,154,0.18), rgba(54,167,154,0.18) 6px,
+                rgba(54,167,154,0.06) 6px, rgba(54,167,154,0.06) 12px
+            );
+            box-shadow: inset 0 0 18px rgba(54,167,154,0.32);
+        }
+
+        /* MOD-01 ECU — chip/procesador (forma asimétrica) */
+        #slot-role {
+            border: 3px dashed #a855f7;
+            border-radius: 3px 18px 3px 18px;
+            box-shadow: inset 0 0 12px rgba(168,85,247,0.12);
+        }
+        /* MOD-02 Depósito — cilíndrico/píldora */
+        #slot-data {
+            border: 3px dashed var(--accent-amber);
+            border-radius: 50px;
+            box-shadow: inset 0 0 12px rgba(245,158,11,0.12);
+        }
+        /* MOD-03 Regulador — válvula (bridas anchas) */
+        #slot-rule {
+            border: 3px dashed var(--safe-green);
+            border-left-width: 10px;
+            border-right-width: 10px;
+            border-radius: 4px;
+            box-shadow: inset 0 0 12px rgba(16,185,129,0.12);
+        }
+
+        /* Mangueta/cable entre anclajes */
+        .pipe-connector {
+            width: 4px;
+            height: 26px;
+            background: linear-gradient(180deg, var(--accent-teal), var(--pipe-glow) 50%, var(--accent-teal));
+            margin: -13px auto -7px;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 0 6px rgba(54,167,154,0.28);
+            opacity: 0.65;
+        }
+        .pipe-connector::before,
+        .pipe-connector::after {
+            content: "";
+            position: absolute;
+            left: -5px;
+            width: 14px; height: 4px;
+            background: var(--metal-bright);
+            border-radius: 2px;
+        }
+        .pipe-connector::before { top: 3px; }
+        .pipe-connector::after  { bottom: 3px; }
+
+        /* ======= ALMACÉN DE PIEZAS ======= */
+        .inventory {
+            background: var(--panel-bg);
+            border: 1px solid var(--metal);
+            border-radius: 12px;
+            padding: 26px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .inventory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--pipe);
+            padding-bottom: 10px;
+            margin-bottom: -4px;
+        }
+        .inventory-header h2 {
+            margin: 0;
+            color: var(--accent-mint);
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 1.0em;
+            letter-spacing: 1.8px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .inventory-header .tag {
+            font-family: 'Courier New', monospace;
+            font-size: 0.68em;
+            color: var(--text-dim);
+            padding: 3px 9px;
+            border: 1px solid var(--pipe);
+            border-radius: 4px;
+        }
+
+        .component-group h3 {
+            margin: 0 0 12px;
+            font-size: 0.76em;
+            color: var(--text-dim);
+            border-bottom: 1px dashed var(--pipe);
+            padding-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-weight: 600;
+        }
+        .component-group h3 .ref-code {
+            color: var(--accent-amber);
+            font-weight: 800;
+        }
+
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+            gap: 14px;
+            min-height: 60px;
+            padding-bottom: 6px;
+        }
+
+        /* Piezas del motor IA */
+        .component {
+            background-color: #0e2520;
+            padding: 14px 16px;
+            cursor: grab;
+            font-size: 0.87em;
+            user-select: none;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.55);
+            transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+            display: flex;
+            align-items: center;
+            line-height: 1.48;
+            color: #cef0ec;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+        .component:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 15px rgba(0,0,0,0.65);
+            filter: brightness(1.2);
+        }
+        .component:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+            box-shadow: none;
+        }
+
+        /* ECU (MOD-01) — forma de chip asimétrico */
+        .type-role {
+            border: 2px solid #a855f7;
+            border-radius: 3px 18px 3px 18px;
+            background: linear-gradient(145deg, #3b0764, #0e2520);
+        }
+
+        /* Depósito (MOD-02) — forma cilíndrica/píldora */
+        .type-data {
+            border: 2px solid var(--accent-amber);
+            border-radius: 50px;
+            background: linear-gradient(145deg, #78350f, #0e2520);
+            padding-left: 22px;
+            padding-right: 22px;
+        }
+
+        /* Regulador (MOD-03) — válvula con bridas anchas */
+        .type-rule {
+            border: 2px solid var(--safe-green);
+            border-left: 10px solid var(--safe-green);
+            border-right: 10px solid var(--safe-green);
+            border-radius: 4px;
+            background: linear-gradient(145deg, #064e3b, #0e2520);
+        }
+
+        /* ======= CONTROLES ======= */
+        .controls {
+            margin-top: 42px;
+            text-align: center;
+            width: 100%;
+            max-width: 1370px;
+        }
+
+        .btn-start {
+            background: linear-gradient(180deg, var(--unione-teal) 0%, #287f74 100%);
+            color: white;
+            border: none;
+            padding: 18px 56px;
+            font-size: 1.12em;
+            font-weight: 800;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            box-shadow:
+                0 5px 0 #1a5a54,
+                0 8px 22px rgba(54,167,154,0.42);
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+        .btn-start:hover {
+            transform: translateY(2px);
+            box-shadow: 0 3px 0 #1a5a54, 0 5px 15px rgba(54,167,154,0.52);
+        }
+        .btn-start:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 transparent;
+        }
+        .btn-start .icon { margin-right: 10px; }
+
+        /* ======= DIAGNÓSTICO (terminal) ======= */
+        .terminal {
+            margin-top: 26px;
+            background: linear-gradient(180deg, #00080700 0%, #000000 100%);
+            background-color: #000a09;
+            border: 1px solid var(--pipe);
+            border-left: 4px solid var(--accent-teal);
+            border-radius: 0 6px 6px 0;
+            padding: 22px 28px;
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 1.02em;
+            min-height: 95px;
+            display: none;
+            text-align: left;
+            max-width: 1020px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.72;
+            box-shadow: inset 0 0 30px rgba(54,167,154,0.06);
+        }
+        .terminal-header {
+            color: var(--text-dim);
+            font-size: 0.76em;
+            border-bottom: 1px dashed #153b36;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            letter-spacing: 0.5px;
+        }
+
+        .text-success { color: var(--safe-green);   text-shadow: 0 0 8px rgba(16,185,129,0.5); }
+        .text-error   { color: var(--danger);        text-shadow: 0 0 8px rgba(239,68,68,0.5); }
+        .text-warning { color: var(--accent-amber);  text-shadow: 0 0 8px rgba(245,158,11,0.5); }
+        .text-info    { color: var(--accent-teal); }
+        .text-mint    { color: var(--accent-mint); }
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+
+        /* ======= RESPONSIVE ======= */
+        @media (max-width: 1060px) {
+            .workspace { grid-template-columns: 1fr; }
+            .brand-strip { flex-direction: column; gap: 8px; padding: 12px; text-align: center; }
+            .header h1 { font-size: 1.4em; }
+            .legend-strip { justify-content: center; }
+        }
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .header-main { padding: 18px 16px; }
+            .header h1 { font-size: 1.2em; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- =========================================================
+     ENCABEZADO
+     ========================================================= -->
+<div class="header">
+    <div class="brand-strip">
+        <div class="brand-left">
+            <div class="unione-mark">
+                <span></span><span></span><span></span><span></span>
+            </div>
+            <span>UNIONE MOVILIDAD =</span>
+            <span>·</span>
+            <span>TALLER DE AGENTES IA</span>
+        </div>
+        <div class="brand-right">
+            <span class="led"></span>
+            <span>ONLINE</span>
+            <span class="led amber"></span>
+            <span>MODO ENSAMBLAJE</span>
+        </div>
+    </div>
+
+    <div class="header-main">
+        <h1>Banco de Pruebas · Ensamblaje de <span class="accent">Agente IA</span></h1>
+        <p class="subtitle">
+            Nuestros asesores de movilidad necesitan un copiloto inteligente que ayude a los clientes desde la primera consulta hasta la entrega del vehículo.
+            Selecciona las <strong>3 piezas correctas</strong> e insértalas en los anclajes del banco de pruebas.
+            Un motor mal ensamblado puede dejar al cliente — y al equipo — tirado en carretera.
+        </p>
+        <div class="mission-box">
+            &gt; <strong>OBJETIVO:</strong> Ensamblar el agente <strong>"UnioneBot"</strong> — asesor virtual de movilidad para clientes de UNIONE. Debe orientar con pasión e innovación sobre toda la gama: Mercedes-Benz, Mitsubishi, Omoda, BYD y Moovers, derivando al equipo humano cuando sea necesario.
+        </div>
+        <div class="legend-strip">
+            <div class="legend-item">
+                <div class="legend-swatch role"></div>
+                MOD-01 · Chip ECU — Personalidad
+            </div>
+            <div class="legend-item">
+                <div class="legend-swatch data"></div>
+                MOD-02 · Depósito — Conocimiento
+            </div>
+            <div class="legend-item">
+                <div class="legend-swatch rule"></div>
+                MOD-03 · Regulador — Conducta
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================
+     WORKSPACE
+     ========================================================= -->
+<div class="workspace">
+
+    <!-- BANCO DE PRUEBAS (anclajes del motor) -->
+    <div class="control-panel">
+        <div class="panel-header">
+            <h2>⚙ Anclajes del Motor</h2>
+            <span class="rpm-readout" id="rpm-display">RPM: 0</span>
+        </div>
+
+        <!-- Anclaje 1: ECU / Personalidad -->
+        <div class="slot-container">
+            <div class="slot-header">
+                <span class="slot-label">
+                    <span class="icon">🧠</span>
+                    <span class="module-id">MOD-01</span> · ECU — PERSONALIDAD DEL AGENTE
+                </span>
+                <span class="slot-status" id="status-role"><span class="led red"></span>SIN PIEZA</span>
+            </div>
+            <div class="drop-slot" id="slot-role" data-type="role"
+                 ondrop="drop(event)" ondragover="allowDrop(event)"
+                 ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+            </div>
+        </div>
+
+        <div class="pipe-connector"></div>
+
+        <!-- Anclaje 2: Depósito / Conocimiento -->
+        <div class="slot-container">
+            <div class="slot-header">
+                <span class="slot-label">
+                    <span class="icon">⛽</span>
+                    <span class="module-id">MOD-02</span> · DEPÓSITO — FUENTE DE CONOCIMIENTO
+                </span>
+                <span class="slot-status" id="status-data"><span class="led red"></span>SIN PIEZA</span>
+            </div>
+            <div class="drop-slot" id="slot-data" data-type="data"
+                 ondrop="drop(event)" ondragover="allowDrop(event)"
+                 ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+            </div>
+        </div>
+
+        <div class="pipe-connector"></div>
+
+        <!-- Anclaje 3: Regulador / Conducta -->
+        <div class="slot-container">
+            <div class="slot-header">
+                <span class="slot-label">
+                    <span class="icon">🔧</span>
+                    <span class="module-id">MOD-03</span> · REGULADOR — PROTOCOLO DE CONDUCTA
+                </span>
+                <span class="slot-status" id="status-rule"><span class="led red"></span>SIN PIEZA</span>
+            </div>
+            <div class="drop-slot" id="slot-rule" data-type="rule"
+                 ondrop="drop(event)" ondragover="allowDrop(event)"
+                 ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+            </div>
+        </div>
+    </div>
+
+    <!-- ALMACÉN DE PIEZAS -->
+    <div class="inventory">
+        <div class="inventory-header">
+            <h2>⚙ Almacén de Piezas</h2>
+            <span class="tag">STOCK · UNIONE HQ</span>
+        </div>
+
+        <!-- MOD-01: Chips de Personalidad -->
+        <div class="component-group">
+            <h3>&gt; <span class="ref-code">[MOD-01]</span> Chips ECU — Personalidad del Agente (Arrastra al Anclaje)</h3>
+            <div class="components-grid drop-slot-inv" id="inv-role" data-type="role"
+                 ondrop="drop(event)" ondragover="allowDrop(event)">
+
+                <div class="component type-role" draggable="true" ondragstart="drag(event)" id="role-aggressive">
+                    🏎️ Vendedor de cierre agresivo: maximiza el ticket medio a toda costa y nunca menciona defectos del vehículo ni alternativas al cliente.
+                </div>
+                <div class="component type-role" draggable="true" ondragstart="drag(event)" id="role-generic">
+                    🤖 Chatbot genérico sin contexto automotriz: responde de forma estándar sin conocimiento de marcas, modelos ni procesos de UNIONE.
+                </div>
+                <div class="component type-role" draggable="true" ondragstart="drag(event)" id="role-correct">
+                    🌟 Asesor de movilidad UNIONE: experto, cercano y personalizado. Conecta personas con soluciones de movilidad con pasión e innovación.
+                </div>
+            </div>
+        </div>
+
+        <!-- MOD-02: Cartuchos de Conocimiento -->
+        <div class="component-group">
+            <h3>&gt; <span class="ref-code">[MOD-02]</span> Depósito — Fuentes de Conocimiento (Arrastra al Anclaje)</h3>
+            <div class="components-grid drop-slot-inv" id="inv-data" data-type="data"
+                 ondrop="drop(event)" ondragover="allowDrop(event)">
+
+                <div class="component type-data" draggable="true" ondragstart="drag(event)" id="data-forum">
+                    💬 Foro_Tuning_ESP_Reddit_Hilos_2024.html (opiniones de aficionados, sin verificar)
+                </div>
+                <div class="component type-data" draggable="true" ondragstart="drag(event)" id="data-competitor">
+                    📊 Precios_Competencia_Benchmarking_Scrapeado.xlsx (datos de terceros desactualizados)
+                </div>
+                <div class="component type-data" draggable="true" ondragstart="drag(event)" id="data-correct">
+                    📘 Catalogo_UNIONE_MercedesBenz_2025.pdf + Manual_Producto_EQS_EQE_GLC.pdf (fuentes oficiales)
+                </div>
+            </div>
+        </div>
+
+        <!-- MOD-03: Reguladores de Conducta -->
+        <div class="component-group">
+            <h3>&gt; <span class="ref-code">[MOD-03]</span> Regulador — Protocolo de Conducta (Arrastra al Anclaje)</h3>
+            <div class="components-grid drop-slot-inv" id="inv-rule" data-type="rule"
+                 ondrop="drop(event)" ondragover="allowDrop(event)">
+
+                <div class="component type-rule" draggable="true" ondragstart="drag(event)" id="rule-improvise">
+                    ⚠️ Si no tienes el precio o la disponibilidad exacta, estima basándote en campañas antiguas o en lo que parezca razonable al momento.
+                </div>
+                <div class="component type-rule" draggable="true" ondragstart="drag(event)" id="rule-jargon">
+                    🔩 Responde siempre con especificaciones técnicas completas: cilindrada, par motor (Nm), normativa Euro 7 y ciclo WLTP. Sin simplificar nunca.
+                </div>
+                <div class="component type-rule" draggable="true" ondragstart="drag(event)" id="rule-correct">
+                    ✅ Ante consultas de precios, stock o aspectos legales, deriva siempre al asesor humano de UNIONE. El agente orienta, el equipo confirma.
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- =========================================================
+     CONTROLES + DIAGNÓSTICO
+     ========================================================= -->
+<div class="controls">
+    <button class="btn-start" onclick="arrancarAgente()">
+        <span class="icon">▶</span>Arrancar Motor · Probar Agente
+    </button>
+    <div class="terminal" id="terminal"></div>
+</div>
+
+<!-- =========================================================
+     JAVASCRIPT
+     ========================================================= -->
+<script>
+    /* ── Drag & Drop ── */
+    function allowDrop(ev) { ev.preventDefault(); }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("text", ev.target.id);
+        ev.dataTransfer.setData("type",
+            ev.target.classList.contains('type-role') ? 'role' :
+            ev.target.classList.contains('type-data') ? 'data' : 'rule'
+        );
+    }
+
+    function dragEnter(ev) {
+        ev.preventDefault();
+        let slot = ev.target.closest('.drop-slot');
+        if (slot) slot.classList.add('drag-over');
+    }
+
+    function dragLeave(ev) {
+        let slot = ev.target.closest('.drop-slot');
+        if (slot) slot.classList.remove('drag-over');
+    }
+
+    function drop(ev) {
+        ev.preventDefault();
+        let draggedId   = ev.dataTransfer.getData("text");
+        let draggedType = ev.dataTransfer.getData("type");
+        let dropZone    = ev.target.closest('.drop-slot') || ev.target.closest('.drop-slot-inv');
+
+        if (dropZone) {
+            if (dropZone.classList.contains('drop-slot')) dropZone.classList.remove('drag-over');
+
+            let zoneType = dropZone.getAttribute('data-type');
+            if (zoneType === draggedType) {
+                /* Si el anclaje ya tenía pieza, devuélvela al almacén */
+                if (dropZone.id.startsWith('slot-') && dropZone.children.length > 0) {
+                    let existing = dropZone.children[0];
+                    document.getElementById('inv-' + zoneType).appendChild(existing);
+                }
+                dropZone.appendChild(document.getElementById(draggedId));
+                updateSlotStatus();
+            }
+        }
+        document.getElementById('terminal').style.display = 'none';
+    }
+
+    function updateSlotStatus() {
+        const map = { role: 'status-role', data: 'status-data', rule: 'status-rule' };
+        ['role', 'data', 'rule'].forEach(type => {
+            let slot     = document.getElementById('slot-' + type);
+            let statusEl = document.getElementById(map[type]);
+            statusEl.innerHTML = slot.children.length > 0
+                ? '<span class="led"></span>PIEZA OK'
+                : '<span class="led red"></span>SIN PIEZA';
+        });
+    }
+
+    /* ── Arrancar agente ── */
+    function arrancarAgente() {
+        let slotRole = document.getElementById('slot-role').children[0];
+        let slotData = document.getElementById('slot-data').children[0];
+        let slotRule = document.getElementById('slot-rule').children[0];
+        let terminal = document.getElementById('terminal');
+
+        terminal.style.display = 'block';
+        terminal.innerHTML =
+            "<div class='terminal-header'>" +
+                "<span>[UNIONEBOT v1.0 · TALLER IA — UNIONE MOVILIDAD]</span>" +
+                "<span>CALENTANDO MOTOR...</span>" +
+            "</div>" +
+            "<span class='text-info'>&gt; Comprobando circuitos del agente...</span><br>" +
+            "<span class='text-info'>&gt; Ensamblando piezas del motor IA</span> <span class='blink'>_</span>";
+
+        /* Piezas incompletas */
+        if (!slotRole || !slotData || !slotRule) {
+            setTimeout(() => {
+                terminal.innerHTML +=
+                    "<br><br><span class='text-error'>" +
+                    "[ERROR 0x01] MOTOR INCOMPLETO · Faltan piezas en los anclajes del banco. " +
+                    "Revisa los 3 módulos antes de arrancar." +
+                    "</span>";
+            }, 420);
+            return;
+        }
+
+        let idRole = slotRole.id;
+        let idData = slotData.id;
+        let idRule = slotRule.id;
+
+        setTimeout(() => {
+            terminal.innerHTML =
+                "<div class='terminal-header'>" +
+                    "<span>[UNIONEBOT v1.0 · TALLER IA — UNIONE MOVILIDAD]</span>" +
+                    "<span>DIAGNÓSTICO EN CURSO</span>" +
+                "</div>" +
+                "<span class='text-info'>&gt; Analizando configuración del agente...</span><br><br>";
+
+            /* ── Prioridad de errores: DATOS > REGLAS > ROL ── */
+
+            if (idData === 'data-forum') {
+                terminal.innerHTML +=
+                    "<span class='text-error'>[COMBUSTIBLE ADULTERADO · FUENTE NO OFICIAL] ❌<br>" +
+                    "El agente ha recomendado a un cliente instalar un 'chip de potencia de YouTube' en su EQS 450+ con garantía oficial activa.<br>" +
+                    "→ Garantía Mercedes-Benz anulada. Cliente furioso. La IA citó un hilo de Reddit de 2021 como fuente técnica oficial.<br>" +
+                    "Un depósito con combustible adulterado no mueve el motor: necesitamos fuentes verificadas.</span>";
+
+            } else if (idData === 'data-competitor') {
+                terminal.innerHTML +=
+                    "<span class='text-error'>[DATOS CONTAMINADOS · INFORMACIÓN SIN VERIFICAR] ❌<br>" +
+                    "El agente cotizó un GLC 220d con precios scrapeados de la competencia hace 8 meses. El cliente llegó al concesionario con esa cifra.<br>" +
+                    "→ Pérdida de margen, credibilidad y confianza. El asesor tuvo que deshacer la expectativa durante 45 minutos.<br>" +
+                    "Los datos de terceros sin verificar no son el combustible que necesita UNIONE.</span>";
+
+            } else if (idRule === 'rule-improvise') {
+                terminal.innerHTML +=
+                    "<span class='text-error'>[FALLO DE TRANSMISIÓN · DATO INVENTADO] ❌<br>" +
+                    "El agente calculó una cuota de financiación basándose en una campaña de 2022: '€ 289 / mes'. El tipo real con el euríbor actual era € 418 / mes.<br>" +
+                    "→ El cliente firmó con una expectativa incorrecta. Reclamación formal, cancelación del contrato y reputación dañada.<br>" +
+                    "Un regulador que improvisa es tan peligroso como unos frenos que fallan. La IA orienta; el equipo UNIONE confirma.</span>";
+
+            } else if (idRule === 'rule-jargon') {
+                terminal.innerHTML +=
+                    "<span class='text-warning'>[MARCHA EQUIVOCADA · COMUNICACIÓN BLOQUEADA] ⚠️<br>" +
+                    "Un cliente preguntó '¿cabe mi nuevo GLE en un garaje de 5 metros de fondo?' y recibió 7 párrafos con WLTP ciclo combinado, normativa Euro 7 y curvas de par Nm.<br>" +
+                    "→ No entendió nada. Abandonó la conversación. El equipo de ventas perdió un lead caliente.<br>" +
+                    "La excelencia de UNIONE es ser cercanos y personalizados — no manuales técnicos inaccesibles.</span>";
+
+            } else if (idRole === 'role-aggressive') {
+                terminal.innerHTML +=
+                    "<span class='text-warning'>[SOBREMARCHA · PERSONALIDAD INCORRECTA] ⚠️<br>" +
+                    "El agente intentó persuadir a un cliente de cambiar su Clase A por un S 580 4MATIC con mensajes como 'es lo que te mereces' y 'esta oferta caduca en 2 horas'.<br>" +
+                    "→ Queja formal en Google Reviews: ★☆☆☆☆. El cliente compartió la conversación en LinkedIn.<br>" +
+                    "UNIONE conecta con pasión y cercanía — no con presión de cierre agresivo.</span>";
+
+            } else if (idRole === 'role-generic') {
+                terminal.innerHTML +=
+                    "<span class='text-error'>[MOTOR EN FRÍO · PIEZA GENÉRICA INCORRECTA] ❌<br>" +
+                    "Respuesta del agente a '¿Qué diferencia hay entre el GLE híbrido enchufable y el diésel?': 'No tengo información sobre ese modelo. ¿Puedo ayudarte con algo más?'<br>" +
+                    "→ El cliente se fue directamente a la web de la competencia. Oportunidad perdida.<br>" +
+                    "Un motor sin ADN de movilidad no puede mover a UNIONE. Necesitamos identidad desde el primer cilindro.</span>";
+
+            } else if (idRole === 'role-correct' && idData === 'data-correct' && idRule === 'rule-correct') {
+                terminal.innerHTML +=
+                    "<span class='text-success'>[MOTOR A PUNTO · AGENTE LISTO PARA RODAR] ✅<br>" +
+                    "&gt; UnioneBot ensamblado correctamente.<br>" +
+                    "&gt; ECU: Asesor de movilidad UNIONE — cercano, experto, apasionado.<br>" +
+                    "&gt; Depósito: Catálogo oficial Mercedes-Benz 2025 + manuales de producto EQS / EQE / GLC.<br>" +
+                    "&gt; Regulador activo: derivación al asesor humano cuando sea necesario.<br>" +
+                    "&gt; Tono: personalizado, optimista, orientado al cliente — en línea con los valores UNIONE.<br>" +
+                    "&gt; <strong>Cliente asistido. Asesor potenciado. UNIONE en movimiento.</strong></span>" +
+                    "<br><br><span class='text-mint'>" +
+                    "&gt; Siguiente paso: construye tu propio agente en Copilot Agent Builder y ponlo a rodar. 🚀" +
+                    "</span>";
+
+                /* Actualizar marcador RPM */
+                let rpm = document.getElementById('rpm-display');
+                rpm.textContent = 'RPM: 6.500';
+                rpm.style.color = 'var(--safe-green)';
+                rpm.style.borderColor = 'var(--safe-green)';
+
+            } else {
+                terminal.innerHTML +=
+                    "<span class='text-error'>[ERROR] Combinación de piezas no reconocida. " +
+                    "Revisa los módulos e inténtalo de nuevo.</span>";
+            }
+        }, 950);
+    }
+</script>
+</body>
+</html>
